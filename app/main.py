@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 import os
 import time
@@ -37,6 +38,8 @@ async def lifespan(app: FastAPI):
     taak = asyncio.create_task(tik_loop())
     yield
     taak.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await taak
 
 
 app = FastAPI(lifespan=lifespan)
@@ -74,7 +77,9 @@ async def start_post(request: Request, naam: str = Form(""), modus: str = Form("
     else:
         doel = f"/spel/{lobby.start_tegen_computer(sessie.token).id}"
     antwoord = RedirectResponse(doel, status_code=303)
-    antwoord.set_cookie("token", sessie.token, max_age=COOKIE_DUUR, httponly=True, samesite="lax")
+    secure = request.headers.get("x-forwarded-proto", request.url.scheme) == "https"
+    antwoord.set_cookie("token", sessie.token, max_age=COOKIE_DUUR, httponly=True,
+                        samesite="lax", secure=secure)
     return antwoord
 
 

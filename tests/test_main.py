@@ -38,6 +38,15 @@ def test_start_tegen_computer_maakt_spel_en_cookie(client):
     assert game.tegen_computer and game.spelers[1].naam == "Wessel"
 
 
+def test_cookie_is_secure_achter_https(client):
+    r = client.post("/start", data={"naam": "Wessel", "modus": "computer"},
+                    headers={"x-forwarded-proto": "https"}, follow_redirects=False)
+    assert "Secure" in r.headers["set-cookie"]
+    client.cookies.clear()
+    r = client.post("/start", data={"naam": "Wessel", "modus": "computer"}, follow_redirects=False)
+    assert "Secure" not in r.headers["set-cookie"]
+
+
 def test_terugkomen_stuurt_door_naar_lopend_spel(client):
     r = client.post("/start", data={"naam": "Wessel", "modus": "computer"}, follow_redirects=False)
     doel = r.headers["location"]

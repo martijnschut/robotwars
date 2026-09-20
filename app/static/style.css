@@ -99,4 +99,5 @@ a { color: var(--blauw); }
   .rw-veld { grid-template-columns: 20px repeat(13, 1fr); grid-auto-rows: auto; }
   .rw-veld .c { aspect-ratio: 1; } .rw-veld .c svg { width: 90%; height: 90%; }
   .rw-status { flex-direction: column; }
+  .kolommen { grid-template-columns: 1fr; }
 }
