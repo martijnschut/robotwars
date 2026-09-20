@@ -96,6 +96,24 @@ niet als gebruikt schild).
 Het gebouw van de tegenstander op 0 → jij wint. De tijd = seconden vanaf de
 start van het potje tot en met de winnende treffer.
 
+### Uiterlijk van het gebouw
+
+Gekozen ontwerp: **Ruimtetoren** (SVG-sprite, in teamkleur): metalen romp,
+glazen koepel met pulserende energiekern, drie lichtringen, antenne met
+knipperend baken. De schade is aan het gebouw zelf te zien:
+
+| Levens | Uiterlijk |
+|---|---|
+| 5 | alles aan |
+| 4 | baken uit, kleine barst |
+| 3 | bovenste lichtring uit, meer barsten |
+| 2 | middelste ring uit, rook |
+| 1 | onderste ring uit, vuur |
+| 0 | ingestort: alleen puin, vlammen en rook |
+
+Bij elke treffer schudt het gebouw kort en flitst het. Mockups staan in
+`.superpowers/brainstorm/` (niet in git).
+
 ## 4. De taal
 
 Eén commando per regel. Hoofdletters/kleine letters maken niet uit; spaties
