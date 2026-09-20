@@ -1,0 +1,88 @@
+"""De editor van één speler: wat gebeurt er als hij een regel typt.
+
+Zoals CT-3000: geen Start-knop. Zodra een regel een geldig commando is, wordt
+hij uitgevoerd (in de wachtrij gezet) en bevroren. Herhaal-blokken worden
+verzameld tot 'klaar' en dan in één keer uitgerold.
+"""
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+
+from .game import Game, MELD_DRUK
+from .parser import (Command, Incomplete, Invalid, RepeatEnd, RepeatStart,
+                     expand, parse_line)
+
+HINT_KLAAR = "Je bent niet in een herhaal. Typ eerst herhaal 3 keer."
+
+
+@dataclass
+class Regel:
+    markering: str      # "ok", "wacht" of "fout"
+    tekst: str
+    inspringing: int    # diepte in herhaal-blokken, voor de weergave
+
+
+@dataclass
+class Editor:
+    regels: list[Regel] = field(default_factory=list)   # bevroren regels
+    blok: list[Command] = field(default_factory=list)   # open herhaal-blok(ken)
+    diepte: int = 0                                     # aantal open herhaal-blokken
+    markering: str = ""                                 # bij de invoerregel: "", "fout" of "wacht"
+    hint: str | None = None
+
+    def wis(self) -> None:
+        self.regels.clear()
+
+    def verwerk(self, game: Game, nummer: int, tekst: str) -> bool:
+        """Verwerkt de getypte invoerregel. True = regel is bevroren (invoer leegmaken)."""
+        self.hint = None
+        r = parse_line(tekst)
+        if isinstance(r, Incomplete):
+            self.markering = "wacht" if self.diepte else ""
+            return False
+        if isinstance(r, Invalid):
+            self.markering = "fout"
+            self.hint = r.hint
+            return False
+        if isinstance(r, RepeatStart):
+            self.blok.append(r)
+            self._bevries("wacht", tekst, self.diepte)
+            self.diepte += 1
+            self.markering = "wacht"
+            return True
+        if isinstance(r, RepeatEnd):
+            if self.diepte == 0:
+                self.markering = "fout"
+                self.hint = HINT_KLAAR
+                return False
+            self.diepte -= 1
+            self.blok.append(r)
+            if self.diepte > 0:
+                self._bevries("wacht", tekst, self.diepte)
+                return True
+            stappen = expand(self.blok)
+            self.blok = []
+            gelukt = game.voeg_stappen_toe(nummer, stappen)
+            nieuw = "ok" if gelukt else "fout"
+            for regel in self.regels:
+                if regel.markering == "wacht":
+                    regel.markering = nieuw
+            self._bevries(nieuw, tekst, 0)
+            if not gelukt:
+                self.hint = MELD_DRUK
+            return True
+        # Move / Shoot / Shield
+        if self.diepte > 0:
+            self.blok.append(r)
+            self._bevries("wacht", tekst, self.diepte)
+            return True
+        if game.voeg_stappen_toe(nummer, [r]):
+            self._bevries("ok", tekst, 0)
+            return True
+        self.markering = "fout"
+        self.hint = MELD_DRUK
+        return False
+
+    def _bevries(self, markering: str, tekst: str, inspringing: int) -> None:
+        self.regels.append(Regel(markering, tekst.strip(), inspringing))
+        self.markering = "wacht" if self.diepte else ""
