@@ -84,3 +84,31 @@ def test_herhaal_nul_of_te_veel_is_invalid():
 def test_klaar():
     assert parse_line("klaar") == RepeatEnd()
     assert parse_line("kl") == Incomplete()
+
+
+import pytest
+from app.parser import expand
+
+
+def test_expand_zonder_herhaal():
+    assert expand([Move("vooruit"), Shoot()]) == [Move("vooruit"), Shoot()]
+
+
+def test_expand_herhaal_3_keer_geeft_3_stappen():
+    cmds = [RepeatStart(3), Move("vooruit"), RepeatEnd()]
+    assert expand(cmds) == [Move("vooruit")] * 3
+
+
+def test_expand_genest():
+    cmds = [RepeatStart(2), Move("omhoog"), RepeatStart(2), Shoot(), RepeatEnd(), RepeatEnd()]
+    assert expand(cmds) == [Move("omhoog"), Shoot(), Shoot()] * 2
+
+
+def test_expand_klaar_zonder_herhaal():
+    with pytest.raises(ValueError):
+        expand([RepeatEnd()])
+
+
+def test_expand_herhaal_zonder_klaar():
+    with pytest.raises(ValueError):
+        expand([RepeatStart(2), Move("vooruit")])

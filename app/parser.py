@@ -139,3 +139,26 @@ def _hint(compact: str, tekst: str) -> str:
     if compact.startswith("herhaal"):
         return HINT_HERHAAL
     return HINT_START
+
+
+def expand(commands: list[Command]) -> list[Step]:
+    """Rolt herhaal-blokken uit tot een platte lijst stappen.
+
+    Gooit ValueError bij een 'klaar' zonder 'herhaal' of andersom.
+    """
+    stapel: list[list[Step]] = [[]]
+    tellers: list[int] = []
+    for c in commands:
+        if isinstance(c, RepeatStart):
+            stapel.append([])
+            tellers.append(c.n)
+        elif isinstance(c, RepeatEnd):
+            if len(stapel) == 1:
+                raise ValueError("klaar zonder herhaal")
+            blok = stapel.pop()
+            stapel[-1].extend(blok * tellers.pop())
+        else:
+            stapel[-1].append(c)
+    if len(stapel) > 1:
+        raise ValueError("herhaal zonder klaar")
+    return stapel[0]
