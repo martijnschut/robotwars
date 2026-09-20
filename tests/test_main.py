@@ -169,6 +169,18 @@ def test_winst_wordt_opgeslagen_en_getoond(client):
     assert client.get("/", follow_redirects=False).status_code == 200   # niet meer terug het spel in
 
 
+def test_computerwinst_komt_niet_op_het_scorebord(client):
+    game, token = start_spel(client)
+    game.spelers[1].gebouw_levens = 1
+    game.spelers[2].x, game.spelers[2].y = 5, 4
+    game.spelers[1].x, game.spelers[1].y = 2, 1
+    game.spelers[2].tegoed = 1
+    main.tik_alles()
+    assert game.winnaar == 2
+    assert game.score_opgeslagen
+    assert main.db.top(True) == []
+
+
 def test_weg_zijn_is_verlies_zonder_score(client):
     game, token = start_spel(client)
     game.laatst_gezien[1] = time.time() - main.WEG_NA - 1

@@ -212,8 +212,8 @@ def tik_spel(game, nu: float) -> None:
     controleer_weg(game, nu)
     if game.afgelopen and not game.score_opgeslagen:
         game.score_opgeslagen = True
-        if not game.opgegeven:
-            winnaar = game.spelers[game.winnaar]
+        winnaar = game.spelers[game.winnaar]
+        if not game.opgegeven and not winnaar.is_computer:
             verliezer = game.tegenstander(game.winnaar)
             db.sla_op(winnaar.naam, verliezer.naam, game.tegen_computer, game.tik)
 

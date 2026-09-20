@@ -311,7 +311,8 @@ scores(id INTEGER PRIMARY KEY,
        gespeeld_op TEXT)         -- ISO-8601
 ```
 
-Alleen echte overwinningen (gebouw op 0) worden opgeslagen. Pagina
+Alleen echte overwinningen (gebouw op 0) worden opgeslagen. Alleen overwinningen
+van menselijke spelers worden opgeslagen. Pagina
 `/scorebord` toont twee lijsten: **Tegen de computer** en **Tegen een mens**,
 elk de 10 snelste, snelste bovenaan, als
 "1. Wessel – 1:23 – tegen Robo – 20 sep".
