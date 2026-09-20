@@ -61,8 +61,13 @@ a { color: var(--blauw); }
 .rw-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 20px; font-weight: 700; }
 .rw-top .tijd { background: var(--paneel); padding: 6px 14px; border-radius: 20px; font-variant-numeric: tabular-nums; }
 /* het veld krimpt mee met de ruimte (vakjes hooguit 56px), zodat het naast de editor past */
-.rw-veld { display: grid; grid-template-columns: 26px repeat(13, minmax(0, 56px)); gap: 2px; justify-content: center; }
+.rw-veld { position: relative; display: grid; grid-template-columns: 26px repeat(13, minmax(0, 56px)); gap: 2px; justify-content: center; }
 .rw-veld .co { display: flex; align-items: center; justify-content: center; color: var(--grijs); font-size: 13px; font-weight: 600; }
+/* as-hints van het assenstelsel: ↑ y links van de y-nummers (bovenaan), x → rechts van de
+   x-nummers (onderaan); ze liggen buiten het grid en nemen geen vakje in */
+.rw-veld .as { position: absolute; color: var(--grijs); font-size: 11px; line-height: 1; white-space: nowrap; opacity: .8; pointer-events: none; }
+.rw-veld .as-y { top: 0; right: 100%; margin-right: 2px; }
+.rw-veld .as-x { bottom: 0; left: 100%; margin-left: 2px; }
 .rw-veld .c { position: relative; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
 .rw-veld .c svg { width: 96%; height: 96%; }
 .c.b { background: var(--helft-b); } .c.r { background: var(--helft-r); }

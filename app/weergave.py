@@ -38,11 +38,18 @@ def schermkolom(x: int, ik: int) -> int:
     return eigen_kolom(ik, x)
 
 
+def gridrij(y: int) -> int:
+    """Op welke gridrij (1..7) veldrij y staat: het veld is een assenstelsel, dus y=7
+    staat bovenaan (gridrij 1) en y=1 onderaan (gridrij 7)."""
+    return HOOGTE - y + 1
+
+
 def kogelbanen(game: Game, ik: int) -> list[dict]:
     """Per schot van de laatste tik: waar de kogel over het scherm vliegt.
 
-    Gridkolommen tellen vanaf 2 (kolom 1 is de rijnummers), gridrijen vanaf 2
-    (rij 1 is de kolomnummers). `n` = aantal vakjes inclusief dat van de schutter.
+    Gridkolommen tellen vanaf 2 (kolom 1 is de y-nummers). Gridrijen 1..7 zijn het
+    veld met y=7 bovenaan (gridrij = HOOGTE - y + 1); gridrij 8 is de x-nummers.
+    `n` = aantal vakjes inclusief dat van de schutter.
     """
     if game.afgelopen:          # na het winnende schot geen kogel meer laten staan
         return []
@@ -56,7 +63,7 @@ def kogelbanen(game: Game, ik: int) -> list[dict]:
         banen.append({
             "kol_van": min(van, tot) + 1,
             "kol_tot": max(van, tot) + 2,
-            "rij": schutter.y + 1,
+            "rij": gridrij(schutter.y),
             "n": len(schot.cellen) + 1,
             "richting": "rechts" if tot > van else "links",
             "duur": round(len(schot.cellen) * STAP_SECONDEN, 2),
@@ -67,8 +74,9 @@ def kogelbanen(game: Game, ik: int) -> list[dict]:
 
 
 def veld_matrix(game: Game, ik: int) -> list[list[Cel]]:
+    """De rijen zoals ze op het scherm staan: van boven (y=7) naar beneden (y=1)."""
     rijen = []
-    for y in range(1, HOOGTE + 1):
+    for y in range(HOOGTE, 0, -1):
         rij = []
         for x in kolommen(ik):
             if x == RIVIER_X:

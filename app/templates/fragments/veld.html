@@ -1,12 +1,12 @@
 <div id="veld" class="rw-veld">
-  {# elk vakje krijgt een vaste gridpositie (kolom 1 en rij 1 zijn de nummers), zodat de
-     kogelbanen als extra grid-items óver de vakjes heen kunnen liggen zonder ze te verschuiven #}
-  <div class="co" style="grid-area: 1 / 1"></div>
-  {# kolomnummers vanaf de eigen kant: iedere speler ziet links 1 en rechts 13 #}
-  {% for x in kolommen %}<div class="co" style="grid-area: 1 / {{ loop.index + 1 }}">{{ loop.index }}</div>{% endfor %}
+  {# Het veld is een assenstelsel: y-nummers links (7 boven, 1 onder), x-nummers eronder.
+     Elk vakje krijgt een vaste gridpositie (kolom 1 = y-nummers, gridrijen 1..7 = veld,
+     gridrij 8 = x-nummers), zodat de kogelbanen als extra grid-items óver de vakjes heen
+     kunnen liggen zonder ze te verschuiven. #}
+  <span class="as as-y">↑ y</span>
   {% for rij in rijen %}
-  {% set r = loop.index + 1 %}
-  <div class="co" style="grid-area: {{ r }} / 1">{{ loop.index }}</div>
+  {% set r = loop.index %}
+  <div class="co" style="grid-area: {{ r }} / 1">{{ rij[0].y }}</div>
   {% for cel in rij %}
   <div class="c {{ cel.soort }}{% if cel.spoor %} spoor{% endif %}{% if cel.raak %} boem{% endif %}"
        style="grid-area: {{ r }} / {{ loop.index + 1 }}{% if cel.spoor %}; --vertraging: {{ (cel.spoor_index + 1) * 0.18 }}s{% endif %}">
@@ -28,6 +28,11 @@
   </div>
   {% endfor %}
   {% endfor %}
+  {# x-nummers onder het veld, vanaf de eigen kant: iedere speler ziet links 1 en rechts 13;
+     de hoekcel linksonder (de oorsprong) blijft leeg #}
+  <div class="co" style="grid-area: {{ rijen|length + 1 }} / 1"></div>
+  {% for x in kolommen %}<div class="co" style="grid-area: {{ rijen|length + 1 }} / {{ loop.index + 1 }}">{{ loop.index }}</div>{% endfor %}
+  <span class="as as-x">x →</span>
   {# de kogels: één per schot, vliegen in de tik van de schutter naar het eindvakje #}
   {% for b in kogelbanen %}
   <div class="kogelbaan {{ b.richting }}{% if not b.raak %} mis{% endif %}"

@@ -14,15 +14,20 @@ def test_matrix_soorten_en_inhoud():
     g.schilden.append(Schild(4, 3, eigenaar=1))
     rijen = veld_matrix(g, ik=1)
     assert len(rijen) == 7 and len(rijen[0]) == 13
+    # assenstelsel: de bovenste rij op het scherm is y=7, de onderste y=1
+    assert rijen[0][0].y == 7 and rijen[6][0].y == 1
+    assert [rij[0].y for rij in rijen] == [7, 6, 5, 4, 3, 2, 1]
     cel = rijen[3][0]                       # (1,4): gebouw speler 1
     assert (cel.x, cel.y) == (1, 4) and cel.soort == "b" and cel.gebouw.nummer == 1
     assert rijen[3][1].robot.nummer == 1    # (2,4)
     assert rijen[3][11].robot.nummer == 2   # (12,4)
-    assert rijen[2][3].schild.eigenaar == 1 # (4,3)
-    assert rijen[0][6].soort == "w" and rijen[1][6].soort == "br"
+    assert rijen[4][3].schild.eigenaar == 1 # (4,3)
+    assert rijen[0][6].soort == "w" and rijen[1][6].soort == "br"   # y=7 water, y=6 brug
+    assert rijen[5][6].soort == "br" and rijen[6][6].soort == "w"   # y=2 brug, y=1 water
     assert rijen[0][7].soort == "r"
     # gespiegeld: eerste kolom is x=13
     assert veld_matrix(g, ik=2)[3][0].gebouw.nummer == 2
+    assert veld_matrix(g, ik=2)[0][0].y == 7
 
 
 def test_matrix_toont_kogelbaan():
@@ -31,17 +36,18 @@ def test_matrix_toont_kogelbaan():
     g.voeg_stappen_toe(1, [Shoot()])
     g.tick()                                # niets geraakt: kogel eindigt op (6,1)
     rijen = veld_matrix(g, 1)
-    assert [c.spoor for c in rijen[0][2:6]] == [True] * 4
-    assert [c.spoor_index for c in rijen[0][2:6]] == [0, 1, 2, 3]
-    assert not rijen[0][5].raak                    # mis: nergens een knal
+    onder = rijen[6]                        # y=1 is de onderste rij op het scherm
+    assert [c.spoor for c in onder[2:6]] == [True] * 4
+    assert [c.spoor_index for c in onder[2:6]] == [0, 1, 2, 3]
+    assert not onder[5].raak                       # mis: nergens een knal
     g.spelers[2].x, g.spelers[2].y = 4, 1
     g.voeg_stappen_toe(1, [Shoot()])
     g.tick()
-    rijen = veld_matrix(g, 1)
-    assert rijen[0][3].raak and rijen[0][3].robot.nummer == 2
+    onder = veld_matrix(g, 1)[6]
+    assert onder[3].raak and onder[3].robot.nummer == 2
     # de vakjes van de baan flitsen in golf: vertraging loopt op per vakje
-    assert rijen[0][2].spoor_index == 0 and rijen[0][3].spoor_index == 1
-    assert rijen[0][3].knal_vertraging == round(2 * STAP_SECONDEN, 2)
+    assert onder[2].spoor_index == 0 and onder[3].spoor_index == 1
+    assert onder[3].knal_vertraging == round(2 * STAP_SECONDEN, 2)
 
 
 def test_logtekst_toont_kolommen_vanuit_eigen_kant():
@@ -59,8 +65,9 @@ def test_kogelbanen_vliegen_over_het_scherm():
     g.voeg_stappen_toe(1, [Shoot()])
     g.tick()                                # mis: cellen (3,1)..(6,1)
     (baan,) = kogelbanen(g, 1)
-    # speler 1 kijkt normaal: schutter op schermkolom 2, eind op 6; gridkolom = schermkolom + 1
-    assert baan == {"kol_van": 3, "kol_tot": 8, "rij": 2, "n": 5, "richting": "rechts",
+    # speler 1 kijkt normaal: schutter op schermkolom 2, eind op 6; gridkolom = schermkolom + 1;
+    # y=1 is de onderste veldrij, dus gridrij 7 (y=7 is gridrij 1)
+    assert baan == {"kol_van": 3, "kol_tot": 8, "rij": 7, "n": 5, "richting": "rechts",
                     "duur": round(4 * STAP_SECONDEN, 2), "schutter": 1, "raak": False}
     # speler 2 ziet het gespiegeld: x=2 wordt schermkolom 12, x=6 wordt 8 → kogel vliegt naar links
     (baan2,) = kogelbanen(g, 2)
@@ -72,6 +79,11 @@ def test_kogelbanen_vliegen_over_het_scherm():
     (baan3,) = kogelbanen(g, 1)
     assert baan3["n"] == 3 and baan3["raak"] is True and baan3["kol_tot"] == 6
     assert kogelbanen(Game("leeg", "A", "B"), 1) == []
+    # schutter op y=7 (bovenste rij) ligt in gridrij 1; y=4 in gridrij 4
+    g.spelers[1].x, g.spelers[1].y = 2, 7
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert kogelbanen(g, 1)[0]["rij"] == 1
     g.spelers[2].gebouw_levens = 1
     g.spelers[1].x, g.spelers[1].y = 9, 4
     g.spelers[2].x, g.spelers[2].y = 12, 1

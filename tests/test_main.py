@@ -221,7 +221,14 @@ def test_spelpagina(client):
     game, token = start_spel(client)
     r = client.get(f"/spel/{game.id}")
     assert r.status_code == 200
-    assert r.text.index('>1</div>') < r.text.index('>13</div>')   # labels lopen 1 → 13
+    # assenstelsel: y-labels links van 7 (boven) naar 1 (onder), daaronder de x-labels 1 → 13
+    y7 = r.text.index('style="grid-area: 1 / 1">7</div>')
+    y1 = r.text.index('style="grid-area: 7 / 1">1</div>')
+    x1 = r.text.index('style="grid-area: 8 / 2">1</div>')
+    x13 = r.text.index('style="grid-area: 8 / 14">13</div>')
+    assert y7 < y1 < x1 < x13
+    assert 'style="grid-area: 8 / 1"></div>' in r.text        # lege hoekcel linksonder (oorsprong)
+    assert "↑ y" in r.text and "x →" in r.text                # as-hints
     for fragment in ('id="veld"', 'id="status"', 'id="kop"', 'id="regels"', 'id="invoer"', 'id="einde"',
                      'id="log"', 'id="teller"', 'class="spel-layout"', 'class="kolom-editor"',
                      'class="hartjes"'):
