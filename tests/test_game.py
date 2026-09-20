@@ -247,3 +247,84 @@ def test_zet_schild_wist_oude_foutmelding_bij_succes():
     g.voeg_stappen_toe(1, [ShieldCmd(4, 3)])       # geslaagd
     g.tick()
     assert g.spelers[1].melding is None
+
+
+# ---- gebeurtenissenlog ----
+
+from app.game import Gebeurtenis
+
+
+def soorten(g):
+    return [e.soort for _, e in g.log]
+
+
+def test_log_loop_en_geblokkeerd():
+    g = nieuw()
+    g.voeg_stappen_toe(1, [Move("vooruit"), Move("achteruit"), Move("achteruit")])
+    g.tick()
+    assert g.log[-1] == (1, Gebeurtenis("loop", 1, 3, 4, tekst="vooruit"))
+    g.tick()
+    g.tick()                                     # (1,4) is het gebouw: geblokkeerd
+    assert g.log[-1] == (3, Gebeurtenis("geblokkeerd", 1, tekst="achteruit"))
+    assert soorten(g) == ["loop", "loop", "geblokkeerd"]
+
+
+def test_log_schot_raakt_robot_schild_gebouw_of_mist():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 4, 3
+    g.spelers[2].x, g.spelers[2].y = 6, 3
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert g.log[-1] == (1, Gebeurtenis("raak_robot", 1, 6, 3, doel=2, levens=4))
+    g.schilden.append(Schild(5, 3, eigenaar=1))
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert g.log[-1] == (2, Gebeurtenis("raak_schild", 1, 5, 3, doel=1, levens=2))
+    g.spelers[1].x, g.spelers[1].y = 9, 4
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert g.log[-1] == (3, Gebeurtenis("raak_gebouw", 1, 13, 4, doel=2, levens=4))
+    g.spelers[1].x, g.spelers[1].y = 2, 1
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert g.log[-1] == (4, Gebeurtenis("mis", 1, 6, 1))
+
+
+def test_log_dood_en_terug():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 8, 1
+    g.spelers[2].x, g.spelers[2].y = 10, 1
+    g.spelers[2].robot_levens = 1
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert soorten(g)[-2:] == ["raak_robot", "dood"]
+    assert g.log[-1] == (1, Gebeurtenis("dood", 2, 10, 1))
+    for _ in range(RESPAWN_TIKKEN):
+        g.tick()
+    assert g.log[-1] == (1 + RESPAWN_TIKKEN, Gebeurtenis("terug", 2, 12, 4))
+
+
+def test_log_schild_gezet_of_geweigerd():
+    g = nieuw()
+    g.voeg_stappen_toe(1, [ShieldCmd(4, 3), ShieldCmd(9, 3)])
+    g.tick()
+    assert g.log[-1] == (1, Gebeurtenis("schild", 1, 4, 3))
+    g.tick()
+    assert g.log[-1] == (2, Gebeurtenis("schild_fout", 1, 9, 3, tekst=MELD_HELFT))
+
+
+def test_log_win_en_maxlen():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 9, 4
+    g.spelers[2].x, g.spelers[2].y = 12, 1
+    g.spelers[2].gebouw_levens = 1
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert soorten(g)[-2:] == ["raak_gebouw", "win"]
+    assert g.log[-1] == (1, Gebeurtenis("win", 1))
+    assert g.log.maxlen == 30
+    g2 = nieuw()
+    g2.voeg_stappen_toe(1, [Move("omhoog"), Move("omlaag")] * 25)
+    for _ in range(50):
+        g2.tick()
+    assert len(g2.log) == 30 and g2.log[-1][0] == 50

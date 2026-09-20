@@ -65,6 +65,22 @@ class Schot:
 
 
 @dataclass
+class Gebeurtenis:
+    """Eén regel voor het log "Wat gebeurt er?" (de weergave maakt er tekst van)."""
+    soort: str                   # loop, geblokkeerd, raak_schild, raak_robot, raak_gebouw, mis,
+                                 # dood, terug, schild, schild_fout, win
+    speler: int                  # wie het deed (of wie het overkwam bij dood/terug/win)
+    x: int = 0
+    y: int = 0
+    doel: int | None = None      # geraakte speler / eigenaar van het geraakte voorwerp
+    levens: int | None = None    # resterende levens van het geraakte voorwerp
+    tekst: str | None = None     # richting bij lopen, melding bij schild_fout
+
+
+LOG_LENGTE = 30
+
+
+@dataclass
 class Speler:
     nummer: int
     naam: str
@@ -111,6 +127,7 @@ class Game:
         }
         self.schilden: list[Schild] = []
         self.schoten: list[Schot] = []   # schoten van de laatste tik
+        self.log: deque[tuple[int, Gebeurtenis]] = deque(maxlen=LOG_LENGTE)   # (tik, gebeurtenis)
         self.tik = 0
         self.winnaar: int | None = None
         self.opgegeven = False           # winst doordat de ander wegging: niet voor het scorebord
@@ -195,9 +212,13 @@ class Game:
 
     # ---- intern ----
 
+    def _meld(self, soort: str, speler: int, x: int = 0, y: int = 0, **rest) -> None:
+        self.log.append((self.tik, Gebeurtenis(soort, speler, x, y, **rest)))
+
     def _zet_winnaar(self, nummer: int) -> None:
         self.winnaar = nummer
         self.geeindigd_op = time.time()
+        self._meld("win", nummer)
 
     def _respawn(self, speler: Speler) -> None:
         speler.respawn_over -= 1
@@ -205,6 +226,7 @@ class Game:
             if self.robot_op(*speler.startvak) is None:
                 speler.x, speler.y = speler.startvak
                 speler.robot_levens = ROBOT_LEVENS
+                self._meld("terug", speler.nummer, speler.x, speler.y)
             else:
                 speler.respawn_over = 1   # volgende tik opnieuw proberen
 
@@ -226,6 +248,9 @@ class Game:
         doel = (speler.x + dx, speler.y + dy)
         if self.is_vrij(*doel):
             speler.x, speler.y = doel
+            self._meld("loop", speler.nummer, speler.x, speler.y, tekst=richting)
+        else:
+            self._meld("geblokkeerd", speler.nummer, tekst=richting)
 
     def _schiet(self, speler: Speler) -> None:
         """Kogel vliegt vooruit, max SCHIET_BEREIK vakjes, en raakt het eerste
@@ -242,23 +267,30 @@ class Game:
                 schild.levens -= 1
                 if schild.levens == 0:
                     self.schilden.remove(schild)
+                self._meld("raak_schild", speler.nummer, x, y, doel=schild.eigenaar, levens=schild.levens)
                 raak = (x, y)
                 break
             robot = self.robot_op(x, y)
             if robot is not None:
                 robot.robot_levens -= 1
+                self._meld("raak_robot", speler.nummer, x, y, doel=robot.nummer, levens=robot.robot_levens)
                 if robot.robot_levens == 0:
                     robot.respawn_over = RESPAWN_TIKKEN
                     robot.wachtrij.clear()
+                    self._meld("dood", robot.nummer, x, y)
                 raak = (x, y)
                 break
             gebouw = self.gebouw_op(x, y)
             if gebouw is not None:
                 gebouw.gebouw_levens -= 1
+                self._meld("raak_gebouw", speler.nummer, x, y, doel=gebouw.nummer, levens=gebouw.gebouw_levens)
                 if gebouw.gebouw_levens == 0:
                     self._zet_winnaar(self.tegenstander(gebouw.nummer).nummer)
                 raak = (x, y)
                 break
+        if raak is None:
+            laatste = cellen[-1] if cellen else (speler.x, speler.y)
+            self._meld("mis", speler.nummer, *laatste)
         self.schoten.append(Schot(speler.nummer, cellen, raak))
 
     def _zet_schild(self, speler: Speler, x: int, y: int) -> None:
@@ -276,3 +308,6 @@ class Game:
             self.schilden.append(Schild(x, y, speler.nummer))
             speler.schilden_over -= 1
             speler.melding = None
+            self._meld("schild", speler.nummer, x, y)
+            return
+        self._meld("schild_fout", speler.nummer, x, y, tekst=speler.melding)
