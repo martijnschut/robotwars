@@ -4,23 +4,29 @@
 {% include "fragments/sprites.html" %}
 <div hx-ext="ws" ws-connect="/ws/spel/{{ game.id }}">
   {% include "fragments/kop.html" %}
-  <div class="veld-wrap">
-    {% include "fragments/veld.html" %}
-    {% include "fragments/banner.html" %}
-  </div>
-  {% include "fragments/status.html" %}
-  {% include "fragments/log.html" %}
-  <div class="rw-editor">
-    {% include "fragments/regels.html" %}
-    <div class="regel invoerregel">
-      {% include "fragments/markering.html" %}
-      {% include "fragments/invoer.html" %}
+  <div class="spel-layout">
+    <div class="kolom-veld">
+      <div class="veld-wrap">
+        {% include "fragments/veld.html" %}
+        {% include "fragments/banner.html" %}
+      </div>
+      {% include "fragments/status.html" %}
+      {% include "fragments/log.html" %}
     </div>
-    {% include "fragments/hint.html" %}
-    <div class="rw-knoppen">
-      <form ws-send><input type="hidden" name="actie" value="stop"><button class="stop" type="submit">■ Stop</button></form>
-      <form ws-send><input type="hidden" name="actie" value="wis"><button type="submit">Wis</button></form>
-      {% include "fragments/teller.html" %}
+    <div class="kolom-editor">
+      <div class="rw-editor">
+        {% include "fragments/regels.html" %}
+        <div class="regel invoerregel">
+          {% include "fragments/markering.html" %}
+          {% include "fragments/invoer.html" %}
+        </div>
+        {% include "fragments/hint.html" %}
+        <div class="rw-knoppen">
+          <form ws-send><input type="hidden" name="actie" value="stop"><button class="stop" type="submit">■ Stop</button></form>
+          <form ws-send><input type="hidden" name="actie" value="wis"><button type="submit">Wis</button></form>
+          {% include "fragments/teller.html" %}
+        </div>
+      </div>
     </div>
   </div>
   {% include "fragments/einde.html" %}

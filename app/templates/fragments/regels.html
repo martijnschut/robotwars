@@ -1,5 +1,6 @@
 <div id="regels">
-  {% for r in editor.regels %}
+  {# omgekeerd: met column-reverse in de CSS staat de nieuwste regel onderaan en blijft het vak vanzelf onderaan gescrold #}
+  {% for r in editor.regels|reverse %}
   <div class="regel oud in{{ r.inspringing }}"><span class="mk {{ r.markering }}">{{ r.markering|symbool }}</span>{{ r.tekst }}</div>
   {% endfor %}
 </div>

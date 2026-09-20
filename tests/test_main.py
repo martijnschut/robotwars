@@ -124,7 +124,7 @@ def test_spelpagina(client):
     r = client.get(f"/spel/{game.id}")
     assert r.status_code == 200
     for fragment in ('id="veld"', 'id="status"', 'id="kop"', 'id="regels"', 'id="invoer"', 'id="einde"',
-                     'id="banner"', 'id="log"', 'id="teller"'):
+                     'id="banner"', 'id="log"', 'id="teller"', 'class="spel-layout"', 'class="kolom-editor"'):
         assert fragment in r.text
     assert f'ws-connect="/ws/spel/{game.id}"' in r.text
     assert "Typ een commando om te beginnen." in r.text
@@ -189,6 +189,17 @@ def test_editor_antwoord_bevat_teller(client):
         ws.send_json({"actie": "stop"})
         html = ws.receive_text()
         assert "Je robot wacht op een commando" in html
+
+
+def test_bevroren_regels_staan_omgekeerd(client):
+    game, token = start_spel(client)
+    with client.websocket_connect(f"/ws/spel/{game.id}", headers={"cookie": f"token={token}"}) as ws:
+        ws.send_json({"regel": "robot = vooruit"})
+        ws.receive_text()
+        ws.send_json({"regel": "robot = omhoog"})
+        html = ws.receive_text()
+        regels = html[html.index('id="regels"'):html.index('id="markering"')]
+        assert regels.index("robot = omhoog") < regels.index("robot = vooruit")
 
 
 def test_dodelijk_schot_toont_banner_en_log(client):

@@ -247,7 +247,10 @@ scorebord.
   💥-explosie en de kogelbaan flitst.
 - Stappenteller naast Stop en Wis: "Nog 4 stappen te gaan" of "Je robot wacht
   op een commando", zodat je ziet dat je stappen echt gepland staan.
-- Onder het veld: de editor (hoofdstuk 5).
+- Onder het veld: de editor (hoofdstuk 5). Op brede schermen (vanaf 1180px)
+  staat de editor rechts naast het veld en blijft hij in beeld (sticky); de
+  lijst met bevroren regels scrolt binnen een vast vak, nieuwste onderaan. Zo
+  scrolt het veld nooit uit beeld terwijl je typt.
 - Bij einde: overlay "Wessel wint in 1:23!" met **Nog een keer** (terug naar
   `/`, naam onthouden) en **Scorebord**.
 - WebSocket: `ws-connect="/ws/spel/{id}"`. De server stuurt na elke tik de
