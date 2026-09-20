@@ -125,7 +125,7 @@ def test_spelpagina(client):
     r = client.get(f"/spel/{game.id}")
     assert r.status_code == 200
     for fragment in ('id="veld"', 'id="status"', 'id="kop"', 'id="regels"', 'id="invoer"', 'id="einde"',
-                     'id="banner"', 'id="log"', 'id="teller"', 'class="spel-layout"', 'class="kolom-editor"',
+                     'id="log"', 'id="teller"', 'class="spel-layout"', 'class="kolom-editor"',
                      'class="hartjes"'):
         assert fragment in r.text
     assert f'ws-connect="/ws/spel/{game.id}"' in r.text
@@ -173,7 +173,7 @@ def test_tik_stuurt_veld_naar_verbonden_spelers(client):
         client.portal.call(main.zend_alles)
         html = ws.receive_text()
         assert 'id="veld"' in html and 'id="status"' in html and 'id="kop"' in html
-        assert 'id="banner"' in html and 'id="log"' in html and 'id="teller"' in html
+        assert 'id="banner"' not in html and 'id="log"' in html and 'id="teller"' in html
         assert "Jij loopt omhoog naar (2, 3)" in html and 'class="logregel loop mij nieuw"' in html
         assert 'class="logregel loop nieuw"' in html and "Robo loopt" in html   # Robo zet ook een stap
         assert (game.spelers[1].x, game.spelers[1].y) == (2, 3)
@@ -209,7 +209,7 @@ def test_bevroren_regels_staan_omgekeerd(client):
         assert regels.index("robot = omhoog") < regels.index("robot = vooruit")
 
 
-def test_dodelijk_schot_toont_banner_en_log(client):
+def test_dodelijk_schot_staat_in_het_log(client):
     game, token = start_spel(client)
     game.spelers[1].robot_levens = 1
     game.spelers[1].x, game.spelers[1].y = 8, 2
@@ -220,7 +220,7 @@ def test_dodelijk_schot_toont_banner_en_log(client):
         client.portal.call(main.zend_alles)
         html = ws.receive_text()
         assert not game.spelers[1].leeft
-        assert "Je robot is kapot" in html and 'class="banner ik"' in html
+        assert "Je robot is kapot" in html and "banner" not in html
         assert "Robo schiet → raakt jou!" in html
         assert 'class="knal"' in html
 

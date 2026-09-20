@@ -1,5 +1,5 @@
 from app.weergave import (veld_matrix, kolommen, mmss, datum, hartjes, kleur, symbool,
-                          log_regels, banner)
+                          log_regels)
 from app.game import Game, Schild, Gebeurtenis, MELD_HELFT
 from app.parser import Shoot
 
@@ -121,17 +121,3 @@ def test_log_regels_nieuwste_eerst_en_maximaal_aantal():
     assert log_regels(g, 1) and len(log_regels(g, 1)) == 10
     assert log_regels(Game("leeg", "A", "B"), 1) == []
 
-
-# ---- sneuvel-banner ----
-
-def test_banner():
-    g = Game("g", "Wessel", "Robo")
-    assert banner(g, 1) is None and banner(g, 2) is None
-    g.spelers[1].robot_levens = 0
-    g.spelers[1].respawn_over = 3
-    assert banner(g, 1) == {"tekst": "💥 Je robot is kapot!", "sub": "Hij komt terug over 3…", "soort": "ik"}
-    assert banner(g, 2) == {"tekst": "💥 De robot van Wessel is kapot!", "sub": "Komt terug over 3…", "soort": "ander"}
-    g.spelers[2].robot_levens = 0
-    g.spelers[2].respawn_over = 1
-    assert banner(g, 1)["soort"] == "ik"            # eigen dood gaat voor
-    assert banner(g, 2)["tekst"] == "💥 Je robot is kapot!" and banner(g, 2)["sub"] == "Hij komt terug over 1…"

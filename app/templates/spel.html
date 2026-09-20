@@ -6,12 +6,8 @@
   {% include "fragments/kop.html" %}
   <div class="spel-layout">
     <div class="kolom-veld">
-      <div class="veld-wrap">
-        {% include "fragments/veld.html" %}
-        {% include "fragments/banner.html" %}
-      </div>
+      {% include "fragments/veld.html" %}
       {% include "fragments/status.html" %}
-      {% include "fragments/log.html" %}
     </div>
     <div class="kolom-editor">
       <div class="rw-editor">
@@ -27,6 +23,7 @@
           {% include "fragments/teller.html" %}
         </div>
       </div>
+      {% include "fragments/log.html" %}
     </div>
   </div>
   {% include "fragments/einde.html" %}

@@ -252,15 +252,15 @@ De weggevallen speler mag niet in het duister tasten. Daarom:
 - Bovenaan: "Wessel (jij) tegen Papa" en de lopende tijd.
 - Het veld (gespiegeld voor speler 2).
 - Status: hartjes van beide robots, levens van beide gebouwen, schilden over.
-- Log "Wat gebeurt er?" onder de status: de laatste 10 gebeurtenissen (lopen,
+- Log "Wat gebeurt er?" onder de editor: de laatste 10 gebeurtenissen (lopen,
   geblokkeerd, treffers met resterende hartjes, mis, kapot, terug, schild,
   winst), nieuwste bovenaan, met tijd, en verteld vanuit de kijker ("Jij
   schiet → raakt Robo! ❤️❤️❤️❤️🖤"). De spelmotor houdt daarvoor `Game.log`
   bij (laatste 30 gebeurtenissen).
-- Sneuvel-banner: is je robot kapot, dan ligt er een grote rode melding over
-  het veld ("💥 Je robot is kapot! Hij komt terug over 3…"); is de robot van
-  de ander kapot, een kleinere grijze. Op het geraakte vak verschijnt kort een
-  💥-explosie en de kogelbaan flitst.
+- Sneuvelen: op het geraakte vak verschijnt kort een 💥-explosie, de kogelbaan
+  flitst, en het log meldt "💥 Je robot is kapot! Hij komt terug over 3
+  seconden" en later "Je robot is terug op het startvak". Geen aparte
+  pop-up over het veld (bewust weggehaald: het log is genoeg).
 - Stappenteller naast Stop en Wis: "Nog 4 stappen te gaan" of "Je robot wacht
   op een commando", zodat je ziet dat je stappen echt gepland staan.
 - Onder het veld: de editor (hoofdstuk 5). Op brede schermen (vanaf 1180px)
@@ -270,7 +270,7 @@ De weggevallen speler mag niet in het duister tasten. Daarom:
 - Bij einde: overlay "Wessel wint in 1:23!" met **Nog een keer** (terug naar
   `/`, naam onthouden) en **Scorebord**.
 - WebSocket: `ws-connect="/ws/spel/{id}"`. De server stuurt na elke tik de
-  bijgewerkte fragmenten (`#kop`, `#veld`, `#banner`, `#status`, `#log`,
+  bijgewerkte fragmenten (`#kop`, `#veld`, `#status`, `#log`,
   `#teller`, `#hint`) en na elke editor-actie de editor-fragmenten (`#regels`,
   `#markering`, `#hint`, `#teller`, eventueel `#invoer`).
 

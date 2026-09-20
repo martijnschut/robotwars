@@ -61,11 +61,10 @@ def context(game: Game, ik: int) -> dict:
         "kolommen": list(kolommen(ik)),
         "editor": game.editors[ik],
         "log": log_regels(game, ik),
-        "banner": banner(game, ik),
     }
 
 
-# ---- log "Wat gebeurt er?" en sneuvel-banner ----
+# ---- log "Wat gebeurt er?" ----
 
 def log_tekst(game: Game, ik: int, e: Gebeurtenis) -> str:
     """Eén gebeurtenis als zin vanuit het perspectief van kijker `ik`."""
@@ -110,11 +109,6 @@ def log_regels(game: Game, ik: int, aantal: int = 10) -> list[dict]:
         for tik, e in list(game.log)[::-1][:aantal]
     ]
 
-
-def banner(game: Game, ik: int) -> dict | None:
-    """Grote melding over het veld als een robot kapot is (de eigen robot gaat voor)."""
-    if game.afgelopen:
-        return None
     jij, ander = game.spelers[ik], game.tegenstander(ik)
     if not jij.leeft:
         return {"tekst": "💥 Je robot is kapot!", "sub": f"Hij komt terug over {jij.respawn_over}…", "soort": "ik"}
@@ -164,9 +158,9 @@ def editor_html(templates, game: Game, ik: int, met_invoer: bool) -> str:
 
 
 def tik_html(templates, game: Game, ik: int) -> str:
-    """Na een tik: kop, veld, banner, status, log, teller en hint; bij een afgelopen
+    """Na een tik: kop, veld, status, log, teller en hint; bij een afgelopen
     spel ook einde en invoer."""
-    delen = ["kop", "veld", "banner", "status", "log", "teller", "hint"]
+    delen = ["kop", "veld", "status", "log", "teller", "hint"]
     if game.afgelopen:
         delen += ["einde", "invoer"]
     return "\n".join(render(templates, d, game, ik) for d in delen)

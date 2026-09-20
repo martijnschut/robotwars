@@ -75,14 +75,6 @@ a { color: var(--blauw); }
 /* explosie op het geraakte vak: kort en groot, dan weg */
 .c .knal { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 44px; line-height: 1; pointer-events: none; animation: knal .6s ease-out forwards; }
 @keyframes knal { 0% { transform: scale(.5); opacity: 1; } 60% { transform: scale(1.4); opacity: 1; } 100% { transform: scale(1.4); opacity: 0; } }
-/* sneuvel-banner over het veld */
-.veld-wrap { position: relative; }
-#banner .banner { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 16px 28px; border-radius: 14px; background: var(--rood-knop); color: #fff; text-align: center; pointer-events: none; animation: gloed 1s ease-in-out infinite; }
-#banner .banner b { font-size: 30px; }
-#banner .banner span { font-size: 17px; opacity: .9; }
-#banner .banner.ander { background: rgba(18,20,31,.92); color: var(--tekst); animation: none; box-shadow: 0 0 0 2px var(--rand); }
-#banner .banner.ander b { font-size: 22px; }
-@keyframes gloed { 0%, 100% { box-shadow: 0 0 0 4px rgba(255,95,95,.5), 0 0 24px 8px rgba(255,95,95,.4); } 50% { box-shadow: 0 0 0 8px rgba(255,95,95,.7), 0 0 40px 16px rgba(255,95,95,.7); } }
 .rw-status { display: flex; gap: 12px; margin: 14px 0; }
 .rw-status .kaart { flex: 1; background: var(--paneel); border-radius: 10px; padding: 10px 14px; line-height: 1.7; display: flex; align-items: center; gap: 12px; }
 .rw-status .kaart svg { width: 44px; height: 44px; flex: none; }
@@ -92,7 +84,7 @@ a { color: var(--blauw); }
 .hartjes { white-space: nowrap; }
 .rw-status .dood { color: var(--grijs); font-size: 13px; }
 /* log "Wat gebeurt er?" */
-.log { background: var(--paneel); border-radius: 10px; padding: 10px 14px; margin: 0 0 14px; max-height: 220px; overflow-y: auto; font-size: 15px; }
+.log { background: var(--paneel); border-radius: 10px; padding: 10px 14px; margin: 14px 0 0; max-height: 320px; overflow-y: auto; font-size: 15px; }
 .log h3 { margin: 0 0 6px; font-size: 14px; color: var(--grijs); text-transform: uppercase; letter-spacing: .04em; }
 .logregel { padding: 3px 0; color: #c9cde0; border-top: 1px solid rgba(255,255,255,.06); }
 .logregel .tijd { font-family: ui-monospace, Consolas, monospace; color: var(--grijs); margin-right: 10px; font-variant-numeric: tabular-nums; }
