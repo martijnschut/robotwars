@@ -116,6 +116,7 @@ class Game:
         self.opgegeven = False           # winst doordat de ander wegging: niet voor het scorebord
         self.geeindigd_op: float | None = None
         self.score_opgeslagen = False
+        self.einde_gezonden = False      # de eindstand is één keer naar de spelers gestuurd
         # Gevuld door de lobby/server: editor per speler en wanneer een speler voor het laatst verbonden was.
         self.editors: dict[int, object] = {}
         self.laatst_gezien: dict[int, float] = {1: time.time(), 2: time.time()}

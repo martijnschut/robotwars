@@ -178,7 +178,7 @@ async def ws_spel(ws: WebSocket, game_id: str):
                 bericht = await ws.receive_json()
             except WebSocketDisconnect:
                 break
-            except ValueError:            # geen geldige JSON: negeren
+            except (ValueError, KeyError):   # geen geldige JSON of een binair frame: negeren
                 continue
             game.laatst_gezien[ik] = time.time()
             html = verwerk_bericht(game, ik, bericht)
@@ -202,36 +202,61 @@ def controleer_weg(game, nu: float) -> None:
             return
 
 
+def tik_spel(game, nu: float) -> None:
+    """Eén spel een tik verder: stap, meldingen naar de editor, weg-controle, score."""
+    game.tick()
+    for nummer, speler in game.spelers.items():
+        if speler.melding:
+            game.editors[nummer].hint = speler.melding
+            speler.melding = None
+    controleer_weg(game, nu)
+    if game.afgelopen and not game.score_opgeslagen:
+        game.score_opgeslagen = True
+        if not game.opgegeven:
+            winnaar = game.spelers[game.winnaar]
+            verliezer = game.tegenstander(game.winnaar)
+            db.sla_op(winnaar.naam, verliezer.naam, game.tegen_computer, game.tik)
+
+
 def tik_alles() -> None:
     nu = time.time()
     for game in list(lobby.games.values()):
         if game.afgelopen:
             continue
-        game.tick()
-        controleer_weg(game, nu)
-        if game.afgelopen and not game.score_opgeslagen:
-            game.score_opgeslagen = True
-            if not game.opgegeven:
-                winnaar = game.spelers[game.winnaar]
-                verliezer = game.tegenstander(game.winnaar)
-                db.sla_op(winnaar.naam, verliezer.naam, game.tegen_computer, game.tik)
+        try:
+            tik_spel(game, nu)
+        except Exception:      # één kapot spel houdt de andere niet tegen
+            log.exception("fout in spel %s", game.id)
     for game_id in lobby.ruim_op(nu):
         verbindingen.pop(game_id, None)
+
+
+async def zend(ws: WebSocket, html: str, sockets: set[WebSocket]) -> None:
+    """Stuurt naar één socket; een trage of dode socket wordt uit de set gehaald."""
+    try:
+        await asyncio.wait_for(ws.send_text(html), timeout=TIK_SECONDEN)
+    except Exception:
+        sockets.discard(ws)
 
 
 async def zend_alles() -> None:
     for game_id, per_speler in list(verbindingen.items()):
         game = lobby.games.get(game_id)
-        if game is None:
+        if game is None or (game.afgelopen and game.einde_gezonden):
             continue
-        for nummer, sockets in per_speler.items():
+        for nummer, sockets in list(per_speler.items()):
             if not sockets:
                 continue
             html = weergave.tik_html(templates, game, nummer)
             for ws in list(sockets):
-                try:
-                    await ws.send_text(html)
-                except Exception:
+                await zend(ws, html, sockets)
+        if game.afgelopen:
+            # De eindstand gaat één keer; daarna sluiten (code 1000, dan verbindt HTMX niet opnieuw).
+            game.einde_gezonden = True
+            for sockets in list(per_speler.values()):
+                for ws in list(sockets):
+                    with contextlib.suppress(Exception):
+                        await ws.close()
                     sockets.discard(ws)
 
 
