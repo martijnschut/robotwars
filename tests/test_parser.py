@@ -43,3 +43,44 @@ def test_onbekend_begin_is_invalid():
     r = parse_line("lamp = aan")
     assert isinstance(r, Invalid)
     assert r.hint == "Begin met robot = ..., schild = (...), herhaal ... keer of klaar."
+
+
+from app.parser import Shield, RepeatStart, RepeatEnd, HINT_SCHILD, HINT_HERHAAL
+
+
+def test_schild_met_coordinaten():
+    assert parse_line("schild = (4, 2)") == Shield(4, 2)
+    assert parse_line("schild=(12,7)") == Shield(12, 7)
+
+
+def test_schild_half_getypt_is_incomplete():
+    assert parse_line("schild = (4") == Incomplete()
+    assert parse_line("schild = (4,") == Incomplete()
+
+
+def test_schild_zonder_getallen_is_invalid():
+    r = parse_line("schild = (a, b)")
+    assert isinstance(r, Invalid)
+    assert r.hint == HINT_SCHILD
+
+
+def test_herhaal():
+    assert parse_line("herhaal 3 keer") == RepeatStart(3)
+    assert parse_line("HERHAAL 20 KEER") == RepeatStart(20)
+
+
+def test_herhaal_half_is_incomplete():
+    assert parse_line("herhaal 3") == Incomplete()
+    assert parse_line("herhaal 3 ke") == Incomplete()
+
+
+def test_herhaal_nul_of_te_veel_is_invalid():
+    for tekst in ("herhaal 0 keer", "herhaal 21 keer", "herhaal 100 keer", "herhaal keer"):
+        r = parse_line(tekst)
+        assert isinstance(r, Invalid), tekst
+        assert r.hint == HINT_HERHAAL
+
+
+def test_klaar():
+    assert parse_line("klaar") == RepeatEnd()
+    assert parse_line("kl") == Incomplete()
