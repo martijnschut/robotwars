@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block titel %}Scorebord – Robot Wars{% endblock %}
+{% block inhoud %}
+<div class="logo"><span class="a">ROBOT</span> <span class="b">WARS</span></div>
+<div class="sub">De snelste overwinningen</div>
+<div class="kolommen">
+  {% for titel, lijst in (("🤖 Tegen de computer", computer), ("🧑 Tegen een mens", mens)) %}
+  <div>
+    <div class="tabs"><h2>{{ titel }}</h2></div>
+    <ol class="lijst">
+      {% for s in lijst %}
+      <li><span class="nr">{{ loop.index }}</span>
+          <span>{{ s.winnaar }}<span class="tegen">tegen {{ s.verliezer }} · {{ s.gespeeld_op|datum }}</span></span>
+          <span class="tijd">{{ s.seconden|mmss }}</span></li>
+      {% else %}
+      <li><span class="nr">–</span><span>Nog geen overwinningen</span><span></span></li>
+      {% endfor %}
+    </ol>
+  </div>
+  {% endfor %}
+</div>
+<div class="link"><a href="/">← Terug naar start</a></div>
+{% endblock %}

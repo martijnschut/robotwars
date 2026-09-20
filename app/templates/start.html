@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block inhoud %}
+{% include "fragments/sprites.html" %}
+<div class="logo"><span class="a">ROBOT</span> <span class="b">WARS</span></div>
+<div class="sub">Programmeer je robot. Schiet de toren van de ander kapot.</div>
+<div class="helden">
+  <svg class="gb"><use href="#bolbot"/></svg>
+  <span class="vs">VS</span>
+  <svg class="gr spiegel"><use href="#bolbot"/></svg>
+</div>
+<form class="formulier" method="post" action="/start">
+  <label for="naam">Hoe heet je?</label>
+  <input type="text" id="naam" name="naam" value="{{ naam }}" maxlength="20" autocomplete="off" autofocus required>
+  {% if fout %}<div class="fout-melding">{{ fout }}</div>{% endif %}
+  <button class="knop blauw" name="modus" value="mens">🎮 Speel tegen iemand</button>
+  <button class="knop rood" name="modus" value="computer">🤖 Speel tegen de computer</button>
+</form>
+<div class="link"><a href="/scorebord">🏆 Scorebord</a></div>
+{% endblock %}

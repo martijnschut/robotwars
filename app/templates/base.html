@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titel %}Robot Wars{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/htmx.min.js"></script>
+  <script src="/static/ws.js"></script>
+</head>
+<body>
+  <div class="pagina">
+    {% block inhoud %}{% endblock %}
+  </div>
+</body>
+</html>
