@@ -76,7 +76,7 @@ class Speler:
     schilden_over: int = SCHILDEN_PER_SPELER
     wachtrij: deque[Step] = field(default_factory=deque)
     respawn_over: int = 0        # tikken tot de robot terugkomt (0 = leeft of wacht niet)
-    tegoed: int = 0              # stappen die Robo nog mag doen
+    tegoed: int = 0              # stappen die Robo nog mag doen (één per uitgevoerde stap van de mens)
     melding: str | None = None   # foutmelding uit het spel (bijv. schild geweigerd)
 
     def __post_init__(self) -> None:
@@ -153,8 +153,6 @@ class Game:
         if len(speler.wachtrij) + len(stappen) > MAX_WACHTRIJ:
             return False
         speler.wachtrij.extend(stappen)
-        if self.tegen_computer and nummer == 1:
-            self.spelers[2].tegoed += len(stappen)
         return True
 
     def stop(self, nummer: int) -> None:
@@ -187,6 +185,10 @@ class Game:
                     if stap is not None:
                         self._voer_uit(speler, stap)
             elif speler.wachtrij:
+                # Robo krijgt één tegoed per stap die de mens echt zet (niet bij het
+                # inplannen), zodat hij stilstaat na Stop of als de mens sneuvelt.
+                if self.tegen_computer:
+                    self.spelers[2].tegoed += 1
                 self._voer_uit(speler, speler.wachtrij.popleft())
             if self.afgelopen:
                 return

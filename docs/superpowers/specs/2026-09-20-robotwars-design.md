@@ -279,11 +279,13 @@ Donker thema (achtergrond `#1a1d2b`, panelen `#2a2f45`), teamkleuren blauw
 
 - Robo speelt als speler 2 en heeft geen WebSocket; verder gelden dezelfde
   regels (wachtrij, respawn, schilden).
-- **Tempo:** Robo doet niets uit zichzelf. Telkens als de mens een commando
-  uitvoert dat N stappen in zijn wachtrij zet, krijgt Robo N stappen
-  **tegoed**. Elke tik waarin Robo tegoed heeft, kiest hij op dat moment één
-  stap (op basis van het actuele veld), voert die uit en verbruikt één tegoed.
-  Typt de mens niets, dan staat Robo stil.
+- **Tempo:** Robo doet niets uit zichzelf. Telkens als de robot van de mens in
+  een tik daadwerkelijk een stap uitvoert (niet bij het inplannen), krijgt Robo
+  één stap **tegoed**. Elke tik waarin Robo tegoed heeft, kiest hij op dat
+  moment één stap (op basis van het actuele veld), voert die uit en verbruikt
+  één tegoed; omdat speler 1 eerst aan de beurt is, verwerkt Robo het tegoed in
+  dezelfde tik. Typt de mens niets, dan staat Robo stil. Drukt de mens op Stop
+  of sneuvelt zijn robot (wachtrij gewist), dan stopt Robo dus ook.
 - **Keuze per stap**, eerste regel die past:
   1. Staat de vijandelijke robot vóór Robo in dezelfde rij, binnen 4 vakjes,
      zonder schild ertussen? → `schiet`.

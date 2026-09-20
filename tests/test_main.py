@@ -202,7 +202,7 @@ def test_kapot_spel_houdt_de_rest_niet_tegen(client):
     kapot, _ = start_spel(client, "Kapot")
     client.cookies.clear()
     gezond, _ = start_spel(client, "Gezond")
-    kapot.voeg_stappen_toe(1, [Move("omhoog")])       # geeft Robo tegoed, dus het brein wordt gevraagd
+    kapot.voeg_stappen_toe(1, [Move("omhoog")])       # de mens zet een stap: Robo krijgt tegoed en het brein wordt gevraagd
     kapot.brein = lambda g, n: 1 / 0
     main.tik_alles()
     assert gezond.tik == 1

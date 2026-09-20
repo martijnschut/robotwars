@@ -86,11 +86,43 @@ def test_dode_robo_doet_niets():
 def test_tegoed_in_het_spel():
     g = nieuw()
     g.voeg_stappen_toe(1, [Move("omhoog"), Move("omhoog")])
-    assert g.spelers[2].tegoed == 2
+    assert g.spelers[2].tegoed == 0                      # inplannen geeft nog geen tegoed
     g.tick()
-    assert g.spelers[2].tegoed == 1
+    assert g.spelers[2].tegoed == 0                      # gekregen én in dezelfde tik verbruikt
     assert (g.spelers[2].x, g.spelers[2].y) == (12, 3)   # Robo liep omhoog
     g.tick()
     g.tick()
     assert g.spelers[2].tegoed == 0
     assert (g.spelers[2].x, g.spelers[2].y) == (12, 2)   # niet verder zonder tegoed
+
+
+def test_stop_voor_de_eerste_tik_houdt_robo_stil():
+    g = nieuw()
+    g.voeg_stappen_toe(1, [Move("omhoog")] * 5)
+    g.stop(1)
+    for _ in range(5):
+        g.tick()
+    assert g.spelers[2].tegoed == 0
+    assert (g.spelers[2].x, g.spelers[2].y) == (12, 4)
+
+
+def test_stop_na_twee_ticks_geeft_robo_precies_twee_stappen():
+    g = nieuw()
+    g.voeg_stappen_toe(1, [Move("omhoog")] * 5)
+    g.tick()
+    g.tick()
+    g.stop(1)
+    for _ in range(5):
+        g.tick()
+    assert (g.spelers[1].x, g.spelers[1].y) == (2, 2)
+    assert (g.spelers[2].x, g.spelers[2].y) == (12, 2)   # twee keer omhoog, niet meer
+
+
+def test_sneuvelen_van_de_mens_houdt_robo_stil():
+    g = nieuw()
+    g.voeg_stappen_toe(1, [Move("omhoog")] * 5)
+    g.spelers[1].robot_levens = 0
+    g.spelers[1].respawn_over = 3
+    g.spelers[1].wachtrij.clear()                        # zoals _schiet doet bij een dode robot
+    g.tick()
+    assert (g.spelers[2].x, g.spelers[2].y) == (12, 4)
