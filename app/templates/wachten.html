@@ -8,6 +8,7 @@
   <p>Jij bent <b class="naam gb">{{ naam }}</b>. Zodra iemand anders zijn naam invult, begint het spel vanzelf.</p>
   <div class="puntjes"><span></span><span></span><span></span></div>
   <p class="sub" hx-get="/wachten/status" hx-trigger="every 1s" hx-swap="innerHTML">Al 0:00 aan het wachten</p>
+  <p class="sub">Speel je op dezelfde computer? Open dan een ander venster (bijvoorbeeld incognito) voor de tweede speler.</p>
   <form method="post" action="/wachten/computer">
     <button class="knop grijs">🤖 Toch tegen de computer</button>
   </form>

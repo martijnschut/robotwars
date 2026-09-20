@@ -39,7 +39,9 @@ uv run pytest -q
 ## Instellingen (omgevingsvariabelen)
 
 - `ROBOTWARS_DB` – pad van het SQLite-bestand (standaard `robotwars.db`)
-- `ROBOTWARS_TIK` – seconden per stap (standaard `1`; kleiner = sneller spel)
+- `ROBOTWARS_TIK` – seconden per stap (standaard `1`; kleiner = sneller spel).
+  Kanttekening: de tijd op het scorebord telt in tikken, dus alleen bij `1`
+  klopt hij in seconden.
 
 ## Online zetten achter Caddy
 
@@ -67,6 +69,8 @@ WebSocket-verbinding automatisch: `caddy run`.
 - `app/ai.py` – Robo, de computerspeler
 - `app/editor.py` – de editor: regels bevriezen, herhaal-blokken, hints
 - `app/lobby.py` – wie speelt tegen wie
+- `app/weergave.py` – veldmatrix en filters voor de templates
+- `app/db.py` – scorebord in SQLite
 - `app/main.py` – de webserver (FastAPI + HTMX over een WebSocket)
 
 Het ontwerp staat in `docs/superpowers/specs/2026-09-20-robotwars-design.md`.

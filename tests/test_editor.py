@@ -1,4 +1,4 @@
-from app.editor import Editor, Regel, HINT_KLAAR
+from app.editor import Editor, Regel, HINT_KLAAR, MAX_REGELS
 from app.game import Game, MELD_DRUK
 from app.parser import Move, Shoot
 
@@ -103,3 +103,13 @@ def test_wis_maakt_ook_open_herhaal_blok_leeg():
     assert list(g.spelers[1].wachtrij) == [Shoot()]
     assert e.markering == ""
     assert e.regels == [Regel("ok", "robot = schiet", 0)]
+
+
+def test_alleen_de_laatste_honderd_regels_blijven_bewaard():
+    g, e = nieuw()
+    for i in range(MAX_REGELS + 5):
+        e.verwerk(g, 1, "robot = schiet")
+        g.stop(1)                                   # wachtrij leeg houden
+    assert len(e.regels) == MAX_REGELS
+    e.verwerk(g, 1, "robot = links")                # fout: niets bevroren, dus niets afgeknipt
+    assert len(e.regels) == MAX_REGELS
