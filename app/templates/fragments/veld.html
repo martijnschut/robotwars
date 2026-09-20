@@ -21,6 +21,8 @@
       </svg>
     {% elif cel.schild %}
       <svg class="{{ cel.schild.eigenaar|kleur }} sc{{ cel.schild.levens }}"><use href="#schild"/></svg>
+    {% elif cel.mijn %}
+      <svg class="{{ cel.mijn.eigenaar|kleur }}"><use href="#bom"/></svg>
     {% elif cel.robot %}
       <svg class="{{ cel.robot.nummer|kleur }}{% if cel.robot.nummer != ik %} spiegel{% endif %}"><use href="#bolbot"/></svg>
     {% endif %}

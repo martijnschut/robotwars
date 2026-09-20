@@ -127,6 +127,18 @@
     </symbol>
     <linearGradient id="glans" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
 
+    <!-- BOM: zwarte bol met lont en vonk, ringetje in de teamkleur van de eigenaar -->
+    <radialGradient id="bomG" cx=".35" cy=".3" r=".75"><stop offset="0" stop-color="#6b7080"/><stop offset=".55" stop-color="#23262f"/><stop offset="1" stop-color="#0b0c10"/></radialGradient>
+    <symbol id="bom" viewBox="0 0 100 100">
+      <ellipse cx="50" cy="92" rx="26" ry="4" fill="rgba(0,0,0,.45)"/>
+      <circle cx="50" cy="60" r="34" fill="none" stroke="var(--kleur)" stroke-width="3" opacity=".8" filter="url(#glow)"/>
+      <circle cx="50" cy="60" r="27" fill="url(#bomG)" filter="url(#schaduw)"/>
+      <ellipse cx="40" cy="48" rx="8" ry="5" fill="#fff" opacity=".35"/>
+      <rect x="44" y="27" width="12" height="9" rx="2" fill="#8d93a3"/>
+      <path d="M50 28 C50 18, 62 18, 66 10" stroke="#c9a66b" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <circle cx="67" cy="9" r="6" fill="url(#gloed)"><animate attributeName="r" values="4;8;4" dur=".4s" repeatCount="indefinite"/></circle>
+    </symbol>
+
     <!-- KOGEL -->
     <symbol id="kogel" viewBox="0 0 100 100">
       <path d="M8 50 L62 40 L62 60 Z" fill="url(#staart)" opacity=".9"/>
