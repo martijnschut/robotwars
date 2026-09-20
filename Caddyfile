@@ -1,0 +1,4 @@
+# Vervang robotwars.example.nl door je eigen domein.
+robotwars.example.nl {
+    reverse_proxy localhost:8000
+}

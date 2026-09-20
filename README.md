@@ -1,0 +1,62 @@
+# Robot Wars
+
+Een programmeerspel voor kinderen van 8–12 jaar, gemaakt door Martijn en Wessel.
+Je bestuurt een robot door commando's te typen (zoals in CT-3000) en probeert de
+toren van de tegenstander kapot te schieten (zoals in Clash Royale).
+
+## Spelen
+
+```
+robot = vooruit      robot = achteruit
+robot = omhoog       robot = omlaag
+robot = schiet       (schiet 4 vakjes vooruit)
+schild = (4, 2)      (3 per potje, alleen op je eigen helft)
+herhaal 3 keer
+  robot = vooruit
+klaar
+```
+
+Je hoeft niet op Enter te drukken: zodra een regel klopt, doet je robot hem.
+Wie de toren van de ander op 0 schiet, wint. De snelste tijd staat bovenaan het
+scorebord.
+
+## Starten (alleen met uv)
+
+```
+uv sync
+uv run uvicorn app.main:app --reload
+```
+
+Open http://localhost:8000. Voor twee spelers: open de pagina in twee
+verschillende browsers (of een incognitovenster).
+
+## Testen
+
+```
+uv run pytest -q
+```
+
+## Instellingen (omgevingsvariabelen)
+
+- `ROBOTWARS_DB` – pad van het SQLite-bestand (standaard `robotwars.db`)
+- `ROBOTWARS_TIK` – seconden per stap (standaard `1`; kleiner = sneller spel)
+
+## Online zetten achter Caddy
+
+```
+uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+Met de meegeleverde `Caddyfile` (pas de domeinnaam aan) regelt Caddy HTTPS en de
+WebSocket-verbinding automatisch: `caddy run`.
+
+## Hoe het werkt
+
+- `app/parser.py` – zet een getypte regel om in een commando
+- `app/game.py` – de spelregels (veld, lopen, schieten, schilden, winnen)
+- `app/ai.py` – Robo, de computerspeler
+- `app/editor.py` – de editor: regels bevriezen, herhaal-blokken, hints
+- `app/lobby.py` – wie speelt tegen wie
+- `app/main.py` – de webserver (FastAPI + HTMX over een WebSocket)
+
+Het ontwerp staat in `docs/superpowers/specs/2026-09-20-robotwars-design.md`.
