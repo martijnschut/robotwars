@@ -100,7 +100,14 @@ async def wachten(request: Request):
         return RedirectResponse(f"/spel/{lopend[0].id}", status_code=303)
     if game := lobby.zoek_tegenstander(sessie.token):     # direct gekoppeld
         return RedirectResponse(f"/spel/{game.id}", status_code=303)
+    meld_gepolld(sessie.token)
     return templates.TemplateResponse(request, "wachten.html", {"naam": sessie.naam})
+
+
+def meld_gepolld(token: str | None) -> None:
+    """De wachtende laat van zich horen; zonder dat ruimt de tik hem na een paar seconden op."""
+    if token is not None and lobby.wachtende == token:
+        lobby.laatst_gepolld = time.time()
 
 
 @app.get("/wachten/status")
@@ -108,6 +115,7 @@ async def wachten_status(request: Request):
     sessie = huidige_sessie(request)
     if sessie and (lopend := lobby.game_van(sessie.token)):
         return Response(headers={"HX-Redirect": f"/spel/{lopend[0].id}"})
+    meld_gepolld(sessie.token if sessie else None)
     wacht = int(time.time() - lobby.wacht_sinds) if lobby.wachtende else 0
     return HTMLResponse(f"Al {weergave.mmss(wacht)} aan het wachten")
 
@@ -229,6 +237,7 @@ def tik_alles() -> None:
             log.exception("fout in spel %s", game.id)
     for game_id in lobby.ruim_op(nu):
         verbindingen.pop(game_id, None)
+    lobby.ruim_wachtende_op(nu)
 
 
 async def sluit(ws: WebSocket, code: int = 1000) -> None:

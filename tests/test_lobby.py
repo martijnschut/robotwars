@@ -65,3 +65,16 @@ def test_wacht_sinds_blijft_staan_bij_nog_een_keer_zoeken():
     lobby.wacht_sinds = 123.0
     assert lobby.zoek_tegenstander(a.token) is None
     assert lobby.wacht_sinds == 123.0
+
+
+def test_wachtende_die_niet_meer_pollt_wordt_opgeruimd():
+    lobby = Lobby()
+    a = lobby.registreer("A")
+    lobby.zoek_tegenstander(a.token)
+    assert lobby.laatst_gepolld == lobby.wacht_sinds
+    lobby.laatst_gepolld = 1000.0
+    assert lobby.ruim_wachtende_op(nu=1004.0) is False
+    assert lobby.wachtende == a.token
+    assert lobby.ruim_wachtende_op(nu=1005.5) is True
+    assert lobby.wachtende is None
+    assert lobby.ruim_wachtende_op(nu=2000.0) is False    # niets meer op te ruimen

@@ -27,6 +27,7 @@ class Lobby:
         self.games: dict[str, Game] = {}
         self.wachtende: str | None = None     # token van de speler die wacht
         self.wacht_sinds: float = 0.0
+        self.laatst_gepolld: float = 0.0      # wanneer de wachtende voor het laatst iets vroeg
 
     def registreer(self, naam: str, token: str | None = None) -> Sessie:
         sessie = self.sessies.get(token) if token else None
@@ -54,7 +55,7 @@ class Lobby:
         """Zet de speler in de wachtrij, of koppelt hem aan wie al wacht."""
         if self.wachtende is None or self.wachtende == token:
             if self.wachtende is None:
-                self.wacht_sinds = time.time()
+                self.wacht_sinds = self.laatst_gepolld = time.time()
             self.wachtende = token
             return None
         ander = self.wachtende
@@ -64,6 +65,14 @@ class Lobby:
     def verlaat_wachtrij(self, token: str) -> None:
         if self.wachtende == token:
             self.wachtende = None
+
+    def ruim_wachtende_op(self, nu: float, max_stil: float = 5.0) -> bool:
+        """Vergeet een wachtende die al max_stil seconden niet meer pollt (tabblad dicht),
+        anders wordt de volgende speler aan een spook gekoppeld. True als er iets opgeruimd is."""
+        if self.wachtende is not None and nu - self.laatst_gepolld > max_stil:
+            self.wachtende = None
+            return True
+        return False
 
     def start_tegen_computer(self, token: str) -> Game:
         self.verlaat_wachtrij(token)

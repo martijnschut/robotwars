@@ -82,6 +82,30 @@ def test_wachtkamer_en_koppelen(client):
     assert r.headers["HX-Redirect"] == b.headers["location"]
 
 
+def test_spookwachter_wordt_door_de_tik_opgeruimd(client):
+    client.post("/start", data={"naam": "A", "modus": "mens"}, follow_redirects=False)
+    assert main.lobby.wachtende is not None
+    main.lobby.laatst_gepolld = time.time() - 10
+    main.tik_alles()
+    assert main.lobby.wachtende is None
+
+
+def test_pollen_vernieuwt_laatst_gepolld(client):
+    a = client.post("/start", data={"naam": "A", "modus": "mens"}, follow_redirects=False)
+    main.lobby.laatst_gepolld = time.time() - 10
+    client.get("/wachten/status")
+    assert main.lobby.laatst_gepolld > time.time() - 1
+    main.lobby.laatst_gepolld = time.time() - 10
+    client.get("/wachten")
+    assert main.lobby.laatst_gepolld > time.time() - 1
+    # een ander (niet de wachtende) die pollt, vernieuwt niets
+    main.lobby.laatst_gepolld = oud = time.time() - 3
+    client.cookies.clear()
+    client.post("/start", data={"naam": "B", "modus": "computer"}, follow_redirects=False)
+    client.get("/wachten/status")
+    assert main.lobby.laatst_gepolld == oud
+
+
 def test_toch_tegen_de_computer(client):
     client.post("/start", data={"naam": "A", "modus": "mens"}, follow_redirects=False)
     r = client.post("/wachten/computer", follow_redirects=False)
