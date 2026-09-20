@@ -78,3 +78,106 @@ def test_niet_buiten_het_veld_of_in_gebouw_of_robot():
     g.voeg_stappen_toe(1, [Move("vooruit")])     # andere robot op (3,4)
     g.tick()
     assert (g.spelers[1].x, g.spelers[1].y) == (2, 4)
+
+
+from app.game import Schild, RESPAWN_TIKKEN
+from app.parser import Shoot
+
+
+def test_schot_raakt_robot_op_afstand_4_niet_op_5():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 4, 3
+    g.spelers[2].x, g.spelers[2].y = 8, 3        # afstand 4
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert g.spelers[2].robot_levens == 4
+    assert g.schoten[0].raak == (8, 3)
+    assert g.schoten[0].cellen == [(5, 3), (6, 3), (7, 3), (8, 3)]
+    g.spelers[2].x = 9                            # afstand 5
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert g.spelers[2].robot_levens == 4
+    assert g.schoten[0].raak is None
+
+
+def test_schot_stopt_bij_schild():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 2, 2
+    g.schilden.append(Schild(4, 2, eigenaar=1))
+    g.spelers[2].x, g.spelers[2].y = 5, 2
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert g.spelers[2].robot_levens == 5
+    assert g.schild_op(4, 2).levens == 2
+
+
+def test_schild_verdwijnt_na_3_treffers():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 2, 2
+    g.schilden.append(Schild(4, 2, eigenaar=1))
+    g.voeg_stappen_toe(1, [Shoot(), Shoot(), Shoot()])
+    for _ in range(3):
+        g.tick()
+    assert g.schild_op(4, 2) is None
+
+
+def test_robot_gaat_dood_en_komt_terug_op_startvak():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 8, 1
+    g.spelers[2].x, g.spelers[2].y = 10, 1
+    g.spelers[2].robot_levens = 1
+    g.voeg_stappen_toe(2, [Move("vooruit")])     # wordt gewist bij dood
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    s2 = g.spelers[2]
+    assert not s2.leeft and s2.respawn_over == RESPAWN_TIKKEN
+    assert len(s2.wachtrij) == 0
+    assert g.robot_op(10, 1) is None             # dode robot blokkeert niets
+    for _ in range(RESPAWN_TIKKEN):
+        g.tick()
+    assert s2.leeft and s2.robot_levens == 5 and (s2.x, s2.y) == (12, 4)
+
+
+def test_respawn_wacht_als_startvak_bezet():
+    g = nieuw()
+    g.spelers[2].robot_levens = 0
+    g.spelers[2].respawn_over = 1
+    g.spelers[1].x, g.spelers[1].y = 12, 4       # staat op het startvak van speler 2
+    g.tick()
+    assert not g.spelers[2].leeft
+    g.spelers[1].x = 11
+    g.tick()
+    assert g.spelers[2].leeft
+
+
+def test_gebouw_kapot_is_winst():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 9, 4        # 4 vakjes van gebouw (13,4)
+    g.spelers[2].x, g.spelers[2].y = 12, 1       # uit de weg
+    g.voeg_stappen_toe(1, [Shoot()] * 5)
+    for _ in range(4):
+        g.tick()
+    assert g.spelers[2].gebouw_levens == 1 and not g.afgelopen
+    g.tick()
+    assert g.spelers[2].gebouw_levens == 0
+    assert g.winnaar == 1 and g.afgelopen and g.tik == 5
+    g.tick()                                     # na afloop gebeurt niets meer
+    assert g.tik == 5
+
+
+def test_speler_1_wint_bij_gelijktijdige_treffer():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 9, 4
+    g.spelers[2].x, g.spelers[2].y = 5, 4
+    g.spelers[1].gebouw_levens = 1
+    g.spelers[2].gebouw_levens = 1
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.voeg_stappen_toe(2, [Shoot()])
+    g.tick()
+    assert g.winnaar == 1 and g.spelers[1].gebouw_levens == 1
+
+
+def test_geef_op():
+    g = nieuw()
+    g.geef_op(2)
+    assert g.winnaar == 1 and g.opgegeven and g.geeindigd_op is not None

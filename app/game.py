@@ -225,7 +225,38 @@ class Game:
             speler.x, speler.y = doel
 
     def _schiet(self, speler: Speler) -> None:
-        raise NotImplementedError   # Task 6
+        """Kogel vliegt vooruit, max SCHIET_BEREIK vakjes, en raakt het eerste
+        schild, de eerste robot of het eerste gebouw dat hij tegenkomt."""
+        cellen: list[tuple[int, int]] = []
+        raak: tuple[int, int] | None = None
+        for i in range(1, SCHIET_BEREIK + 1):
+            x, y = speler.x + speler.richting * i, speler.y
+            if not in_veld(x, y):
+                break
+            cellen.append((x, y))
+            schild = self.schild_op(x, y)
+            if schild is not None:
+                schild.levens -= 1
+                if schild.levens == 0:
+                    self.schilden.remove(schild)
+                raak = (x, y)
+                break
+            robot = self.robot_op(x, y)
+            if robot is not None:
+                robot.robot_levens -= 1
+                if robot.robot_levens == 0:
+                    robot.respawn_over = RESPAWN_TIKKEN
+                    robot.wachtrij.clear()
+                raak = (x, y)
+                break
+            gebouw = self.gebouw_op(x, y)
+            if gebouw is not None:
+                gebouw.gebouw_levens -= 1
+                if gebouw.gebouw_levens == 0:
+                    self._zet_winnaar(self.tegenstander(gebouw.nummer).nummer)
+                raak = (x, y)
+                break
+        self.schoten.append(Schot(speler.nummer, cellen, raak))
 
     def _zet_schild(self, speler: Speler, x: int, y: int) -> None:
         raise NotImplementedError   # Task 7
