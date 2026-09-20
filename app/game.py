@@ -44,6 +44,13 @@ def is_water(x: int, y: int) -> bool:
     return x == RIVIER_X and y not in BRUG_RIJEN
 
 
+def eigen_kolom(nummer: int, x: int) -> int:
+    """Kolomnummer zoals speler `nummer` hem ziet: iedereen telt vanaf zijn eigen kant
+    1 t/m 13. Voor speler 1 is dat de echte x; voor speler 2 gespiegeld. De functie is
+    haar eigen inverse, dus ook bruikbaar om getypte kolommen terug te vertalen."""
+    return x if nummer == 1 else BREEDTE + 1 - x
+
+
 def eigen_helft(nummer: int, x: int) -> bool:
     return 1 <= x <= RIVIER_X - 1 if nummer == 1 else RIVIER_X + 1 <= x <= BREEDTE
 

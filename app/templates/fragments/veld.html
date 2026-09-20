@@ -2,7 +2,8 @@
   {# elk vakje krijgt een vaste gridpositie (kolom 1 en rij 1 zijn de nummers), zodat de
      kogelbanen als extra grid-items óver de vakjes heen kunnen liggen zonder ze te verschuiven #}
   <div class="co" style="grid-area: 1 / 1"></div>
-  {% for x in kolommen %}<div class="co" style="grid-area: 1 / {{ loop.index + 1 }}">{{ x }}</div>{% endfor %}
+  {# kolomnummers vanaf de eigen kant: iedere speler ziet links 1 en rechts 13 #}
+  {% for x in kolommen %}<div class="co" style="grid-area: 1 / {{ loop.index + 1 }}">{{ loop.index }}</div>{% endfor %}
   {% for rij in rijen %}
   {% set r = loop.index + 1 %}
   <div class="co" style="grid-area: {{ r }} / 1">{{ loop.index }}</div>

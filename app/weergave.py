@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .game import (BREEDTE, BRUG_RIJEN, GEBOUW_LEVENS, HOOGTE, RESPAWN_TIKKEN, RIVIER_X,
-                   ROBOT_LEVENS, Game, Gebeurtenis, Schild, Speler)
+                   ROBOT_LEVENS, Game, Gebeurtenis, Schild, Speler, eigen_kolom)
 
 MAANDEN = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
 SYMBOLEN = {"ok": "✓", "wacht": "…", "fout": "!"}
@@ -33,8 +33,9 @@ def kolommen(ik: int) -> range:
 
 
 def schermkolom(x: int, ik: int) -> int:
-    """Op welke schermkolom (1..13) staat veldkolom x voor kijker ik."""
-    return x if ik == 1 else BREEDTE + 1 - x
+    """Op welke schermkolom (1..13) staat veldkolom x voor kijker ik. Dat is ook het
+    kolomnummer dat de kijker langs de rand ziet en in `schild = (…)` typt."""
+    return eigen_kolom(ik, x)
 
 
 def kogelbanen(game: Game, ik: int) -> list[dict]:
@@ -109,7 +110,7 @@ def log_tekst(game: Game, ik: int, e: Gebeurtenis) -> str:
     doel_mij = e.doel == ik
     doel_naam = game.spelers[e.doel].naam if e.doel is not None else ""
     if e.soort == "loop":
-        return f"{wie} loopt {e.tekst} naar ({e.x}, {e.y})"
+        return f"{wie} loopt {e.tekst} naar ({schermkolom(e.x, ik)}, {e.y})"
     if e.soort == "geblokkeerd":
         return f"{wie} loopt tegen iets aan en blijft staan"
     if e.soort == "raak_robot":
@@ -130,7 +131,7 @@ def log_tekst(game: Game, ik: int, e: Gebeurtenis) -> str:
     if e.soort == "terug":
         return "Je robot is terug op het startvak" if mij else f"De robot van {wie} is terug"
     if e.soort == "schild":
-        return f"{wie} zet een schild op ({e.x}, {e.y})"
+        return f"{wie} zet een schild op ({schermkolom(e.x, ik)}, {e.y})"
     if e.soort == "schild_fout":
         return f"Schild geweigerd: {e.tekst}" if mij else f"{wie} probeert een schild, maar dat mag niet"
     if e.soort == "win":
@@ -144,14 +145,6 @@ def log_regels(game: Game, ik: int, aantal: int = 10) -> list[dict]:
         {"tik": tik, "tijd": mmss(tik), "tekst": log_tekst(game, ik, e), "soort": e.soort, "mij": e.speler == ik}
         for tik, e in list(game.log)[::-1][:aantal]
     ]
-
-    jij, ander = game.spelers[ik], game.tegenstander(ik)
-    if not jij.leeft:
-        return {"tekst": "💥 Je robot is kapot!", "sub": f"Hij komt terug over {jij.respawn_over}…", "soort": "ik"}
-    if not ander.leeft:
-        return {"tekst": f"💥 De robot van {ander.naam} is kapot!",
-                "sub": f"Komt terug over {ander.respawn_over}…", "soort": "ander"}
-    return None
 
 
 # ---- Jinja-filters ----

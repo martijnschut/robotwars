@@ -10,11 +10,14 @@ toren van de tegenstander kapot te schieten (zoals in Clash Royale).
 robot = vooruit      robot = achteruit
 robot = omhoog       robot = omlaag
 robot = schiet       (schiet 4 vakjes vooruit)
-schild = (4, 2)      (3 per potje, alleen op je eigen helft)
+schild = (4, 2)      (kolom, rij; 3 per potje, alleen op je eigen helft)
 herhaal 3 keer
   robot = vooruit
 klaar
 ```
+
+De kolommen tel je vanaf jouw eigen kant: 1 staat bij jouw toren, 13 bij die
+van de ander; de rijen lopen van boven (1) naar beneden (7).
 
 Je hoeft niet op Enter te drukken: zodra een regel klopt, doet je robot hem.
 Wie de toren van de ander op 0 schiet, wint. De snelste tijd staat bovenaan het

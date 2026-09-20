@@ -44,6 +44,15 @@ def test_matrix_toont_kogelbaan():
     assert rijen[0][3].knal_vertraging == round(2 * STAP_SECONDEN, 2)
 
 
+def test_logtekst_toont_kolommen_vanuit_eigen_kant():
+    g = Game("g", "Wessel", "Papa")
+    g.log.append((1, Gebeurtenis("loop", 2, x=11, y=3, tekst="vooruit")))
+    g.log.append((1, Gebeurtenis("schild", 2, x=10, y=3)))
+    assert log_regels(g, 2)[1]["tekst"] == "Jij loopt vooruit naar (3, 3)"
+    assert log_regels(g, 2)[0]["tekst"] == "Jij zet een schild op (4, 3)"
+    assert log_regels(g, 1)[1]["tekst"] == "Papa loopt vooruit naar (11, 3)"
+
+
 def test_kogelbanen_vliegen_over_het_scherm():
     g = Game("g", "A", "B")
     g.spelers[1].x, g.spelers[1].y = 2, 1
@@ -128,7 +137,7 @@ def test_log_regels_vanuit_speler_2():
     regels = log_regels(g, 2, aantal=99)
     teksten = [r["tekst"] for r in regels]
     assert teksten[0] == "🏆 Wessel wint!"
-    assert teksten[-1] == "Wessel loopt vooruit naar (6, 2)"
+    assert teksten[-1] == "Wessel loopt vooruit naar (8, 2)"   # x=6 gezien vanaf de kant van speler 2
     assert teksten[-2] == "Jij loopt tegen iets aan en blijft staan"
     assert teksten[-3] == "Jij schiet → raakt Wessel! ❤️❤️❤️🖤🖤"
     assert teksten[-4] == "Wessel schiet → raakt jou! ❤️❤️❤️❤️🖤"

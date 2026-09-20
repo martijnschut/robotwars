@@ -60,6 +60,11 @@ ligt een brug.
   `omlaag` = rij +1.
 - Speler 2 ziet het veld gespiegeld, zodat "vooruit" op het scherm altijd naar
   rechts is en de eigen kant links staat.
+- **Iedere speler telt de kolommen vanaf zijn eigen kant**: links staat 1 (bij
+  je eigen toren), rechts 13. Je eigen helft is dus voor allebei kolom 1–6 en
+  `schild = (4, 2)` betekent voor allebei hetzelfde. Intern rekent het spel in
+  echte veldcoördinaten; voor speler 2 worden getypte kolommen en getoonde
+  coördinaten gespiegeld (`eigen_kolom`).
 
 ### Bewegen
 

@@ -124,6 +124,7 @@ def test_spelpagina(client):
     game, token = start_spel(client)
     r = client.get(f"/spel/{game.id}")
     assert r.status_code == 200
+    assert r.text.index('>1</div>') < r.text.index('>13</div>')   # labels lopen 1 → 13
     for fragment in ('id="veld"', 'id="status"', 'id="kop"', 'id="regels"', 'id="invoer"', 'id="einde"',
                      'id="log"', 'id="teller"', 'class="spel-layout"', 'class="kolom-editor"',
                      'class="hartjes"'):

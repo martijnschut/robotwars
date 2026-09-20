@@ -77,6 +77,17 @@ def test_volle_wachtrij_weigert_commando():
     assert e.markering == "fout" and e.hint == MELD_DRUK
 
 
+def test_schild_van_speler_2_wordt_gespiegeld_naar_veldcoordinaten():
+    from app.parser import Shield
+    g, e = nieuw()
+    e.verwerk(g, 1, "schild = (4, 3)")
+    assert list(g.spelers[1].wachtrij) == [Shield(4, 3)]
+    e2 = Editor()
+    e2.verwerk(g, 2, "schild = (4, 3)")               # speler 2 telt vanaf zijn eigen kant
+    assert list(g.spelers[2].wachtrij) == [Shield(10, 3)]
+    assert e2.regels[-1].tekst == "schild = (4, 3)"    # de getypte regel blijft zoals getypt
+
+
 def test_wis_maakt_regels_leeg():
     g, e = nieuw()
     e.verwerk(g, 1, "robot = vooruit")
