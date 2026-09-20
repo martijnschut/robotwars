@@ -102,7 +102,8 @@ a { color: var(--blauw); }
 .logregel.nieuw.raak_robot, .logregel.nieuw.raak_gebouw { color: #ffc46b; }
 .logregel.nieuw.dood { color: #ff8a80; }
 .logregel.nieuw.win { color: var(--geel); }
-@keyframes opkomen { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+/* geen opacity 0 als startframe: een verborgen tabblad pauzeert animaties op frame 0 */
+@keyframes opkomen { from { background: rgba(255,210,63,.45); transform: translateY(-6px); } to { background: rgba(255,255,255,.06); transform: none; } }
 .rw-editor { background: var(--paneel-donker); border: 3px solid var(--rand); border-radius: 10px; padding: 12px 14px; font-family: ui-monospace, Consolas, monospace; font-size: 17px; }
 /* bevroren regels scrollen in een vast vak; de template geeft ze omgekeerd, column-reverse zet de
    nieuwste onderaan én houdt de scrollpositie onderaan zonder JavaScript */
