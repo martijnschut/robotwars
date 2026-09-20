@@ -1,4 +1,4 @@
-"""Spelregels van Robot Wars: veld, lopen, schieten, schilden, respawn, winnen.
+"""Spelregels van Robot Wars: veld, lopen, schieten, schilden, bommen, respawn, winnen.
 
 Pure Python; de server roept alleen voeg_stappen_toe(), stop(), tick() en
 geef_op() aan en leest de toestand voor de weergave.
@@ -10,7 +10,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Callable
 
-from .parser import Move, Shoot, Shield, Step
+from .parser import Move, Shoot, Shield, Bomb, Step
 
 # Het veld is een wiskundig assenstelsel: x loopt naar rechts (1..13), y omhoog (1 onderaan,
 # 7 bovenaan). Bruggen, torens en startvakken liggen symmetrisch, dus (x, y) is eenduidig.
@@ -22,6 +22,7 @@ GEBOUW_LEVENS = 5
 ROBOT_LEVENS = 5
 SCHILD_LEVENS = 8
 SCHILDEN_PER_SPELER = 3
+BOMMEN_PER_SPELER = 3
 RESPAWN_TIKKEN = 3
 MAX_WACHTRIJ = 50
 MAX_SPELDUUR = 30 * 60   # tikken; daarna stopt de server het potje (reden "tijd")
@@ -36,6 +37,8 @@ MELD_BESTAAT_NIET = "Dat vak bestaat niet."
 MELD_HELFT = "Een schild mag alleen op je eigen helft."
 MELD_STARTVAK = "Niet op een startvak, anders kan een robot nooit meer terugkomen."
 MELD_BEZET = "Dat vak is niet leeg."
+MELD_BOMMEN_OP = "Je bommen zijn op."
+MELD_WATER = "Daar is water."
 MELD_DRUK = "Wacht even, je robot is nog bezig."
 
 
@@ -67,6 +70,14 @@ class Schild:
 
 
 @dataclass
+class Mijn:
+    """Een bom die is blijven liggen: gaat af zodra een robot erop stapt (van wie ook)."""
+    x: int
+    y: int
+    eigenaar: int
+
+
+@dataclass
 class Schot:
     """Eén schot in de laatste tik, voor de weergave van de kogelbaan."""
     schutter: int
@@ -78,7 +89,8 @@ class Schot:
 class Gebeurtenis:
     """Eén regel voor het log "Wat gebeurt er?" (de weergave maakt er tekst van)."""
     soort: str                   # loop, geblokkeerd, raak_schild, raak_robot, raak_gebouw, mis,
-                                 # dood, terug, schild, schild_fout, win
+                                 # dood, terug, schild, schild_fout, bom, bom_fout, bom_raak,
+                                 # mijn_raak, mijn_dubbel, win
     speler: int                  # wie het deed (of wie het overkwam bij dood/terug/win)
     x: int = 0
     y: int = 0
@@ -100,6 +112,7 @@ class Speler:
     robot_levens: int = ROBOT_LEVENS
     gebouw_levens: int = GEBOUW_LEVENS
     schilden_over: int = SCHILDEN_PER_SPELER
+    bommen_over: int = BOMMEN_PER_SPELER
     wachtrij: deque[Step] = field(default_factory=deque)
     respawn_over: int = 0        # tikken tot de robot terugkomt (0 = leeft of wacht niet)
     tegoed: int = 0              # stappen die Robo nog mag doen (één per uitgevoerde stap van de mens)
@@ -137,6 +150,8 @@ class Game:
         }
         self.schilden: list[Schild] = []
         self.schoten: list[Schot] = []   # schoten van de laatste tik
+        self.mijnen: list[Mijn] = []
+        self.knallen: list[tuple[int, int]] = []   # explosies van de laatste tik (bom/mijn), voor de 💥
         self.log: deque[tuple[int, Gebeurtenis]] = deque(maxlen=LOG_LENGTE)   # (tik, gebeurtenis)
         self.tik = 0
         self.winnaar: int | None = None
@@ -160,6 +175,9 @@ class Game:
 
     def schild_op(self, x: int, y: int) -> Schild | None:
         return next((s for s in self.schilden if (s.x, s.y) == (x, y)), None)
+
+    def mijn_op(self, x: int, y: int) -> Mijn | None:
+        return next((m for m in self.mijnen if (m.x, m.y) == (x, y)), None)
 
     def robot_op(self, x: int, y: int) -> Speler | None:
         return next((p for p in self.spelers.values() if p.leeft and (p.x, p.y) == (x, y)), None)
@@ -200,6 +218,7 @@ class Game:
         if self.afgelopen:
             return
         self.schoten = []
+        self.knallen = []
         self.tik += 1
         # Eerst terugkomen (zodat een robot die net dood is deze tik niet al aftelt),
         # dan handelen: speler 1 eerst, dan speler 2.
@@ -244,6 +263,13 @@ class Game:
             else:
                 speler.respawn_over = 1   # volgende tik opnieuw proberen
 
+    def _robot_kapot(self, robot: Speler, x: int, y: int) -> None:
+        """Robot sneuvelt op (x, y): hartjes op 0, wachtrij leeg, terug na RESPAWN_TIKKEN."""
+        robot.robot_levens = 0
+        robot.respawn_over = RESPAWN_TIKKEN
+        robot.wachtrij.clear()
+        self._meld("dood", robot.nummer, x, y)
+
     def _voer_uit(self, speler: Speler, stap: Step) -> None:
         if isinstance(stap, Move):
             self._loop(speler, stap.richting)
@@ -251,6 +277,8 @@ class Game:
             self._schiet(speler)
         elif isinstance(stap, Shield):
             self._zet_schild(speler, stap.x, stap.y)
+        elif isinstance(stap, Bomb):
+            self._leg_bom(speler, stap.dx, stap.dy)
 
     def _loop(self, speler: Speler, richting: str) -> None:
         # Het veld is een assenstelsel: y=1 ligt onderaan, y=7 bovenaan.
@@ -264,6 +292,12 @@ class Game:
         if self.is_vrij(*doel):
             speler.x, speler.y = doel
             self._meld("loop", speler.nummer, speler.x, speler.y, tekst=richting)
+            mijn = self.mijn_op(*doel)
+            if mijn is not None:
+                self.mijnen.remove(mijn)
+                self.knallen.append(doel)
+                self._meld("mijn_raak", speler.nummer, *doel, doel=mijn.eigenaar)
+                self._robot_kapot(speler, *doel)
         else:
             self._meld("geblokkeerd", speler.nummer, tekst=richting)
 
@@ -290,9 +324,7 @@ class Game:
                 robot.robot_levens -= 1
                 self._meld("raak_robot", speler.nummer, x, y, doel=robot.nummer, levens=robot.robot_levens)
                 if robot.robot_levens == 0:
-                    robot.respawn_over = RESPAWN_TIKKEN
-                    robot.wachtrij.clear()
-                    self._meld("dood", robot.nummer, x, y)
+                    self._robot_kapot(robot, x, y)
                 raak = (x, y)
                 break
             gebouw = self.gebouw_op(x, y)
@@ -326,3 +358,36 @@ class Game:
             self._meld("schild", speler.nummer, x, y)
             return
         self._meld("schild_fout", speler.nummer, x, y, tekst=speler.melding)
+
+    def _leg_bom(self, speler: Speler, dx: int, dy: int) -> None:
+        """Bom op een buurvak (dx, dy al in echte veldrichting). Staat er een robot: meteen
+        kapot. Ligt er een mijn: beide weg. Anders blijft de bom liggen als mijn."""
+        x, y = speler.x + dx, speler.y + dy
+        if speler.bommen_over == 0:
+            speler.melding = MELD_BOMMEN_OP
+        elif not in_veld(x, y):
+            speler.melding = MELD_BESTAAT_NIET
+        elif is_water(x, y):
+            speler.melding = MELD_WATER
+        elif self.gebouw_op(x, y) is not None or self.schild_op(x, y) is not None:
+            speler.melding = MELD_BEZET
+        elif (x, y) in START.values() and self.robot_op(x, y) is None:
+            speler.melding = MELD_STARTVAK   # anders zou de mijn blijven liggen en kan niemand terugkomen
+        else:
+            speler.bommen_over -= 1
+            speler.melding = None
+            robot = self.robot_op(x, y)
+            mijn = self.mijn_op(x, y)
+            if robot is not None:
+                self.knallen.append((x, y))
+                self._meld("bom_raak", speler.nummer, x, y, doel=robot.nummer)
+                self._robot_kapot(robot, x, y)
+            elif mijn is not None:
+                self.mijnen.remove(mijn)
+                self.knallen.append((x, y))
+                self._meld("mijn_dubbel", speler.nummer, x, y, doel=mijn.eigenaar)
+            else:
+                self.mijnen.append(Mijn(x, y, speler.nummer))
+                self._meld("bom", speler.nummer, x, y)
+            return
+        self._meld("bom_fout", speler.nummer, x, y, tekst=speler.melding)

@@ -349,3 +349,152 @@ def test_log_win_en_maxlen():
     for _ in range(50):
         g2.tick()
     assert len(g2.log) == 30 and g2.log[-1][0] == 50
+
+
+# ---- bommen en mijnen ----
+
+from app.game import Mijn, BOMMEN_PER_SPELER, MELD_BOMMEN_OP, MELD_WATER
+from app.parser import Bomb
+
+
+def leg(g, nummer, dx, dy):
+    g.spelers[nummer].melding = None
+    g.voeg_stappen_toe(nummer, [Bomb(dx, dy)])
+    g.tick()
+    return g.spelers[nummer].melding
+
+
+def test_bom_op_leeg_vak_blijft_liggen_als_mijn():
+    g = nieuw()
+    assert g.spelers[1].bommen_over == BOMMEN_PER_SPELER == 3
+    assert leg(g, 1, 1, 1) is None                     # robot op (2,4) → mijn op (3,5)
+    assert g.mijn_op(3, 5) == Mijn(3, 5, eigenaar=1)
+    assert g.spelers[1].bommen_over == 2
+    assert g.knallen == []
+    assert g.log[-1] == (1, Gebeurtenis("bom", 1, 3, 5))
+
+
+def test_mijn_blokkeert_lopen_niet_maar_robot_gaat_kapot():
+    g = nieuw()
+    g.mijnen.append(Mijn(3, 4, eigenaar=2))
+    g.voeg_stappen_toe(1, [Move("vooruit"), Move("vooruit")])
+    g.tick()
+    s1 = g.spelers[1]
+    assert (s1.x, s1.y) == (3, 4)                      # hij kwam er wel
+    assert not s1.leeft and s1.respawn_over == RESPAWN_TIKKEN
+    assert len(s1.wachtrij) == 0
+    assert g.mijn_op(3, 4) is None                     # mijn is weg
+    assert g.knallen == [(3, 4)]
+    assert soorten(g)[-3:] == ["loop", "mijn_raak", "dood"]
+    assert g.log[-2] == (1, Gebeurtenis("mijn_raak", 1, 3, 4, doel=2))
+    for _ in range(RESPAWN_TIKKEN):
+        g.tick()
+    assert s1.leeft and (s1.x, s1.y) == (2, 4)
+
+
+def test_eigen_mijn_is_ook_gevaarlijk():
+    g = nieuw()
+    g.mijnen.append(Mijn(3, 4, eigenaar=1))
+    g.voeg_stappen_toe(1, [Move("vooruit")])
+    g.tick()
+    assert not g.spelers[1].leeft
+    assert g.log[-2] == (1, Gebeurtenis("mijn_raak", 1, 3, 4, doel=1))
+
+
+def test_bom_op_tegenstander_is_meteen_kapot():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 8, 3
+    g.spelers[2].x, g.spelers[2].y = 9, 4
+    assert leg(g, 1, 1, 1) is None
+    s2 = g.spelers[2]
+    assert not s2.leeft and s2.respawn_over == RESPAWN_TIKKEN
+    assert g.mijn_op(9, 4) is None                     # geen mijn achtergebleven
+    assert g.knallen == [(9, 4)]
+    assert g.spelers[1].bommen_over == 2
+    assert soorten(g)[-2:] == ["bom_raak", "dood"]
+    assert g.log[-2] == (1, Gebeurtenis("bom_raak", 1, 9, 4, doel=2))
+
+
+def test_bom_op_eigen_vak_blaast_jezelf_op():
+    g = nieuw()
+    assert leg(g, 1, 0, 0) is None                     # (2,4) is een startvak, maar er staat een robot
+    assert not g.spelers[1].leeft
+    assert g.log[-2] == (1, Gebeurtenis("bom_raak", 1, 2, 4, doel=1))
+
+
+def test_bom_op_tegenstander_op_zijn_startvak_mag():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 11, 3
+    assert leg(g, 1, 1, 1) is None                     # (12,4): startvak, robot 2 staat erop
+    assert not g.spelers[2].leeft
+    assert g.mijn_op(12, 4) is None
+
+
+def test_bom_op_mijn_laat_beide_knallen_zonder_gewonden():
+    g = nieuw()
+    g.mijnen.append(Mijn(3, 4, eigenaar=2))
+    assert leg(g, 1, 1, 0) is None
+    assert g.mijnen == []
+    assert g.spelers[1].leeft and g.spelers[2].leeft
+    assert g.spelers[1].bommen_over == 2
+    assert g.knallen == [(3, 4)]
+    assert g.log[-1] == (1, Gebeurtenis("mijn_dubbel", 1, 3, 4, doel=2))
+
+
+def test_knallen_worden_per_tik_geleegd():
+    g = nieuw()
+    leg(g, 1, 1, 1)                                    # mijn op (3,5)
+    leg(g, 1, 1, 1)                                    # tweede bom erop: beide knallen
+    assert g.knallen == [(3, 5)]
+    g.tick()
+    assert g.knallen == []
+
+
+def test_bom_mag_op_brug_en_op_andere_helft():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 6, 2
+    assert leg(g, 1, 1, 0) is None                     # brug (7,2)
+    assert g.mijn_op(7, 2) is not None
+    g.spelers[1].x, g.spelers[1].y = 7, 2
+    assert leg(g, 1, 1, 0) is None                     # (8,2): helft van speler 2
+    assert g.mijn_op(8, 2) is not None
+
+
+def test_bom_geweigerd_en_niet_verbruikt():
+    g = nieuw()
+    s1 = g.spelers[1]
+    s1.x, s1.y = 1, 1
+    assert leg(g, 1, -1, 0) == MELD_BESTAAT_NIET       # (0,1)
+    assert leg(g, 1, 0, -1) == MELD_BESTAAT_NIET       # (1,0)
+    s1.x, s1.y = 6, 3
+    assert leg(g, 1, 1, 0) == MELD_WATER               # (7,3)
+    s1.x, s1.y = 2, 3
+    assert leg(g, 1, -1, 1) == MELD_BEZET              # (1,4) gebouw
+    assert leg(g, 1, 0, 1) == MELD_STARTVAK            # (2,4)
+    g.schilden.append(Schild(3, 3, eigenaar=1))
+    assert leg(g, 1, 1, 0) == MELD_BEZET               # schild
+    assert s1.bommen_over == 3
+    assert g.mijnen == []
+    assert g.log[-1] == (6, Gebeurtenis("bom_fout", 1, 3, 3, tekst=MELD_BEZET))
+    s1.bommen_over = 0
+    assert leg(g, 1, 1, 1) == MELD_BOMMEN_OP
+
+
+def test_kogel_vliegt_over_mijn_heen():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 8, 1
+    g.spelers[2].x, g.spelers[2].y = 10, 1
+    g.mijnen.append(Mijn(9, 1, eigenaar=2))
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert g.spelers[2].robot_levens == 4
+    assert g.mijn_op(9, 1) is not None
+
+
+def test_dode_robot_legt_geen_bom():
+    g = nieuw()
+    g.spelers[1].robot_levens = 0
+    g.spelers[1].respawn_over = RESPAWN_TIKKEN
+    g.voeg_stappen_toe(1, [Bomb(1, 0)])
+    g.tick()
+    assert g.mijnen == [] and g.spelers[1].bommen_over == 3
