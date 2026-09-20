@@ -131,7 +131,7 @@ a { color: var(--blauw); }
 .stop-spel { margin-top: 14px; text-align: right; }
 .stop-spel button { background: transparent; color: var(--grijs); border: 1px solid var(--rand); border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
 .stop-spel button:hover { color: var(--tekst); border-color: var(--rood); }
-.overlay { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(10,12,20,.7); }
+.overlay { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: rgba(10,12,20,.7); }
 .win { background: var(--bg); border: 3px solid var(--geel); border-radius: 16px; padding: 24px 32px; text-align: center; box-shadow: 0 0 40px rgba(255,210,63,.35); max-width: 420px; }
 .win .beker { font-size: 54px; line-height: 1; }
 .win h2 { font-size: 26px; margin: 6px 0 2px; }

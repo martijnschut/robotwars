@@ -72,6 +72,12 @@ def test_kogelbanen_vliegen_over_het_scherm():
     (baan3,) = kogelbanen(g, 1)
     assert baan3["n"] == 3 and baan3["raak"] is True and baan3["kol_tot"] == 6
     assert kogelbanen(Game("leeg", "A", "B"), 1) == []
+    g.spelers[2].gebouw_levens = 1
+    g.spelers[1].x, g.spelers[1].y = 9, 4
+    g.spelers[2].x, g.spelers[2].y = 12, 1
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()                                # winnend schot
+    assert g.afgelopen and g.schoten and kogelbanen(g, 1) == []
 
 
 def test_filters():

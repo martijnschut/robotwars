@@ -44,6 +44,8 @@ def kogelbanen(game: Game, ik: int) -> list[dict]:
     Gridkolommen tellen vanaf 2 (kolom 1 is de rijnummers), gridrijen vanaf 2
     (rij 1 is de kolomnummers). `n` = aantal vakjes inclusief dat van de schutter.
     """
+    if game.afgelopen:          # na het winnende schot geen kogel meer laten staan
+        return []
     banen = []
     for schot in game.schoten:
         if not schot.cellen:
