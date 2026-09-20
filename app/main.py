@@ -23,6 +23,9 @@ HIER = Path(__file__).parent
 TIK_SECONDEN = float(os.environ.get("ROBOTWARS_TIK", "1"))
 WEG_NA = 60          # seconden zonder verbinding: speler is weg
 COOKIE_DUUR = 30 * 24 * 3600
+MAX_BERICHTEN_PER_SEC = 30   # WebSocket-berichten per socket (token-bucket)...
+BURST = 60                   # ...met dit tegoed als piek
+MAX_SOCKETS = 3              # open sockets per speler per spel (tabbladen)
 
 log = logging.getLogger("robotwars")
 lobby = Lobby()
@@ -30,8 +33,30 @@ db = ScoreDb(os.environ.get("ROBOTWARS_DB", "robotwars.db"))
 templates = Jinja2Templates(directory=str(HIER / "templates"))
 templates.env.filters.update(weergave.FILTERS)
 
-# game_id -> spelernummer -> open WebSockets
-verbindingen: dict[str, dict[int, set[WebSocket]]] = {}
+# game_id -> spelernummer -> open WebSockets, oudste eerst
+verbindingen: dict[str, dict[int, list[WebSocket]]] = {}
+
+
+def verwijder(sockets: list[WebSocket], ws: WebSocket) -> None:
+    if ws in sockets:
+        sockets.remove(ws)
+
+
+class Emmer:
+    """Token-bucket per socket: MAX_BERICHTEN_PER_SEC berichten per seconde, piek BURST."""
+
+    def __init__(self) -> None:
+        self.tegoed = float(BURST)
+        self.laatst = time.monotonic()
+
+    def toestaan(self) -> bool:
+        nu = time.monotonic()
+        self.tegoed = min(BURST, self.tegoed + (nu - self.laatst) * MAX_BERICHTEN_PER_SEC)
+        self.laatst = nu
+        if self.tegoed < 1:
+            return False
+        self.tegoed -= 1
+        return True
 
 
 @asynccontextmanager
@@ -200,8 +225,12 @@ async def ws_spel(ws: WebSocket, game_id: str):
         return
     game, ik = gevonden
     await ws.accept()
-    verbindingen.setdefault(game_id, {}).setdefault(ik, set()).add(ws)
+    sockets = verbindingen.setdefault(game_id, {}).setdefault(ik, [])
+    sockets.append(ws)
+    while len(sockets) > MAX_SOCKETS:        # te veel tabbladen: de oudste gaat dicht
+        await sluit(sockets.pop(0))
     game.laatst_gezien[ik] = time.time()
+    emmer = Emmer()
     try:
         if game.afgelopen:
             # Een pagina die na verbindingsverlies opnieuw verbindt, krijgt alsnog het eindscherm
@@ -215,13 +244,18 @@ async def ws_spel(ws: WebSocket, game_id: str):
             except WebSocketDisconnect:
                 break
             except (ValueError, KeyError):   # geen geldige JSON of een binair frame: negeren
+                bericht = None
+            if not emmer.toestaan():         # te veel berichten: weg ermee
+                await sluit(ws, code=1008)
+                break
+            if bericht is None:
                 continue
             game.laatst_gezien[ik] = time.time()
             html = verwerk_bericht(game, ik, bericht)
             if html:
                 await ws.send_text(html)
     finally:
-        verbindingen.get(game_id, {}).get(ik, set()).discard(ws)
+        verwijder(sockets, ws)
         game.laatst_gezien[ik] = time.time()
 
 
@@ -274,13 +308,13 @@ async def sluit(ws: WebSocket, code: int = 1000) -> None:
         await asyncio.wait_for(ws.close(code=code), timeout=TIK_SECONDEN)
 
 
-async def zend(ws: WebSocket, html: str, sockets: set[WebSocket]) -> None:
-    """Stuurt naar één socket; een trage of dode socket gaat uit de set en wordt gesloten
+async def zend(ws: WebSocket, html: str, sockets: list[WebSocket]) -> None:
+    """Stuurt naar één socket; een trage of dode socket gaat uit de lijst en wordt gesloten
     met code 1013 (daarop verbindt HTMX opnieuw), los van de tik-loop."""
     try:
         await asyncio.wait_for(ws.send_text(html), timeout=TIK_SECONDEN)
     except Exception:
-        sockets.discard(ws)
+        verwijder(sockets, ws)
         asyncio.create_task(sluit(ws, code=1013))
 
 
@@ -301,7 +335,7 @@ async def zend_alles() -> None:
             for sockets in list(per_speler.values()):
                 for ws in list(sockets):
                     await sluit(ws)
-                    sockets.discard(ws)
+                    verwijder(sockets, ws)
 
 
 async def tik_loop() -> None:

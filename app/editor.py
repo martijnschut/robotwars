@@ -13,6 +13,8 @@ from .parser import (Command, Incomplete, Invalid, RepeatEnd, RepeatStart, Shiel
                      expand, parse_line)
 
 HINT_KLAAR = "Je bent niet in een herhaal. Typ eerst herhaal 3 keer."
+HINT_TE_DIEP = "Zo veel herhalingen in elkaar kan niet (maximaal 10)."
+MAX_DIEPTE = 10    # herhaal-blokken in elkaar
 MAX_REGELS = 100   # bevroren regels die we bewaren (en elke keer meesturen)
 MAX_REGEL_LENGTE = 200   # tekens per getypte regel; langere berichten negeert de server
 
@@ -56,6 +58,10 @@ class Editor:
             # elke speler typt kolommen vanaf zijn eigen kant; het veld rekent in echte x
             r = Shield(eigen_kolom(nummer, r.x), r.y)
         if isinstance(r, RepeatStart):
+            if self.diepte >= MAX_DIEPTE:
+                self.markering = "fout"
+                self.hint = HINT_TE_DIEP
+                return False
             self.blok.append(r)
             self._bevries("wacht", tekst, self.diepte)
             self.diepte += 1

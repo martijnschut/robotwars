@@ -3,6 +3,7 @@ import time
 
 import pytest
 from fastapi.testclient import TestClient
+from starlette.websockets import WebSocketDisconnect
 
 from app import main
 from app.db import ScoreDb
@@ -177,6 +178,35 @@ def test_te_lange_regel_wordt_genegeerd(client):
 def test_hint_bij_onbekend_commando_is_kort():
     r = parse_line("robot = " + "x" * 5000)
     assert isinstance(r, Invalid) and len(r.hint) <= len(HINT_ROBOT) + 40 < 120
+
+
+def test_te_veel_berichten_sluit_de_verbinding(client):
+    game, token = start_spel(client)
+    with client.websocket_connect(f"/ws/spel/{game.id}", headers={"cookie": f"token={token}"}) as ws:
+        for _ in range(main.BURST + 1):
+            ws.send_json({"niets": True})              # goedkoop bericht: geen antwoord
+        with pytest.raises(WebSocketDisconnect) as e:
+            ws.receive_text()
+        assert e.value.code == 1008
+    assert not main.verbindingen[game.id][1]
+
+
+def test_maximaal_drie_sockets_per_speler(client):
+    game, token = start_spel(client)
+    url, kop = f"/ws/spel/{game.id}", {"cookie": f"token={token}"}
+    with client.websocket_connect(url, headers=kop) as ws1, \
+         client.websocket_connect(url, headers=kop) as ws2, \
+         client.websocket_connect(url, headers=kop) as ws3:
+        assert len(main.verbindingen[game.id][1]) == 3
+        with client.websocket_connect(url, headers=kop) as ws4:
+            with pytest.raises(WebSocketDisconnect) as e:
+                ws1.receive_text()                    # de oudste is dichtgegooid
+            assert e.value.code == 1000
+            assert len(main.verbindingen[game.id][1]) == 3
+            ws4.send_json({"regel": "robot = schiet"})
+            assert 'id="invoer"' in ws4.receive_text()
+            ws2.send_json({"regel": "robot = schiet"})
+            assert 'id="invoer"' in ws2.receive_text()
 
 
 def test_websocket_ongeldig_bericht_wordt_genegeerd(client):
@@ -432,7 +462,7 @@ class NepSocket:
 def test_stokkende_socket_wordt_gesloten_met_1013(client):
     game, token = start_spel(client)
     nep = NepSocket()
-    main.verbindingen[game.id] = {1: {nep}}
+    main.verbindingen[game.id] = {1: [nep]}
 
     async def zend_en_wacht():
         await main.zend_alles()
