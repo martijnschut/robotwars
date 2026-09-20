@@ -50,6 +50,16 @@ uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
 Met de meegeleverde `Caddyfile` (pas de domeinnaam aan) regelt Caddy HTTPS en de
 WebSocket-verbinding automatisch: `caddy run`.
 
+## Bekende beperkingen
+
+- Zodra een regel klopt, vervangt de server de invoerregel door een lege. Wat je
+  in die paar milliseconden nog typt, gaat verloren. Op een trage verbinding kan
+  het helpen om na elke regel even te wachten op het ✓.
+- Speel je in twee tabbladen tegelijk, dan zien beide het veld, maar alleen het
+  tabblad waarin je typt toont je bevroren regels.
+- Het scorebord is per server; er is geen account of wachtwoord — je naam is
+  genoeg.
+
 ## Hoe het werkt
 
 - `app/parser.py` – zet een getypte regel om in een commando
