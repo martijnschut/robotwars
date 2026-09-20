@@ -217,8 +217,10 @@ Werkt zoals CT-3000: geen Start-knop, geen Enter.
   wachtrij gezet. Een `Invalid`-regel binnen een blok wordt gemarkeerd en
   overgeslagen, het blok blijft open.
 - Uitgevoerde commando's komen in de **wachtrij** van de robot; de robot doet
-  er elke tik (1 seconde) één. Maximaal 50 stappen in de rij; daarboven wordt
+  er elke tik (1 seconde) één. Maximaal 500 stappen in de rij; daarboven wordt
   het commando geweigerd met de melding "Wacht even, je robot is nog bezig".
+  Een `herhaal`-blok dat in zijn eentje al meer dan 500 stappen oplevert, krijgt
+  "Dat zijn te veel stappen in één keer (maximaal 500)".
 - Knoppen: **Stop** (leegt de wachtrij), **Wis** (leegt de lijst met bevroren
   regels; heeft geen effect op het spel).
 

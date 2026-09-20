@@ -251,7 +251,7 @@ def test_maximaal_drie_schilden():
     assert zet(g, 1, 4, 5) == MELD_OP
 
 
-def test_wachtrij_maximaal_50():
+def test_wachtrij_heeft_een_maximum():
     g = nieuw()
     assert g.voeg_stappen_toe(1, [Move("omhoog")] * MAX_WACHTRIJ)
     assert not g.voeg_stappen_toe(1, [Move("omhoog")])

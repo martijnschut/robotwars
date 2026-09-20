@@ -14,6 +14,7 @@ from .parser import (Bomb, Command, Incomplete, Invalid, RepeatEnd, RepeatStart,
 
 HINT_KLAAR = "Je bent niet in een herhaal. Typ eerst herhaal 3 keer."
 HINT_TE_DIEP = "Zo veel herhalingen in elkaar kan niet (maximaal 10)."
+HINT_TE_VEEL = f"Dat zijn te veel stappen in één keer (maximaal {MAX_WACHTRIJ})."
 MAX_DIEPTE = 10    # herhaal-blokken in elkaar
 MAX_REGELS = 100   # bevroren regels die we bewaren (en elke keer meesturen)
 MAX_REGEL_LENGTE = 200   # tekens per getypte regel; langere berichten negeert de server
@@ -83,9 +84,9 @@ class Editor:
             try:
                 stappen = expand(self.blok, max_stappen=MAX_WACHTRIJ)
             except ValueError:
-                gelukt = False
+                gelukt, hint = False, HINT_TE_VEEL      # het blok zelf is te groot
             else:
-                gelukt = game.voeg_stappen_toe(nummer, stappen)
+                gelukt, hint = game.voeg_stappen_toe(nummer, stappen), MELD_DRUK
             self.blok = []
             nieuw = "ok" if gelukt else "fout"
             for regel in self.regels:
@@ -93,7 +94,7 @@ class Editor:
                     regel.markering = nieuw
             self._bevries(nieuw, tekst, 0)
             if not gelukt:
-                self.hint = MELD_DRUK
+                self.hint = hint
             return True
         # Move / Shoot / Shield / Bomb
         if self.diepte > 0:

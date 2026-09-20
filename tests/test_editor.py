@@ -1,5 +1,6 @@
-from app.editor import Editor, Regel, HINT_KLAAR, HINT_TE_DIEP, MAX_DIEPTE, MAX_REGELS, MAX_REGEL_LENGTE
-from app.game import Game, MELD_DRUK
+from app.editor import (Editor, Regel, HINT_KLAAR, HINT_TE_DIEP, HINT_TE_VEEL, MAX_DIEPTE, MAX_REGELS,
+                        MAX_REGEL_LENGTE)
+from app.game import Game, MELD_DRUK, MAX_WACHTRIJ
 from app.parser import Move, Shoot
 
 
@@ -72,7 +73,7 @@ def test_fout_binnen_blok_laat_blok_open():
 
 def test_volle_wachtrij_weigert_commando():
     g, e = nieuw()
-    g.voeg_stappen_toe(1, [Move("omhoog")] * 50)
+    g.voeg_stappen_toe(1, [Move("omhoog")] * MAX_WACHTRIJ)
     assert e.verwerk(g, 1, "robot = vooruit") is False
     assert e.markering == "fout" and e.hint == MELD_DRUK
 
@@ -108,13 +109,22 @@ def test_wis_maakt_regels_leeg():
     assert e.regels == []
 
 
-def test_te_veel_geneste_stappen_is_fout_net_als_volle_wachtrij():
+def test_herhaal_20_keer_met_zes_regels_past_in_de_wachtrij():
+    g, e = nieuw()
+    for tekst in ("herhaal 20 keer", "robot=omlaag", "robot=schiet", "robot=omlaag",
+                  "robot=omhoog", "robot=schiet", "robot=omhoog", "klaar"):
+        e.verwerk(g, 1, tekst)
+    assert all(r.markering == "ok" for r in e.regels)
+    assert len(g.spelers[1].wachtrij) == 120
+
+
+def test_te_veel_geneste_stappen_is_fout_met_eigen_melding():
     g, e = nieuw()
     for tekst in ("herhaal 20 keer", "herhaal 20 keer", "herhaal 20 keer",
                   "robot = vooruit", "klaar", "klaar", "klaar"):
         e.verwerk(g, 1, tekst)
     assert e.regels[-1].markering == "fout"
-    assert e.hint == MELD_DRUK
+    assert e.hint == HINT_TE_VEEL                    # 8000 stappen: niet "je robot is nog bezig"
     assert len(g.spelers[1].wachtrij) == 0
 
 

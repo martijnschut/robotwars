@@ -24,7 +24,7 @@ SCHILD_LEVENS = 8
 SCHILDEN_PER_SPELER = 3
 BOMMEN_PER_SPELER = 3
 RESPAWN_TIKKEN = 3
-MAX_WACHTRIJ = 50
+MAX_WACHTRIJ = 500   # stappen per speler; herhaal 20 keer in herhaal 20 keer (400) past nog
 MAX_SPELDUUR = 30 * 60   # tikken; daarna stopt de server het potje (reden "tijd")
 
 # per spelernummer: gebouw, startvak en looprichting (+1 = naar rechts)
