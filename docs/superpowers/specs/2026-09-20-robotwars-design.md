@@ -2,7 +2,7 @@
 
 Datum: 20 september 2026
 Voor: Martijn & Wessel
-Status: goedgekeurd in brainstorm, klaar voor implementatieplan
+Status: goedgekeurd (tekst en visuals), klaar voor implementatieplan
 
 ## 1. Wat is het
 
@@ -250,6 +250,28 @@ scorebord.
   bevroren regels, lijst met open WebSockets. Twee tabbladen van dezelfde
   speler zien en typen allebei.
 - Afgelopen spellen worden 5 minuten na het einde uit de dict gehaald.
+
+### Uiterlijk van de schermen
+
+Donker thema (achtergrond `#1a1d2b`, panelen `#2a2f45`), teamkleuren blauw
+`#4aa8ff` en rood `#ff5f5f`, accent geel `#ffd23f`. Alle schermen delen één
+`style.css`.
+
+- **Startpagina:** logo "ROBOT WARS" (blauw/rood), blauwe en rode bolbot met
+  "VS", veld "Hoe heet je?", grote knoppen **Speel tegen iemand** (blauw) en
+  **Speel tegen de computer** (rood), link naar scorebord.
+- **Wachtkamer:** zwevende bolbot, "Wachten op een tegenstander", stuiterende
+  puntjes, wachttijd, knop **Toch tegen de computer**.
+- **Spelpagina:** kop "Wessel (jij) tegen Papa" + tijd; veld van 13×7 met
+  coördinaten langs de rand, blauwe/rode helften, rivier en bruggen; statuskaart
+  per speler (bolbot, hartjes robot, hartjes toren, schilden over); editor met
+  bevroren regels, markeringen, hint, knoppen Stop en Wis.
+- **Winnaarsscherm:** overlay met gouden kader over het vervaagde veld: 🏆,
+  "<naam> wint!", tijd groot in geel, eigen bolbot naast de ingestorte toren,
+  knoppen **Nog een keer** en **Scorebord**.
+- **Scorebord:** twee tabbladen (tegen de computer / tegen een mens), top-10
+  met goud/zilver/brons-nummers, tijd in geel, "tegen <naam> · <datum>",
+  eigen scores blauw omlijnd, link terug naar start.
 
 ## 7. De computerspeler (Robo, `app/ai.py`)
 
