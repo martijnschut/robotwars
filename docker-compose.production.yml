@@ -26,7 +26,8 @@ services:
       # Het scorebord (SQLite) overleeft deploys en herstarts.
       # Een nieuw volume krijgt de eigenaar van /data uit de image (uid 10001). Bij een
       # BESTAAND volume (aangemaakt toen de container nog als root draaide) eenmalig:
-      #   docker run --rm -v robotwars_data:/data alpine chown 10001:10001 /data
+      #   docker run --rm -v robotwars_robotwars_data:/data alpine chown -R 10001:10001 /data
+      #   (compose zet de projectnaam "robotwars_" vóór de volumenaam)
       - robotwars_data:/data
     # Poort bewust NIET gepubliceerd: alleen bereikbaar via Caddy op deployment_web.
     networks:
