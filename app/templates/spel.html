@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block titel %}{{ jij.naam }} tegen {{ ander.naam }} – Robot Wars{% endblock %}
+{% block inhoud %}
+{% include "fragments/sprites.html" %}
+<div hx-ext="ws" ws-connect="/ws/spel/{{ game.id }}">
+  {% include "fragments/kop.html" %}
+  {% include "fragments/veld.html" %}
+  {% include "fragments/status.html" %}
+  <div class="rw-editor">
+    {% include "fragments/regels.html" %}
+    <div class="regel invoerregel">
+      {% include "fragments/markering.html" %}
+      {% include "fragments/invoer.html" %}
+    </div>
+    {% include "fragments/hint.html" %}
+    <div class="rw-knoppen">
+      <form ws-send><input type="hidden" name="actie" value="stop"><button class="stop" type="submit">■ Stop</button></form>
+      <form ws-send><input type="hidden" name="actie" value="wis"><button type="submit">Wis</button></form>
+    </div>
+  </div>
+  {% include "fragments/einde.html" %}
+</div>
+{% endblock %}

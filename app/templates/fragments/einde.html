@@ -1,0 +1,21 @@
+<div id="einde">
+  {% if game.afgelopen %}
+  {% set winnaar = game.spelers[game.winnaar] %}
+  <div class="overlay">
+    <div class="win">
+      <div class="beker">🏆</div>
+      <h2><span class="naam {{ winnaar.nummer|kleur }}">{{ winnaar.naam }}</span> wint!</h2>
+      <div class="tijd">{{ game.tik|mmss }}</div>
+      {% if game.opgegeven %}
+        <p>{{ game.tegenstander(game.winnaar).naam }} is weg. Dit potje telt niet voor het scorebord.</p>
+      {% else %}
+        <p>De toren van {{ game.tegenstander(game.winnaar).naam }} ligt in puin.</p>
+      {% endif %}
+      <div class="knoppen">
+        <a class="knop blauw" href="/">🔁 Nog een keer</a>
+        <a class="knop grijs" href="/scorebord">🏆 Scorebord</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>

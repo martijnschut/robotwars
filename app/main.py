@@ -118,10 +118,116 @@ async def wachten_computer(request: Request):
     return RedirectResponse(f"/spel/{game.id}", status_code=303)
 
 
-# ---- tik-taak (wordt in Task 15 uitgebreid) ----
+# ---- spelpagina ----
+
+def spel_van(request_of_ws, game_id: str):
+    """(game, nummer) als deze cookie bij dit spel hoort, anders None."""
+    sessie = lobby.sessie(request_of_ws.cookies.get("token"))
+    game = lobby.games.get(game_id)
+    if sessie is None or game is None or sessie.game_id != game_id:
+        return None
+    return game, sessie.nummer
+
+
+@app.get("/spel/{game_id}", response_class=HTMLResponse)
+async def spel(request: Request, game_id: str):
+    gevonden = spel_van(request, game_id)
+    if gevonden is None:
+        return RedirectResponse("/", status_code=303)
+    game, ik = gevonden
+    return templates.TemplateResponse(request, "spel.html", weergave.context(game, ik))
+
+
+def verwerk_bericht(game, ik: int, bericht) -> str | None:
+    """Een bericht van de editor: getypte regel of knop. Geeft de HTML om terug te sturen."""
+    if game.afgelopen or not isinstance(bericht, dict):
+        return None
+    editor = game.editors[ik]
+    if "regel" in bericht:
+        bevroren = editor.verwerk(game, ik, str(bericht["regel"]))
+        return weergave.editor_html(templates, game, ik, met_invoer=bevroren)
+    actie = bericht.get("actie")
+    if actie == "stop":
+        game.stop(ik)
+        editor.hint = "Gestopt. Je robot staat stil."
+    elif actie == "wis":
+        editor.wis()
+    else:
+        return None
+    return weergave.editor_html(templates, game, ik, met_invoer=False)
+
+
+@app.websocket("/ws/spel/{game_id}")
+async def ws_spel(ws: WebSocket, game_id: str):
+    gevonden = spel_van(ws, game_id)
+    if gevonden is None:
+        await ws.close(code=1008)
+        return
+    game, ik = gevonden
+    await ws.accept()
+    verbindingen.setdefault(game_id, {}).setdefault(ik, set()).add(ws)
+    game.laatst_gezien[ik] = time.time()
+    try:
+        while True:
+            try:
+                bericht = await ws.receive_json()
+            except WebSocketDisconnect:
+                break
+            except ValueError:            # geen geldige JSON: negeren
+                continue
+            game.laatst_gezien[ik] = time.time()
+            html = verwerk_bericht(game, ik, bericht)
+            if html:
+                await ws.send_text(html)
+    finally:
+        verbindingen.get(game_id, {}).get(ik, set()).discard(ws)
+        game.laatst_gezien[ik] = time.time()
+
+
+# ---- tik-taak: elke seconde alle spellen een stap verder en uitzenden ----
+
+def controleer_weg(game, nu: float) -> None:
+    for nummer in (1, 2):
+        speler = game.spelers[nummer]
+        if speler.is_computer:
+            continue
+        verbonden = bool(verbindingen.get(game.id, {}).get(nummer))
+        if not verbonden and nu - game.laatst_gezien[nummer] > WEG_NA:
+            game.geef_op(nummer)
+            return
+
 
 def tik_alles() -> None:
-    lobby.ruim_op()
+    nu = time.time()
+    for game in list(lobby.games.values()):
+        if game.afgelopen:
+            continue
+        game.tick()
+        controleer_weg(game, nu)
+        if game.afgelopen and not game.score_opgeslagen:
+            game.score_opgeslagen = True
+            if not game.opgegeven:
+                winnaar = game.spelers[game.winnaar]
+                verliezer = game.tegenstander(game.winnaar)
+                db.sla_op(winnaar.naam, verliezer.naam, game.tegen_computer, game.tik)
+    for game_id in lobby.ruim_op(nu):
+        verbindingen.pop(game_id, None)
+
+
+async def zend_alles() -> None:
+    for game_id, per_speler in list(verbindingen.items()):
+        game = lobby.games.get(game_id)
+        if game is None:
+            continue
+        for nummer, sockets in per_speler.items():
+            if not sockets:
+                continue
+            html = weergave.tik_html(templates, game, nummer)
+            for ws in list(sockets):
+                try:
+                    await ws.send_text(html)
+                except Exception:
+                    sockets.discard(ws)
 
 
 async def tik_loop() -> None:
@@ -129,5 +235,6 @@ async def tik_loop() -> None:
         await asyncio.sleep(TIK_SECONDEN)
         try:
             tik_alles()
+            await zend_alles()
         except Exception:      # nooit de loop laten sterven
             log.exception("fout in tik")

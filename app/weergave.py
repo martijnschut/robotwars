@@ -86,3 +86,27 @@ def symbool(markering: str) -> str:
 
 
 FILTERS = {"mmss": mmss, "datum": datum, "hartjes": hartjes, "kleur": kleur, "symbool": symbool}
+
+
+# ---- fragmenten voor de WebSocket (HTMX swapt ze out-of-band op id) ----
+
+def render(templates, naam: str, game: Game, ik: int) -> str:
+    return templates.get_template(f"fragments/{naam}.html").render(context(game, ik))
+
+
+def editor_html(templates, game: Game, ik: int, met_invoer: bool) -> str:
+    delen = ["regels", "markering", "hint"] + (["invoer"] if met_invoer else [])
+    return "\n".join(render(templates, d, game, ik) for d in delen)
+
+
+def tik_html(templates, game: Game, ik: int) -> str:
+    """Na een tik: kop, veld en status; plus hint als het spel een melding heeft; plus einde."""
+    delen = ["kop", "veld", "status"]
+    speler = game.spelers[ik]
+    if speler.melding:
+        game.editors[ik].hint = speler.melding
+        speler.melding = None
+        delen.append("hint")
+    if game.afgelopen:
+        delen += ["einde", "invoer"]
+    return "\n".join(render(templates, d, game, ik) for d in delen)

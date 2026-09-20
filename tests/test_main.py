@@ -77,3 +77,84 @@ def test_toch_tegen_de_computer(client):
     r = client.post("/wachten/computer", follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"].startswith("/spel/")
     assert main.lobby.wachtende is None
+
+
+def start_spel(client, naam="Wessel"):
+    r = client.post("/start", data={"naam": naam, "modus": "computer"}, follow_redirects=False)
+    game_id = r.headers["location"].split("/")[-1]
+    return main.lobby.games[game_id], r.cookies["token"]
+
+
+def test_spelpagina(client):
+    game, token = start_spel(client)
+    r = client.get(f"/spel/{game.id}")
+    assert r.status_code == 200
+    for fragment in ('id="veld"', 'id="status"', 'id="kop"', 'id="regels"', 'id="invoer"', 'id="einde"'):
+        assert fragment in r.text
+    assert f'ws-connect="/ws/spel/{game.id}"' in r.text
+    assert "Wessel" in r.text and "Robo" in r.text
+    client.cookies.clear()
+    assert client.get(f"/spel/{game.id}", follow_redirects=False).status_code == 303   # vreemde: weg
+
+
+def test_websocket_typen_voert_uit(client):
+    game, token = start_spel(client)
+    with client.websocket_connect(f"/ws/spel/{game.id}", headers={"cookie": f"token={token}"}) as ws:
+        ws.send_json({"regel": "robot = vo"})
+        html = ws.receive_text()
+        assert 'id="markering"' in html and 'id="invoer"' not in html
+        ws.send_json({"regel": "robot = vooruit"})
+        html = ws.receive_text()
+        assert 'id="invoer"' in html and "robot = vooruit" in html and 'class="mk ok"' in html
+        assert list(game.spelers[1].wachtrij) == [Move("vooruit")]
+        ws.send_json({"actie": "stop"})
+        ws.receive_text()
+        assert len(game.spelers[1].wachtrij) == 0
+        ws.send_json({"regel": "robot = links"})
+        html = ws.receive_text()
+        assert 'id="hint"' in html and "links" in html
+
+
+def test_websocket_ongeldig_bericht_wordt_genegeerd(client):
+    game, token = start_spel(client)
+    with client.websocket_connect(f"/ws/spel/{game.id}", headers={"cookie": f"token={token}"}) as ws:
+        ws.send_text("dit is geen json")
+        ws.send_json(["ook", "geen", "dict"])
+        ws.send_json({"regel": "robot = schiet"})
+        assert 'id="invoer"' in ws.receive_text()
+
+
+def test_tik_stuurt_veld_naar_verbonden_spelers(client):
+    game, token = start_spel(client)
+    with client.websocket_connect(f"/ws/spel/{game.id}", headers={"cookie": f"token={token}"}) as ws:
+        ws.send_json({"regel": "robot = omhoog"})
+        ws.receive_text()
+        main.tik_alles()
+        client.portal.call(main.zend_alles)
+        html = ws.receive_text()
+        assert 'id="veld"' in html and 'id="status"' in html and 'id="kop"' in html
+        assert (game.spelers[1].x, game.spelers[1].y) == (2, 3)
+
+
+def test_winst_wordt_opgeslagen_en_getoond(client):
+    game, token = start_spel(client)
+    game.spelers[2].gebouw_levens = 1
+    game.spelers[1].x, game.spelers[1].y = 9, 4
+    game.spelers[2].x, game.spelers[2].y = 12, 1
+    game.voeg_stappen_toe(1, [Shoot()])
+    with client.websocket_connect(f"/ws/spel/{game.id}", headers={"cookie": f"token={token}"}) as ws:
+        main.tik_alles()
+        client.portal.call(main.zend_alles)
+        html = ws.receive_text()
+        assert "wint!" in html and "Wessel" in html and 'class="overlay"' in html
+    assert game.score_opgeslagen
+    assert main.db.top(True)[0]["winnaar"] == "Wessel"
+    assert client.get("/", follow_redirects=False).status_code == 200   # niet meer terug het spel in
+
+
+def test_weg_zijn_is_verlies_zonder_score(client):
+    game, token = start_spel(client)
+    game.laatst_gezien[1] = time.time() - main.WEG_NA - 1
+    main.tik_alles()
+    assert game.afgelopen and game.winnaar == 2 and game.opgegeven
+    assert main.db.top(True) == []

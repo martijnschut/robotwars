@@ -1,0 +1,27 @@
+<div id="veld" class="rw-veld">
+  <div class="co"></div>
+  {% for x in kolommen %}<div class="co">{{ x }}</div>{% endfor %}
+  {% for rij in rijen %}
+  <div class="co">{{ loop.index }}</div>
+  {% for cel in rij %}
+  <div class="c {{ cel.soort }}{% if cel.spoor %} spoor{% endif %}{% if cel.raak %} boem{% endif %}">
+    {% if cel.gebouw %}
+      {% set g = cel.gebouw %}
+      <svg class="{{ g.nummer|kleur }}{% if g.nummer != ik %} spiegel{% endif %} t{{ g.gebouw_levens }}">
+        {% if g.gebouw_levens == 0 %}<use href="#puin"/>
+        {% else %}<use href="#toren"/>
+          {% if g.gebouw_levens == 4 %}<use href="#barst1"/>{% elif g.gebouw_levens < 4 %}<use href="#barst2"/>{% endif %}
+          {% if g.gebouw_levens == 2 %}<use href="#rook"/>{% elif g.gebouw_levens == 1 %}<use href="#vlammen"/>{% endif %}
+        {% endif %}
+      </svg>
+    {% elif cel.schild %}
+      <svg class="{{ cel.schild.eigenaar|kleur }} sc{{ cel.schild.levens }}"><use href="#schild"/></svg>
+    {% elif cel.robot %}
+      <svg class="{{ cel.robot.nummer|kleur }}{% if cel.robot.nummer != ik %} spiegel{% endif %}"><use href="#bolbot"/></svg>
+    {% elif cel.kogel %}
+      <svg class="{{ cel.kogel|kleur }}{% if cel.kogel != ik %} spiegel{% endif %}"><use href="#kogel"/></svg>
+    {% endif %}
+  </div>
+  {% endfor %}
+  {% endfor %}
+</div>
