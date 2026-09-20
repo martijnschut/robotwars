@@ -88,12 +88,15 @@ a { color: var(--blauw); }
 .rw-status .kaart svg { width: 44px; height: 44px; flex: none; }
 .rw-status .kaart b { display: block; font-size: 18px; }
 .rw-status .kaart.gb b { color: var(--blauw); } .rw-status .kaart.gr b { color: var(--rood); }
+.rw-status .stat { display: inline-block; margin-right: 10px; }   /* wrapt per onderdeel, niet midden in een reeks hartjes */
+.hartjes { white-space: nowrap; }
 .rw-status .dood { color: var(--grijs); font-size: 13px; }
 /* log "Wat gebeurt er?" */
 .log { background: var(--paneel); border-radius: 10px; padding: 10px 14px; margin: 0 0 14px; max-height: 220px; overflow-y: auto; font-size: 15px; }
 .log h3 { margin: 0 0 6px; font-size: 14px; color: var(--grijs); text-transform: uppercase; letter-spacing: .04em; }
 .logregel { padding: 3px 0; color: #c9cde0; border-top: 1px solid rgba(255,255,255,.06); }
 .logregel .tijd { font-family: ui-monospace, Consolas, monospace; color: var(--grijs); margin-right: 10px; font-variant-numeric: tabular-nums; }
+.logregel.mij .tijd { color: var(--tekst); }   /* eigen regels: de tijd iets helderder */
 .logregel.leeg { color: var(--grijs); font-style: italic; border-top: 0; }
 .logregel.raak_robot, .logregel.raak_gebouw { color: #ffb347; }
 .logregel.dood { color: var(--rood); font-weight: 700; }

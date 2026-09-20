@@ -1,7 +1,8 @@
 <div id="log" class="log">
   <h3>Wat gebeurt er?</h3>
+  {# 'nieuw' alleen voor regels uit deze tik: #log wordt elke tik vervangen, anders flitst de bovenste regel elke seconde #}
   {% for r in log %}
-  <div class="logregel {{ r.soort }}{% if r.mij %} mij{% endif %}{% if loop.first %} nieuw{% endif %}"><span class="tijd">{{ r.tijd }}</span>{{ r.tekst }}</div>
+  <div class="logregel {{ r.soort }}{% if r.mij %} mij{% endif %}{% if r.tik == game.tik %} nieuw{% endif %}"><span class="tijd">{{ r.tijd }}</span>{{ r.tekst }}</div>
   {% else %}
   <div class="logregel leeg">Typ een commando om te beginnen.</div>
   {% endfor %}

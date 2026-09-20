@@ -106,7 +106,7 @@ def log_tekst(game: Game, ik: int, e: Gebeurtenis) -> str:
 def log_regels(game: Game, ik: int, aantal: int = 10) -> list[dict]:
     """De laatste `aantal` gebeurtenissen als regels voor het log, nieuwste eerst."""
     return [
-        {"tijd": mmss(tik), "tekst": log_tekst(game, ik, e), "soort": e.soort, "mij": e.speler == ik}
+        {"tik": tik, "tijd": mmss(tik), "tekst": log_tekst(game, ik, e), "soort": e.soort, "mij": e.speler == ik}
         for tik, e in list(game.log)[::-1][:aantal]
     ]
 

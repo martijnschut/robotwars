@@ -91,7 +91,7 @@ def test_log_regels_vanuit_speler_1():
         "Robo loopt tegen iets aan en blijft staan",
         "Jij loopt vooruit naar (6, 2)",
     ]
-    assert regels[0] == {"tijd": "1:15", "tekst": "🏆 Jij wint!", "soort": "win", "mij": True}
+    assert regels[0] == {"tik": 75, "tijd": "1:15", "tekst": "🏆 Jij wint!", "soort": "win", "mij": True}
     assert regels[-1]["tijd"] == "0:01" and regels[-1]["mij"] is True
     assert regels[-2]["mij"] is False and regels[-2]["soort"] == "geblokkeerd"
     assert regels[5]["soort"] == "dood" and regels[5]["mij"] is True

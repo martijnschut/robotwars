@@ -125,7 +125,8 @@ def test_spelpagina(client):
     r = client.get(f"/spel/{game.id}")
     assert r.status_code == 200
     for fragment in ('id="veld"', 'id="status"', 'id="kop"', 'id="regels"', 'id="invoer"', 'id="einde"',
-                     'id="banner"', 'id="log"', 'id="teller"', 'class="spel-layout"', 'class="kolom-editor"'):
+                     'id="banner"', 'id="log"', 'id="teller"', 'class="spel-layout"', 'class="kolom-editor"',
+                     'class="hartjes"'):
         assert fragment in r.text
     assert f'ws-connect="/ws/spel/{game.id}"' in r.text
     assert "Typ een commando om te beginnen." in r.text
@@ -173,9 +174,14 @@ def test_tik_stuurt_veld_naar_verbonden_spelers(client):
         html = ws.receive_text()
         assert 'id="veld"' in html and 'id="status"' in html and 'id="kop"' in html
         assert 'id="banner"' in html and 'id="log"' in html and 'id="teller"' in html
-        assert "Jij loopt omhoog naar (2, 3)" in html and 'class="logregel loop mij"' in html
+        assert "Jij loopt omhoog naar (2, 3)" in html and 'class="logregel loop mij nieuw"' in html
         assert 'class="logregel loop nieuw"' in html and "Robo loopt" in html   # Robo zet ook een stap
         assert (game.spelers[1].x, game.spelers[1].y) == (2, 3)
+        # een tik zonder gebeurtenissen: de regels blijven staan, maar flitsen niet opnieuw
+        main.tik_alles()
+        client.portal.call(main.zend_alles)
+        html = ws.receive_text()
+        assert "Jij loopt omhoog naar (2, 3)" in html and "nieuw" not in html
 
 
 def test_editor_antwoord_bevat_teller(client):

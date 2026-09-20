@@ -4,7 +4,9 @@
     <svg class="{{ p.nummer|kleur }}{% if p.nummer != ik %} spiegel{% endif %}"><use href="#bolbot"/></svg>
     <div>
       <b>{{ p.naam }}{% if p.nummer == ik %} (jij){% endif %}</b>
-      robot {{ p.robot_levens|hartjes(5) }} &nbsp; toren {{ p.gebouw_levens|hartjes(5) }} &nbsp; 🛡️ nog {{ p.schilden_over }}
+      <span class="stat">robot <span class="hartjes">{{ p.robot_levens|hartjes(5) }}</span></span>
+      <span class="stat">toren <span class="hartjes">{{ p.gebouw_levens|hartjes(5) }}</span></span>
+      <span class="stat">🛡️ nog {{ p.schilden_over }}</span>
       {% if not p.leeft and not game.afgelopen %}<span class="dood">· komt terug over {{ p.respawn_over }}</span>{% endif %}
     </div>
   </div>
