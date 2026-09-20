@@ -111,8 +111,22 @@ knipperend baken. De schade is aan het gebouw zelf te zien:
 | 1 | onderste ring uit, vuur |
 | 0 | ingestort: alleen puin, vlammen en rook |
 
-Bij elke treffer schudt het gebouw kort en flitst het. Mockups staan in
-`.superpowers/brainstorm/` (niet in git).
+Bij elke treffer schudt het gebouw kort en flitst het.
+
+### Uiterlijk van robot, schild en kogel
+
+- **Robot:** gekozen ontwerp **Bolbot** (SVG-sprite in teamkleur): zwevende
+  bolrobot met één groot oog, straalmotor eronder (zweefanimatie), blaster
+  aan de voorkant, antenne met knipperlicht. De robot kijkt altijd "vooruit";
+  de tegenstander wordt gespiegeld (`scaleX(-1)`).
+- **Schild:** zeshoek van energie in teamkleur met een lopende glans. Na 1
+  treffer één barst, na 2 treffers meerdere barsten, na 3 treffers weg.
+- **Kogel:** gloeiende energiebol met een staart; de vakjes die hij passeert
+  lichten één tik geel op.
+
+Alle sprites zijn inline SVG-`<symbol>`s in één bestand (`static/sprites.svg`
+of in de template), hergebruikt via `<use>`, met de teamkleur als CSS-variabele
+`--kleur`. Mockups staan in `.superpowers/brainstorm/` (niet in git).
 
 ## 4. De taal
 
