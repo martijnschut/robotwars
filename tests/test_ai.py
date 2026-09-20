@@ -48,16 +48,25 @@ def test_loopt_naar_dichtstbijzijnde_brug_en_dan_vooruit():
     g.spelers[1].x, g.spelers[1].y = 2, 1        # uit de weg (anders schiet Robo op rij 4)
     r = g.spelers[2]
     r.x, r.y = 12, 4
-    assert kies_stap(g, 2) == Move("omhoog")     # brug op rij 2 is even ver als 6; kies 2
+    assert kies_stap(g, 2) == Move("omlaag")     # brug op y=2 is even ver als 6; kies 2 (de onderste)
     r.y = 2
     assert kies_stap(g, 2) == Move("vooruit")
     r.x = 7                                      # op de brug
     assert kies_stap(g, 2) == Move("vooruit")
-    r.x = 6                                      # over de rivier: naar rij 4
-    assert kies_stap(g, 2) == Move("omlaag")
+    r.x = 6                                      # over de rivier: naar y=4, dus omhoog
+    assert kies_stap(g, 2) == Move("omhoog")
     r.y = 4
     assert kies_stap(g, 2) == Move("vooruit")    # tot binnen bereik (rule 2 schiet dan)
     r.y = 5
+    assert kies_stap(g, 2) == Move("omlaag")
+
+
+def test_vanaf_startvak_met_vijand_thuis_kiest_robo_de_onderste_brug():
+    g = nieuw()                                  # mens op (2,4), Robo op (12,4)
+    assert kies_stap(g, 2) == Move("omlaag")     # richting brug y=2
+    g.spelers[2].y = 3
+    assert kies_stap(g, 2) == Move("omlaag")
+    g.spelers[2].y = 5                           # dichter bij y=6: dan omhoog
     assert kies_stap(g, 2) == Move("omhoog")
 
 
@@ -71,10 +80,10 @@ def test_schild_in_de_weg_op_rij_4_wordt_kapotgeschoten():
 
 def test_andere_brug_als_weg_geblokkeerd():
     g = nieuw()
-    g.spelers[1].x, g.spelers[1].y = 12, 3       # vijand blokkeert 'omhoog' vanaf (12,4)
+    g.spelers[1].x, g.spelers[1].y = 12, 3       # vijand blokkeert 'omlaag' vanaf (12,4)
     g.spelers[2].x, g.spelers[2].y = 12, 4
     g.spelers[2].schilden_over = 0               # anders zet hij eerst een schild
-    assert kies_stap(g, 2) == Move("omlaag")
+    assert kies_stap(g, 2) == Move("omhoog")     # dan maar naar de brug op y=6
 
 
 def test_dode_robo_doet_niets():
@@ -89,7 +98,7 @@ def test_tegoed_in_het_spel():
     assert g.spelers[2].tegoed == 0                      # inplannen geeft nog geen tegoed
     g.tick()
     assert g.spelers[2].tegoed == 0                      # gekregen én in dezelfde tik verbruikt
-    assert (g.spelers[2].x, g.spelers[2].y) == (12, 3)   # Robo liep omhoog
+    assert (g.spelers[2].x, g.spelers[2].y) == (12, 3)   # Robo liep omlaag, richting brug y=2
     g.tick()
     g.tick()
     assert g.spelers[2].tegoed == 0
@@ -114,8 +123,8 @@ def test_stop_na_twee_ticks_geeft_robo_precies_twee_stappen():
     g.stop(1)
     for _ in range(5):
         g.tick()
-    assert (g.spelers[1].x, g.spelers[1].y) == (2, 2)
-    assert (g.spelers[2].x, g.spelers[2].y) == (12, 2)   # twee keer omhoog, niet meer
+    assert (g.spelers[1].x, g.spelers[1].y) == (2, 6)
+    assert (g.spelers[2].x, g.spelers[2].y) == (12, 2)   # twee keer omlaag, niet meer
 
 
 def test_sneuvelen_van_de_mens_houdt_robo_stil():

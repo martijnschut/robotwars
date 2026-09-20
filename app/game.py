@@ -12,6 +12,8 @@ from typing import Callable
 
 from .parser import Move, Shoot, Shield, Step
 
+# Het veld is een wiskundig assenstelsel: x loopt naar rechts (1..13), y omhoog (1 onderaan,
+# 7 bovenaan). Bruggen, torens en startvakken liggen symmetrisch, dus (x, y) is eenduidig.
 BREEDTE, HOOGTE = 13, 7
 RIVIER_X = 7
 BRUG_RIJEN = (2, 6)
@@ -251,11 +253,12 @@ class Game:
             self._zet_schild(speler, stap.x, stap.y)
 
     def _loop(self, speler: Speler, richting: str) -> None:
+        # Het veld is een assenstelsel: y=1 ligt onderaan, y=7 bovenaan.
         dx, dy = {
             "vooruit": (speler.richting, 0),
             "achteruit": (-speler.richting, 0),
-            "omhoog": (0, -1),
-            "omlaag": (0, 1),
+            "omhoog": (0, 1),    # y + 1
+            "omlaag": (0, -1),   # y - 1
         }[richting]
         doel = (speler.x + dx, speler.y + dy)
         if self.is_vrij(*doel):

@@ -39,11 +39,26 @@ def test_een_stap_per_tik():
     g = nieuw()
     g.voeg_stappen_toe(1, [Move("omhoog"), Move("omhoog"), Move("vooruit")])
     g.tick()
-    assert (g.spelers[1].x, g.spelers[1].y) == (2, 3)
+    assert (g.spelers[1].x, g.spelers[1].y) == (2, 5)
     g.tick()
     g.tick()
-    assert (g.spelers[1].x, g.spelers[1].y) == (3, 2)
+    assert (g.spelers[1].x, g.spelers[1].y) == (3, 6)
     assert len(g.spelers[1].wachtrij) == 0
+
+
+def test_omhoog_is_y_plus_1_en_omlaag_y_min_1():
+    """Het veld is een assenstelsel: y loopt van onder (1) naar boven (7)."""
+    g = nieuw()
+    g.voeg_stappen_toe(1, [Move("omhoog")])
+    g.tick()
+    assert (g.spelers[1].x, g.spelers[1].y) == (2, 5)
+    g.voeg_stappen_toe(1, [Move("omlaag"), Move("omlaag")])
+    g.tick()
+    g.tick()
+    assert (g.spelers[1].x, g.spelers[1].y) == (2, 3)
+    g.voeg_stappen_toe(2, [Move("omlaag")])
+    g.tick()
+    assert (g.spelers[2].x, g.spelers[2].y) == (12, 3)
 
 
 def test_niet_het_water_in():
@@ -66,8 +81,12 @@ def test_wel_over_de_brug():
 
 def test_niet_buiten_het_veld_of_in_gebouw_of_robot():
     g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 2, HOOGTE
+    g.voeg_stappen_toe(1, [Move("omhoog")])      # boven rij 7 is niets
+    g.tick()
+    assert (g.spelers[1].x, g.spelers[1].y) == (2, HOOGTE)
     g.spelers[1].x, g.spelers[1].y = 2, 1
-    g.voeg_stappen_toe(1, [Move("omhoog")])
+    g.voeg_stappen_toe(1, [Move("omlaag")])      # onder rij 1 ook niet
     g.tick()
     assert (g.spelers[1].x, g.spelers[1].y) == (2, 1)
     g.spelers[1].x, g.spelers[1].y = 2, 4

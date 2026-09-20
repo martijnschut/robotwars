@@ -6,7 +6,13 @@ from .parser import Move, Shoot, Shield, Step
 
 SCHILD_VAK = (11, 4)   # vóór Robo's startvak (12,4), dus de kogel raakt het schild eerder dan de toren
 
-_DELTA = {"vooruit": (1, 0), "achteruit": (-1, 0), "omhoog": (0, -1), "omlaag": (0, 1)}
+_DELTA = {"vooruit": (1, 0), "achteruit": (-1, 0), "omhoog": (0, 1), "omlaag": (0, -1)}
+
+
+def _verticaal(van_y: int, naar_y: int) -> str:
+    """Welke kant op om van van_y naar naar_y te komen: y loopt van onder naar boven,
+    dus naar een hogere y is 'omhoog'."""
+    return "omhoog" if naar_y > van_y else "omlaag"
 
 
 def kies_stap(game: Game, nummer: int = 2) -> Step | None:
@@ -67,12 +73,12 @@ def _loop_stap(game: Game, ik: Speler, vijand: Speler) -> Step | None:
         brug = min(BRUG_RIJEN, key=lambda rij: (abs(rij - ik.y), rij))
         if ik.y == brug:
             return _stap_of_schot(game, ik, "vooruit")
-        stap = _stap_of_schot(game, ik, "omhoog" if brug < ik.y else "omlaag")
+        stap = _stap_of_schot(game, ik, _verticaal(ik.y, brug))
         if stap is not None:
             return stap
         andere = BRUG_RIJEN[1] if brug == BRUG_RIJEN[0] else BRUG_RIJEN[0]
-        return _stap_of_schot(game, ik, "omhoog" if andere < ik.y else "omlaag")
+        return _stap_of_schot(game, ik, _verticaal(ik.y, andere))
     doel_y = vijand.gebouw[1]
     if ik.y == doel_y:
         return _stap_of_schot(game, ik, "vooruit")
-    return _stap_of_schot(game, ik, "omhoog" if doel_y < ik.y else "omlaag")
+    return _stap_of_schot(game, ik, _verticaal(ik.y, doel_y))
