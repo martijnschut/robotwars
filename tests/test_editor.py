@@ -92,3 +92,14 @@ def test_te_veel_geneste_stappen_is_fout_net_als_volle_wachtrij():
     assert e.regels[-1].markering == "fout"
     assert e.hint == MELD_DRUK
     assert len(g.spelers[1].wachtrij) == 0
+
+
+def test_wis_maakt_ook_open_herhaal_blok_leeg():
+    g, e = nieuw()
+    e.verwerk(g, 1, "herhaal 2 keer")
+    e.verwerk(g, 1, "robot = vooruit")
+    e.wis()
+    assert e.verwerk(g, 1, "robot = schiet") is True
+    assert list(g.spelers[1].wachtrij) == [Shoot()]
+    assert e.markering == ""
+    assert e.regels == [Regel("ok", "robot = schiet", 0)]

@@ -45,7 +45,7 @@ def _kan_raken(game: Game, ik: Speler, doel: tuple[int, int]) -> bool:
 
 def _doel(ik: Speler, richting: str) -> tuple[int, int]:
     dx, dy = _DELTA[richting]
-    return ik.x + dx * ik.richting if dx else ik.x, ik.y + dy
+    return ik.x + dx * ik.richting, ik.y + dy
 
 
 def _stap_of_schot(game: Game, ik: Speler, richting: str) -> Step | None:

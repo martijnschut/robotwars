@@ -31,7 +31,13 @@ class Editor:
     hint: str | None = None
 
     def wis(self) -> None:
+        """Maakt de hele editor-toestand leeg, inclusief een open herhaal-blok.
+        Heeft geen effect op het spel: de wachtrij van de speler blijft ongemoeid."""
         self.regels.clear()
+        self.blok = []
+        self.diepte = 0
+        self.markering = ""
+        self.hint = None
 
     def verwerk(self, game: Game, nummer: int, tekst: str) -> bool:
         """Verwerkt de getypte invoerregel. True = regel is bevroren (invoer leegmaken)."""
