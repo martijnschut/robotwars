@@ -12,7 +12,7 @@ Spelen: **https://robot.schut.me**
 robot = vooruit      robot = achteruit
 robot = omhoog       robot = omlaag
 robot = schiet       (schiet 4 vakjes vooruit)
-schild = (4, 2)      (x, y; 3 per potje, alleen op je eigen helft)
+schild = (4, 2)      (x, y; 3 per potje, alleen op je eigen helft; kapot na 8 treffers)
 herhaal 3 keer
   robot = vooruit
 klaar

@@ -99,7 +99,7 @@ def test_niet_buiten_het_veld_of_in_gebouw_of_robot():
     assert (g.spelers[1].x, g.spelers[1].y) == (2, 4)
 
 
-from app.game import Schild, RESPAWN_TIKKEN
+from app.game import Schild, RESPAWN_TIKKEN, SCHILD_LEVENS
 from app.parser import Shoot
 
 
@@ -127,16 +127,18 @@ def test_schot_stopt_bij_schild():
     g.voeg_stappen_toe(1, [Shoot()])
     g.tick()
     assert g.spelers[2].robot_levens == 5
-    assert g.schild_op(4, 2).levens == 2
+    assert g.schild_op(4, 2).levens == SCHILD_LEVENS - 1
 
 
-def test_schild_verdwijnt_na_3_treffers():
+def test_schild_verdwijnt_na_acht_treffers():
     g = nieuw()
     g.spelers[1].x, g.spelers[1].y = 2, 2
     g.schilden.append(Schild(4, 2, eigenaar=1))
-    g.voeg_stappen_toe(1, [Shoot(), Shoot(), Shoot()])
-    for _ in range(3):
+    g.voeg_stappen_toe(1, [Shoot()] * SCHILD_LEVENS)
+    for _ in range(SCHILD_LEVENS - 1):
         g.tick()
+    assert g.schild_op(4, 2).levens == 1
+    g.tick()
     assert g.schild_op(4, 2) is None
 
 
@@ -298,7 +300,7 @@ def test_log_schot_raakt_robot_schild_gebouw_of_mist():
     g.schilden.append(Schild(5, 3, eigenaar=1))
     g.voeg_stappen_toe(1, [Shoot()])
     g.tick()
-    assert g.log[-1] == (2, Gebeurtenis("raak_schild", 1, 5, 3, doel=1, levens=2))
+    assert g.log[-1] == (2, Gebeurtenis("raak_schild", 1, 5, 3, doel=1, levens=SCHILD_LEVENS - 1))
     g.spelers[1].x, g.spelers[1].y = 9, 4
     g.voeg_stappen_toe(1, [Shoot()])
     g.tick()

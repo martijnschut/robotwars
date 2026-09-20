@@ -19,9 +19,9 @@ a { color: var(--blauw); }
 .t3 { --l5: hidden; --l4: hidden; }
 .t2 { --l5: hidden; --l4: hidden; --l3: hidden; }
 .t1 { --l5: hidden; --l4: hidden; --l3: hidden; --l2: hidden; }
-/* schild-barsten (--b1, --b2) */
-.sc2 { --b1: visible; }
-.sc1 { --b1: visible; --b2: visible; }
+/* schild-barsten (--b1, --b2): één barst op de helft, meer barsten bij de laatste twee levens */
+.sc4, .sc3 { --b1: visible; }
+.sc2, .sc1 { --b1: visible; --b2: visible; }
 
 /* startpagina, wachtkamer, scorebord */
 .logo { font-size: 40px; font-weight: 900; text-align: center; margin: 24px 0 4px; }

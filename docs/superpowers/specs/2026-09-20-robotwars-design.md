@@ -103,7 +103,7 @@ beide spelers zichtbaar.
   ((2,4) of (12,4)), anders kan een robot nooit meer terugkomen;
 - de speler heeft nog schilden over (3 per potje).
 
-Een schild verdwijnt na 3 treffers. Voldoet het commando niet aan de
+Een schild verdwijnt na 8 treffers. Voldoet het commando niet aan de
 voorwaarden, dan zie je een foutmelding en gebeurt er niets (het commando telt
 niet als gebruikt schild).
 
@@ -135,8 +135,8 @@ Bij elke treffer schudt het gebouw kort en flitst het.
   bolrobot met één groot oog, straalmotor eronder (zweefanimatie), blaster
   aan de voorkant, antenne met knipperlicht. De robot kijkt altijd "vooruit";
   de tegenstander wordt gespiegeld (`scaleX(-1)`).
-- **Schild:** zeshoek van energie in teamkleur met een lopende glans. Na 1
-  treffer één barst, na 2 treffers meerdere barsten, na 3 treffers weg.
+- **Schild:** zeshoek van energie in teamkleur met een lopende glans. Vanaf 4
+  treffers één barst, vanaf 6 treffers meerdere barsten, na 8 treffers weg.
 - **Kogel:** gloeiende energiebol met een staart; de vakjes die hij passeert
   lichten één tik geel op.
 
