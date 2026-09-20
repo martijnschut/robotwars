@@ -349,8 +349,8 @@ class Game:
             speler.melding = MELD_HELFT
         elif (x, y) in START.values():
             speler.melding = MELD_STARTVAK
-        elif not self.is_vrij(x, y):
-            speler.melding = MELD_BEZET
+        elif not self.is_vrij(x, y) or self.mijn_op(x, y) is not None:
+            speler.melding = MELD_BEZET   # ook niet op een mijn: die zou dan onzichtbaar worden
         else:
             self.schilden.append(Schild(x, y, speler.nummer))
             speler.schilden_over -= 1

@@ -28,7 +28,8 @@ def kies_stap(game: Game, nummer: int = 2) -> Step | None:
         return Shoot()
     # 3. vijand op onze helft: schild vóór ons startvak
     if (vijand.leeft and eigen_helft(nummer, vijand.x)
-            and ik.schilden_over > 0 and game.is_vrij(*SCHILD_VAK)):
+            and ik.schilden_over > 0 and game.is_vrij(*SCHILD_VAK)
+            and game.mijn_op(*SCHILD_VAK) is None):
         return Shield(*SCHILD_VAK)
     # 4. lopen
     return _loop_stap(game, ik, vijand)
@@ -72,7 +73,7 @@ def _kies_brug(game: Game, ik: Speler) -> int:
     lopen. Liggen er op beide rijen mijnen, dan toch de dichtstbijzijnde."""
     def afstand(rij: int) -> tuple[int, int]:
         return abs(rij - ik.y), rij
-    naar_rivier = range(RIVIER_X, ik.x, 1 if ik.x > RIVIER_X else -1)
+    naar_rivier = range(min(RIVIER_X, ik.x), max(RIVIER_X, ik.x) + 1)   # incl. eigen kolom
     vrij = [rij for rij in BRUG_RIJEN if not any(game.mijn_op(x, rij) for x in naar_rivier)]
     return min(vrij or BRUG_RIJEN, key=afstand)
 

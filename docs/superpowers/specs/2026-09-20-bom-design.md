@@ -47,6 +47,8 @@ Eerste regel die past:
 - Kogels vliegen over mijnen heen; een mijn blokkeert een schot niet en gaat
   er niet van af.
 - Een mijn blokkeert lopen niet (anders zou hij nooit afgaan).
+- Een schild mag niet op een mijn worden gezet (de mijn zou dan onzichtbaar
+  zijn); dat geeft "Dat vak is niet leeg."
 - Robo (de computerspeler) legt geen bommen. Hij stapt wel niet op een mijn:
   ligt er een mijn op zijn volgende vak, dan telt dat als geblokkeerd. Bij het
   kiezen van een brug slaat hij een brugrij over waar tussen hem en de rivier

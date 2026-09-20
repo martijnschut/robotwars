@@ -505,3 +505,10 @@ def test_speler_2_legt_bom_in_echte_veldrichting():
     assert leg(g, 2, -1, 0) is None                    # dx is hier al gespiegeld (de editor doet dat)
     assert g.mijn_op(11, 4) == Mijn(11, 4, eigenaar=2)
     assert g.spelers[2].bommen_over == 2
+
+
+def test_schild_niet_op_een_mijn():
+    g = nieuw()
+    g.mijnen.append(Mijn(4, 3, eigenaar=2))
+    assert zet(g, 1, 4, 3) == MELD_BEZET           # de mijn zou anders onzichtbaar worden
+    assert g.schild_op(4, 3) is None and g.spelers[1].schilden_over == 3

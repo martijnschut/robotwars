@@ -283,6 +283,7 @@ De weggevallen speler mag niet in het duister tasten. Daarom:
   bommen over.
 - Log "Wat gebeurt er?" onder de editor: de laatste 10 gebeurtenissen (lopen,
   geblokkeerd, treffers met resterende hartjes, mis, kapot, terug, schild,
+  bom, mijn,
   winst), nieuwste bovenaan, met tijd, en verteld vanuit de kijker ("Jij
   schiet → raakt Robo! ❤️❤️❤️❤️🖤"). De spelmotor houdt daarvoor `Game.log`
   bij (laatste 30 gebeurtenissen).

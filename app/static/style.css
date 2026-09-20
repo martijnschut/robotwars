@@ -106,11 +106,11 @@ a { color: var(--blauw); }
 .logregel .tijd { font-family: ui-monospace, Consolas, monospace; color: var(--grijs); margin-right: 10px; font-variant-numeric: tabular-nums; }
 .logregel.mij .tijd { color: var(--tekst); }   /* eigen regels: de tijd iets helderder */
 .logregel.leeg { color: var(--grijs); font-style: italic; border-top: 0; }
-.logregel.raak_robot, .logregel.raak_gebouw { color: #ffb347; }
+.logregel.raak_robot, .logregel.raak_gebouw, .logregel.bom_raak, .logregel.mijn_raak, .logregel.mijn_dubbel { color: #ffb347; }
 .logregel.dood { color: var(--rood); font-weight: 700; }
 .logregel.win { color: var(--geel); font-weight: 700; }
 .logregel.nieuw { color: #fff; background: rgba(255,255,255,.06); border-radius: 6px; padding-left: 6px; margin-left: -6px; animation: opkomen .5s ease-out; }
-.logregel.nieuw.raak_robot, .logregel.nieuw.raak_gebouw { color: #ffc46b; }
+.logregel.nieuw.raak_robot, .logregel.nieuw.raak_gebouw, .logregel.nieuw.bom_raak, .logregel.nieuw.mijn_raak, .logregel.nieuw.mijn_dubbel { color: #ffc46b; }
 .logregel.nieuw.dood { color: #ff8a80; }
 .logregel.nieuw.win { color: var(--geel); }
 /* geen opacity 0 als startframe: een verborgen tabblad pauzeert animaties op frame 0 */

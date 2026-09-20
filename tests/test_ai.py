@@ -175,3 +175,20 @@ def test_robo_blijft_niet_stuiteren_bij_een_mijn_op_de_brugrij():
     assert kies_stap(g, 2) == Move("omhoog")     # meteen naar de andere brug, niet eerst omlaag
     g.mijnen.append(Mijn(9, 6, eigenaar=1))      # ook de bovenste geblokkeerd: dan toch de dichtstbijzijnde
     assert kies_stap(g, 2) == Move("omlaag")
+
+
+def test_mijn_in_eigen_kolom_op_de_brugrij_telt_ook_mee():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 2, 1
+    g.spelers[2].x, g.spelers[2].y = 12, 4
+    g.mijnen.append(Mijn(12, 2, eigenaar=1))     # precies op de brugrij in Robo's eigen kolom
+    assert kies_stap(g, 2) == Move("omhoog")
+    g.spelers[2].y = 3
+    assert kies_stap(g, 2) == Move("omhoog")     # geen heen-en-weer tussen (12,3) en (12,4)
+
+
+def test_robo_zet_geen_schild_op_een_mijn():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 9, 1        # vijand op Robo's helft, buiten schootsveld
+    g.mijnen.append(Mijn(*SCHILD_VAK, eigenaar=1))
+    assert not isinstance(kies_stap(g, 2), Shield)
