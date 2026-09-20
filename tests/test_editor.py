@@ -88,6 +88,19 @@ def test_schild_van_speler_2_wordt_gespiegeld_naar_veldcoordinaten():
     assert e2.regels[-1].tekst == "schild = (4, 3)"    # de getypte regel blijft zoals getypt
 
 
+def test_bom_dx_is_vooruit_dus_gespiegeld_voor_speler_2():
+    from app.parser import Bomb
+    g, e = nieuw()
+    e.verwerk(g, 1, "bom = (1, -1)")
+    assert list(g.spelers[1].wachtrij) == [Bomb(1, -1)]
+    e2 = Editor()
+    e2.verwerk(g, 2, "bom = (1, -1)")                  # vooruit is voor speler 2 kolom -1
+    assert list(g.spelers[2].wachtrij) == [Bomb(-1, -1)]
+    e2.verwerk(g, 2, "bom = (0, 1)")
+    assert list(g.spelers[2].wachtrij)[-1] == Bomb(0, 1)
+    assert e2.regels[-1].tekst == "bom = (0, 1)"       # de getypte regel blijft zoals getypt
+
+
 def test_wis_maakt_regels_leeg():
     g, e = nieuw()
     e.verwerk(g, 1, "robot = vooruit")

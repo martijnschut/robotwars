@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .game import Game, MAX_WACHTRIJ, MELD_DRUK, eigen_kolom
-from .parser import (Command, Incomplete, Invalid, RepeatEnd, RepeatStart, Shield,
+from .game import Game, MAX_WACHTRIJ, MELD_DRUK, RICHTING, eigen_kolom
+from .parser import (Bomb, Command, Incomplete, Invalid, RepeatEnd, RepeatStart, Shield,
                      expand, parse_line)
 
 HINT_KLAAR = "Je bent niet in een herhaal. Typ eerst herhaal 3 keer."
@@ -57,6 +57,9 @@ class Editor:
         if isinstance(r, Shield):
             # elke speler typt kolommen vanaf zijn eigen kant; het veld rekent in echte x
             r = Shield(eigen_kolom(nummer, r.x), r.y)
+        if isinstance(r, Bomb):
+            # dx = 1 is "vooruit"; voor speler 2 is dat op het veld kolom -1
+            r = Bomb(r.dx * RICHTING[nummer], r.dy)
         if isinstance(r, RepeatStart):
             if self.diepte >= MAX_DIEPTE:
                 self.markering = "fout"
@@ -92,7 +95,7 @@ class Editor:
             if not gelukt:
                 self.hint = MELD_DRUK
             return True
-        # Move / Shoot / Shield
+        # Move / Shoot / Shield / Bomb
         if self.diepte > 0:
             self.blok.append(r)
             self._bevries("wacht", tekst, self.diepte)
