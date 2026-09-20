@@ -62,9 +62,10 @@ bom telt niet als gebruikt (zoals bij een schild):
 | buiten het veld | Dat vak bestaat niet. |
 | water (rivier zonder brug) | Daar is water. |
 | gebouw of schild op het vak | Dat vak is niet leeg. |
-| startvak (2,4) of (12,4) | Niet op een startvak, anders kan een robot nooit meer terugkomen. |
+| leeg startvak (2,4) of (12,4) | Niet op een startvak, anders kan een robot nooit meer terugkomen. |
 
-Bruggen en de helft van de tegenstander mogen wel.
+Staat er een robot op het startvak, dan mag de bom wél: hij knalt meteen en
+er blijft geen mijn liggen. Bruggen en de helft van de tegenstander mogen wel.
 
 ### Speler 2
 
