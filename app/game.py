@@ -96,7 +96,7 @@ class Gebeurtenis:
     y: int = 0
     doel: int | None = None      # geraakte speler / eigenaar van het geraakte voorwerp
     levens: int | None = None    # resterende levens van het geraakte voorwerp
-    tekst: str | None = None     # richting bij lopen, melding bij schild_fout
+    tekst: str | None = None     # richting bij lopen, melding bij schild_fout / bom_fout
 
 
 LOG_LENGTE = 30
@@ -288,16 +288,16 @@ class Game:
             "omhoog": (0, 1),    # y + 1
             "omlaag": (0, -1),   # y - 1
         }[richting]
-        doel = (speler.x + dx, speler.y + dy)
-        if self.is_vrij(*doel):
-            speler.x, speler.y = doel
+        vak = (speler.x + dx, speler.y + dy)
+        if self.is_vrij(*vak):
+            speler.x, speler.y = vak
             self._meld("loop", speler.nummer, speler.x, speler.y, tekst=richting)
-            mijn = self.mijn_op(*doel)
+            mijn = self.mijn_op(*vak)
             if mijn is not None:
                 self.mijnen.remove(mijn)
-                self.knallen.append(doel)
-                self._meld("mijn_raak", speler.nummer, *doel, doel=mijn.eigenaar)
-                self._robot_kapot(speler, *doel)
+                self.knallen.append(vak)
+                self._meld("mijn_raak", speler.nummer, *vak, doel=mijn.eigenaar)
+                self._robot_kapot(speler, *vak)
         else:
             self._meld("geblokkeerd", speler.nummer, tekst=richting)
 

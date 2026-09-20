@@ -498,3 +498,10 @@ def test_dode_robot_legt_geen_bom():
     g.voeg_stappen_toe(1, [Bomb(1, 0)])
     g.tick()
     assert g.mijnen == [] and g.spelers[1].bommen_over == 3
+
+
+def test_speler_2_legt_bom_in_echte_veldrichting():
+    g = nieuw()
+    assert leg(g, 2, -1, 0) is None                    # dx is hier al gespiegeld (de editor doet dat)
+    assert g.mijn_op(11, 4) == Mijn(11, 4, eigenaar=2)
+    assert g.spelers[2].bommen_over == 2
