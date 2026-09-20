@@ -5,9 +5,12 @@ import asyncio
 import contextlib
 import logging
 import os
+import re
 import time
+import unicodedata
 from contextlib import asynccontextmanager
 from pathlib import Path
+from urllib.parse import urlsplit
 
 from fastapi import FastAPI, Form, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, RedirectResponse, Response
@@ -27,6 +30,10 @@ COOKIE_DUUR = 30 * 24 * 3600
 MAX_BERICHTEN_PER_SEC = 30   # WebSocket-berichten per socket (token-bucket)...
 BURST = 60                   # ...met dit tegoed als piek
 MAX_SOCKETS = 3              # open sockets per speler per spel (tabbladen)
+# Namen komen op het openbare scorebord: letters/cijfers (Unicode), spaties, - en '; geen
+# regeleinden, geen onzichtbare of richting-omdraaiende tekens.
+NAAM_PATROON = re.compile(r"[\w][\w \-']{0,19}")
+FOUT_NAAM = "Gebruik alleen letters, cijfers, spaties of - en ' (1 tot 20 tekens)."
 
 log = logging.getLogger("robotwars")
 lobby = Lobby()
@@ -80,6 +87,13 @@ def huidige_sessie(request: Request):
     return sessie
 
 
+def cross_site(request: Request) -> Response | None:
+    """Een POST vanaf een andere site (Sec-Fetch-Site, gestuurd door moderne browsers): weigeren."""
+    if request.headers.get("sec-fetch-site") == "cross-site":
+        return Response("Geweigerd: dit formulier hoort bij Robot Wars zelf.", status_code=403)
+    return None
+
+
 def druk(request: Request, naam: str = ""):
     """Antwoord als er geen spel meer bij kan: de startpagina met een melding, status 503."""
     return templates.TemplateResponse(
@@ -102,10 +116,12 @@ async def start(request: Request):
 
 @app.post("/start")
 async def start_post(request: Request, naam: str = Form(""), modus: str = Form("computer")):
-    naam = naam.strip()
-    if not 1 <= len(naam) <= 20:
-        return templates.TemplateResponse(request, "start.html",
-                                          {"naam": naam, "fout": "Vul een naam in van 1 tot 20 tekens."},
+    if geweigerd := cross_site(request):
+        return geweigerd
+    naam = unicodedata.normalize("NFKC", naam).strip()
+    if not naam or not NAAM_PATROON.fullmatch(naam):
+        fout = FOUT_NAAM if naam else "Vul een naam in van 1 tot 20 tekens."
+        return templates.TemplateResponse(request, "start.html", {"naam": naam, "fout": fout},
                                           status_code=400)
     token = request.cookies.get("token")
     if lobby.vol() and not (token and lobby.game_van(token)):
@@ -170,6 +186,8 @@ async def wachten_status(request: Request):
 
 @app.post("/wachten/computer")
 async def wachten_computer(request: Request):
+    if geweigerd := cross_site(request):
+        return geweigerd
     sessie = huidige_sessie(request)
     if sessie is None:
         return RedirectResponse("/", status_code=303)
@@ -204,6 +222,8 @@ async def spel(request: Request, game_id: str):
 @app.post("/spel/{game_id}/stop")
 async def spel_stop(request: Request, game_id: str):
     """Knop "Stop spel": geef op, de ander wint (telt niet voor het scorebord), terug naar start."""
+    if geweigerd := cross_site(request):
+        return geweigerd
     gevonden = spel_van(request, game_id)
     if gevonden is not None:
         game, ik = gevonden
@@ -236,9 +256,10 @@ def verwerk_bericht(game, ik: int, bericht) -> str | None:
 
 @app.websocket("/ws/spel/{game_id}")
 async def ws_spel(ws: WebSocket, game_id: str):
+    origin = ws.headers.get("origin")
     gevonden = spel_van(ws, game_id)
-    if gevonden is None:
-        await ws.close(code=1008)
+    if gevonden is None or (origin and urlsplit(origin).hostname != ws.url.hostname):
+        await ws.close(code=1008)          # vreemde cookie, of een pagina van een andere site
         return
     game, ik = gevonden
     await ws.accept()

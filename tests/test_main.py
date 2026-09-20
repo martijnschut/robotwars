@@ -34,6 +34,58 @@ def test_naam_verplicht(client):
     assert "Vul een naam in" in r.text
 
 
+ACCENT, RTL, ZERO_WIDTH = chr(0x0301), chr(0x202E), chr(0x200B)   # combinerend accent, richting-om, onzichtbaar
+
+
+@pytest.mark.parametrize("naam", ["Wessel", "Anne-Marie", "José", "Jose" + ACCENT, "Wessel 8", "O'Neil", "x" * 20])
+def test_geldige_namen(client, naam):
+    client.cookies.clear()
+    r = client.post("/start", data={"naam": naam, "modus": "computer"}, follow_redirects=False)
+    assert r.status_code == 303, naam
+
+
+@pytest.mark.parametrize("naam", ["a" + RTL + "b", "<b>x</b>", "x\ny", "a" + ZERO_WIDTH + "b", "x" * 21,
+                                  "-Wessel", "naam;drop"])
+def test_ongeldige_namen(client, naam):
+    r = client.post("/start", data={"naam": naam, "modus": "computer"}, follow_redirects=False)
+    assert r.status_code == 400, naam
+    assert "Gebruik alleen letters, cijfers, spaties of - en" in r.text
+    assert main.lobby.sessies == {}
+
+
+def test_naam_wordt_genormaliseerd(client):
+    r = client.post("/start", data={"naam": "Jose" + ACCENT, "modus": "computer"}, follow_redirects=False)
+    game = main.lobby.games[r.headers["location"].split("/")[-1]]
+    assert game.spelers[1].naam == "José"
+
+
+def test_cross_site_post_wordt_geweigerd(client):
+    kop = {"sec-fetch-site": "cross-site"}
+    r = client.post("/start", data={"naam": "Wessel", "modus": "computer"}, headers=kop, follow_redirects=False)
+    assert r.status_code == 403 and main.lobby.games == {}
+    game, token = start_spel(client)
+    assert client.post("/wachten/computer", headers=kop, follow_redirects=False).status_code == 403
+    assert client.post(f"/spel/{game.id}/stop", headers=kop, follow_redirects=False).status_code == 403
+    assert not game.afgelopen
+    # same-origin (of een browser zonder de header) mag gewoon
+    r = client.post(f"/spel/{game.id}/stop", headers={"sec-fetch-site": "same-origin"}, follow_redirects=False)
+    assert r.status_code == 303 and game.afgelopen
+
+
+def test_websocket_met_vreemde_origin_wordt_geweigerd(client):
+    game, token = start_spel(client)
+    kop = {"cookie": f"token={token}", "origin": "https://kwaad.example"}
+    with pytest.raises(WebSocketDisconnect) as e:
+        with client.websocket_connect(f"/ws/spel/{game.id}", headers=kop):
+            pass
+    assert e.value.code == 1008
+    assert not main.verbindingen.get(game.id, {}).get(1)
+    kop["origin"] = "http://testserver"                  # de eigen host: prima
+    with client.websocket_connect(f"/ws/spel/{game.id}", headers=kop) as ws:
+        ws.send_json({"regel": "robot = schiet"})
+        assert 'id="invoer"' in ws.receive_text()
+
+
 def test_start_tegen_computer_maakt_spel_en_cookie(client):
     r = client.post("/start", data={"naam": "Wessel", "modus": "computer"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"].startswith("/spel/")

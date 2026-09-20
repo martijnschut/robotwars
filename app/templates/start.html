@@ -24,7 +24,7 @@
 </div>
 {% endif %}
 <form class="formulier" method="post" action="/start">
-  <label for="naam">Hoe heet je?</label>
+  <label for="naam">Hoe heet je? (voornaam of bijnaam — je naam komt op het openbare scorebord)</label>
   <input type="text" id="naam" name="naam" value="{{ naam }}" maxlength="20" autocomplete="off" autofocus required>
   {% if fout %}<div class="fout-melding">{{ fout }}</div>{% endif %}
   <button class="knop blauw" name="modus" value="mens">🎮 Speel tegen iemand</button>

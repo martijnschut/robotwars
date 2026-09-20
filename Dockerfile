@@ -20,4 +20,4 @@ EXPOSE 8000
 # Precies één worker: lopende spellen en sessies leven in het geheugen van het proces.
 # --proxy-headers: achter Caddy komen X-Forwarded-Proto/For mee (Secure-cookie, echte IP).
 CMD ["uv", "run", "--no-sync", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", \
-     "--workers", "1", "--proxy-headers", "--forwarded-allow-ips", "*", "--ws-max-size", "4096"]
+     "--workers", "1", "--proxy-headers", "--forwarded-allow-ips", "*", "--ws-max-size", "4096", "--no-access-log"]
