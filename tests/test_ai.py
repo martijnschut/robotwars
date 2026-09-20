@@ -135,3 +135,33 @@ def test_sneuvelen_van_de_mens_houdt_robo_stil():
     g.spelers[1].wachtrij.clear()                        # zoals _schiet doet bij een dode robot
     g.tick()
     assert (g.spelers[2].x, g.spelers[2].y) == (12, 4)
+
+
+from app.game import Mijn
+
+
+def test_robo_stapt_niet_op_een_mijn_maar_kiest_de_andere_brug():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 2, 1        # vijand uit de weg
+    g.spelers[2].x, g.spelers[2].y = 12, 4
+    g.mijnen.append(Mijn(12, 3, eigenaar=1))     # op weg naar de onderste brug
+    assert kies_stap(g, 2) == Move("omhoog")
+    g.spelers[2].y = 2                           # op de rij van de brug
+    g.mijnen[:] = [Mijn(11, 2, eigenaar=1)]      # mijn vóór hem
+    assert kies_stap(g, 2) == Move("omhoog")     # dan maar naar de brug op y=6
+
+
+def test_robo_wacht_voor_mijn_op_de_brug_zelf():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 2, 1
+    g.spelers[2].x, g.spelers[2].y = 7, 2        # op de brug, mijn op (6,2)
+    g.mijnen.append(Mijn(6, 2, eigenaar=1))
+    assert kies_stap(g, 2) is None               # geblokkeerd: even wachten, niet erop stappen
+
+
+def test_robo_schiet_gewoon_over_een_mijn_heen():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 8, 4
+    g.spelers[2].x, g.spelers[2].y = 11, 4
+    g.mijnen.append(Mijn(9, 4, eigenaar=1))
+    assert kies_stap(g, 2) == Shoot()

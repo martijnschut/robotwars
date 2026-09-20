@@ -55,10 +55,10 @@ def _doel(ik: Speler, richting: str) -> tuple[int, int]:
 
 
 def _stap_of_schot(game: Game, ik: Speler, richting: str) -> Step | None:
-    """Zet een stap als het vak vrij is. Staat er vooruit een schild in de weg,
-    schiet er dan op. Anders None (even wachten)."""
+    """Zet een stap als het vak vrij is en er geen mijn ligt. Staat er vooruit een schild
+    in de weg, schiet er dan op. Anders None (even wachten)."""
     x, y = _doel(ik, richting)
-    if game.is_vrij(x, y):
+    if game.is_vrij(x, y) and game.mijn_op(x, y) is None:
         return Move(richting)
     if richting == "vooruit" and game.schild_op(x, y) is not None:
         return Shoot()
@@ -71,12 +71,15 @@ def _loop_stap(game: Game, ik: Speler, vijand: Speler) -> Step | None:
     over = (ik.x - RIVIER_X) * ik.richting > 0   # al aan de kant van de vijand
     if not over:
         brug = min(BRUG_RIJEN, key=lambda rij: (abs(rij - ik.y), rij))
+        andere = BRUG_RIJEN[1] if brug == BRUG_RIJEN[0] else BRUG_RIJEN[0]
         if ik.y == brug:
-            return _stap_of_schot(game, ik, "vooruit")
+            stap = _stap_of_schot(game, ik, "vooruit")
+            if stap is None and game.mijn_op(*_doel(ik, "vooruit")) is not None:
+                return _stap_of_schot(game, ik, _verticaal(ik.y, andere))   # mijn op de weg: andere brug
+            return stap
         stap = _stap_of_schot(game, ik, _verticaal(ik.y, brug))
         if stap is not None:
             return stap
-        andere = BRUG_RIJEN[1] if brug == BRUG_RIJEN[0] else BRUG_RIJEN[0]
         return _stap_of_schot(game, ik, _verticaal(ik.y, andere))
     doel_y = vijand.gebouw[1]
     if ik.y == doel_y:
