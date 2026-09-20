@@ -56,6 +56,11 @@ def test_terugkomen_stuurt_door_naar_lopend_spel(client):
     assert r2.status_code == 303 and r2.headers["location"] == doel
 
 
+def test_health(client):
+    r = client.get("/health")
+    assert r.status_code == 200 and r.json()["status"] == "ok"
+
+
 def test_scorebord(client):
     main.db.sla_op("Wessel", "Robo", True, 83)
     main.db.sla_op("Papa", "Wessel", False, 120)

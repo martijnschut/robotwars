@@ -84,6 +84,12 @@ async def start_post(request: Request, naam: str = Form(""), modus: str = Form("
     return antwoord
 
 
+@app.get("/health")
+async def health():
+    """Voor de deploy-healthcheck op de VPS (deploy-robotwars.sh)."""
+    return {"status": "ok", "spellen": len(lobby.games)}
+
+
 @app.get("/scorebord", response_class=HTMLResponse)
 async def scorebord(request: Request):
     return templates.TemplateResponse(request, "scorebord.html",

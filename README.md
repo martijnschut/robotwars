@@ -46,14 +46,25 @@ uv run pytest -q
   Kanttekening: de tijd op het scorebord telt in tikken, dus alleen bij `1`
   klopt hij in seconden.
 
-## Online zetten achter Caddy
+## Spelen op meerdere laptops thuis
 
 ```
-uv run uvicorn app.main:app --host 127.0.0.1 --port 8000
+uv run uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
-Met de meegeleverde `Caddyfile` (pas de domeinnaam aan) regelt Caddy HTTPS en de
-WebSocket-verbinding automatisch: `caddy run`.
+Open op de andere laptop `http://<ip-van-deze-laptop>:8000` (zelfde wifi;
+Windows Firewall moet poort 8000 toestaan).
+
+## Online: robot.schut.me
+
+De app draait op de VPS als Docker-container (`Dockerfile`,
+`docker-compose.production.yml`) achter Caddy. Een push naar `master` wordt
+automatisch uitgerold door de webhook-receiver uit de repo `schut-infra`
+(`webhook-receiver/scripts/deploy-robotwars.sh`); het scorebord staat in het
+volume `robotwars_data`. Details: `schut-infra/VPS_DEPLOYMENT.md`.
+
+Zelf ergens anders draaien achter Caddy kan ook; zie de meegeleverde
+`Caddyfile` (pas de domeinnaam aan): `caddy run`.
 
 ## Bekende beperkingen
 

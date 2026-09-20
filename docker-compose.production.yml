@@ -1,0 +1,26 @@
+# Productie op de VPS: één container achter Caddy (zie schut-infra/caddy/Caddyfile.sites).
+# Deploy gebeurt door schut-infra/webhook-receiver/scripts/deploy-robotwars.sh.
+services:
+  robotwars_app:
+    build: .
+    image: robotwars:latest
+    container_name: robotwars_app
+    init: true
+    restart: unless-stopped
+    environment:
+      - ROBOTWARS_DB=/data/robotwars.db
+      - TZ=Europe/Amsterdam
+    volumes:
+      # Het scorebord (SQLite) overleeft deploys en herstarts.
+      - robotwars_data:/data
+    # Poort bewust NIET gepubliceerd: alleen bereikbaar via Caddy op deployment_web.
+    networks:
+      - web
+
+networks:
+  web:
+    name: deployment_web
+    external: true
+
+volumes:
+  robotwars_data:
