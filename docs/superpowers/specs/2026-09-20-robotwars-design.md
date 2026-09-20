@@ -83,7 +83,8 @@ kogel verdwijnt. De kogelbaan wordt één tik (1 seconde) getoond.
 
 `schild = (kolom, rij)` zet een schild neer. Voorwaarden:
 - op de eigen helft (speler 1: kolom 1–6, speler 2: kolom 8–13);
-- op een leeg vak (geen robot, gebouw, schild);
+- op een leeg vak (geen robot, gebouw, schild) en niet op een startvak
+  ((2,4) of (12,4)), anders kan een robot nooit meer terugkomen;
 - de speler heeft nog schilden over (3 per potje).
 
 Een schild verdwijnt na 3 treffers. Voldoet het commando niet aan de
@@ -161,7 +162,7 @@ Werkt zoals CT-3000: geen Start-knop, geen Enter.
 
 ### Techniek
 
-- De invoerregel is een `<input>` met `hx-trigger="keyup changed delay:50ms"`
+- De invoerregel is een `<input>` met `hx-trigger="input changed delay:50ms"`
   en `ws-send`; het bericht bevat `{"regel": "<tekst>"}`.
 - De server antwoordt met OOB-fragmenten: de markering, eventueel de bevroren
   regel (toegevoegd aan de lijst) en een nieuwe lege `<input autofocus>`.
@@ -231,7 +232,8 @@ scorebord.
   2. Staat het vijandelijke gebouw vóór Robo binnen 4 vakjes, zonder schild
      ertussen? → `schiet`.
   3. Is de vijandelijke robot op Robo's helft, heeft Robo nog schilden, en is
-     het vak vóór Robo's gebouw (12,4) leeg? → `schild = (12, 4)`.
+     het vak (11,4) leeg? → `schild = (11, 4)` (vóór zijn startvak, dus de
+     kogel raakt het schild voordat hij het gebouw raakt).
   4. Anders lopen: naar de rij van de dichtstbijzijnde brug (2 of 6), vooruit
      tot over de brug, dan naar rij 4, dan vooruit tot binnen 4 vakjes van het
      vijandelijke gebouw. Is de volgende stap geblokkeerd, dan wordt de andere
