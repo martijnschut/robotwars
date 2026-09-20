@@ -1,0 +1,1 @@
+<span id="teller" class="teller">{% if game.afgelopen %}{% elif jij.wachtrij|length == 0 %}Je robot wacht op een commando{% else %}Nog {{ jij.wachtrij|length }} {{ "stap" if jij.wachtrij|length == 1 else "stappen" }} te gaan{% endif %}</span>

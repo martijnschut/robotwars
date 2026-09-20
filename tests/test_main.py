@@ -123,9 +123,12 @@ def test_spelpagina(client):
     game, token = start_spel(client)
     r = client.get(f"/spel/{game.id}")
     assert r.status_code == 200
-    for fragment in ('id="veld"', 'id="status"', 'id="kop"', 'id="regels"', 'id="invoer"', 'id="einde"'):
+    for fragment in ('id="veld"', 'id="status"', 'id="kop"', 'id="regels"', 'id="invoer"', 'id="einde"',
+                     'id="banner"', 'id="log"', 'id="teller"'):
         assert fragment in r.text
     assert f'ws-connect="/ws/spel/{game.id}"' in r.text
+    assert "Typ een commando om te beginnen." in r.text
+    assert "Je robot wacht op een commando" in r.text
     assert "Wessel" in r.text and "Robo" in r.text
     client.cookies.clear()
     assert client.get(f"/spel/{game.id}", follow_redirects=False).status_code == 303   # vreemde: weg
@@ -168,7 +171,40 @@ def test_tik_stuurt_veld_naar_verbonden_spelers(client):
         client.portal.call(main.zend_alles)
         html = ws.receive_text()
         assert 'id="veld"' in html and 'id="status"' in html and 'id="kop"' in html
+        assert 'id="banner"' in html and 'id="log"' in html and 'id="teller"' in html
+        assert "Jij loopt omhoog naar (2, 3)" in html and 'class="logregel loop mij"' in html
+        assert 'class="logregel loop nieuw"' in html and "Robo loopt" in html   # Robo zet ook een stap
         assert (game.spelers[1].x, game.spelers[1].y) == (2, 3)
+
+
+def test_editor_antwoord_bevat_teller(client):
+    game, token = start_spel(client)
+    with client.websocket_connect(f"/ws/spel/{game.id}", headers={"cookie": f"token={token}"}) as ws:
+        ws.send_json({"regel": "robot = vooruit"})
+        html = ws.receive_text()
+        assert 'id="teller"' in html and "Nog 1 stap te gaan" in html
+        ws.send_json({"regel": "robot = omhoog"})
+        html = ws.receive_text()
+        assert "Nog 2 stappen te gaan" in html
+        ws.send_json({"actie": "stop"})
+        html = ws.receive_text()
+        assert "Je robot wacht op een commando" in html
+
+
+def test_dodelijk_schot_toont_banner_en_log(client):
+    game, token = start_spel(client)
+    game.spelers[1].robot_levens = 1
+    game.spelers[1].x, game.spelers[1].y = 8, 2
+    game.spelers[2].x, game.spelers[2].y = 10, 2
+    game.voeg_stappen_toe(1, [Move("achteruit")])    # de mens stapt de brug op (7,2); Robo schiet
+    with client.websocket_connect(f"/ws/spel/{game.id}", headers={"cookie": f"token={token}"}) as ws:
+        main.tik_alles()
+        client.portal.call(main.zend_alles)
+        html = ws.receive_text()
+        assert not game.spelers[1].leeft
+        assert "Je robot is kapot" in html and 'class="banner ik"' in html
+        assert "Robo schiet → raakt jou!" in html
+        assert 'class="knal"' in html
 
 
 def test_winst_wordt_opgeslagen_en_getoond(client):

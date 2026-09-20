@@ -21,6 +21,7 @@
     {% elif cel.kogel %}
       <svg class="{{ cel.kogel|kleur }}{% if cel.kogel != ik %} spiegel{% endif %}"><use href="#kogel"/></svg>
     {% endif %}
+    {% if cel.raak %}<span class="knal">💥</span>{% endif %}
   </div>
   {% endfor %}
   {% endfor %}

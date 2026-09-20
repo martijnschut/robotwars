@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from .game import (BREEDTE, BRUG_RIJEN, HOOGTE, RIVIER_X, Game, Schild, Speler)
+from .game import (BREEDTE, BRUG_RIJEN, GEBOUW_LEVENS, HOOGTE, RESPAWN_TIKKEN, RIVIER_X,
+                   ROBOT_LEVENS, Game, Gebeurtenis, Schild, Speler)
 
 MAANDEN = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
 SYMBOLEN = {"ok": "✓", "wacht": "…", "fout": "!"}
@@ -59,7 +60,68 @@ def context(game: Game, ik: int) -> dict:
         "rijen": veld_matrix(game, ik),
         "kolommen": list(kolommen(ik)),
         "editor": game.editors[ik],
+        "log": log_regels(game, ik),
+        "banner": banner(game, ik),
     }
+
+
+# ---- log "Wat gebeurt er?" en sneuvel-banner ----
+
+def log_tekst(game: Game, ik: int, e: Gebeurtenis) -> str:
+    """Eén gebeurtenis als zin vanuit het perspectief van kijker `ik`."""
+    mij = e.speler == ik
+    wie = "Jij" if mij else game.spelers[e.speler].naam
+    doel_mij = e.doel == ik
+    doel_naam = game.spelers[e.doel].naam if e.doel is not None else ""
+    if e.soort == "loop":
+        return f"{wie} loopt {e.tekst} naar ({e.x}, {e.y})"
+    if e.soort == "geblokkeerd":
+        return f"{wie} loopt tegen iets aan en blijft staan"
+    if e.soort == "raak_robot":
+        geraakt = "jou" if doel_mij else doel_naam
+        return f"{wie} schiet → raakt {geraakt}! {hartjes(e.levens, ROBOT_LEVENS)}"
+    if e.soort == "raak_schild":
+        van = "jouw schild" if doel_mij else f"het schild van {doel_naam}"
+        return f"{wie} schiet → raakt {van} (nog {e.levens})"
+    if e.soort == "raak_gebouw":
+        toren = "jouw toren" if doel_mij else f"de toren van {doel_naam}"
+        return f"{wie} raakt {toren}! 🏰 {hartjes(e.levens, GEBOUW_LEVENS)}"
+    if e.soort == "mis":
+        return f"{wie} schiet → mis"
+    if e.soort == "dood":
+        if mij:
+            return f"💥 Je robot is kapot! Hij komt terug over {RESPAWN_TIKKEN} seconden"
+        return f"💥 De robot van {wie} is kapot!"
+    if e.soort == "terug":
+        return "Je robot is terug op het startvak" if mij else f"De robot van {wie} is terug"
+    if e.soort == "schild":
+        return f"{wie} zet een schild op ({e.x}, {e.y})"
+    if e.soort == "schild_fout":
+        return f"Schild geweigerd: {e.tekst}" if mij else f"{wie} probeert een schild, maar dat mag niet"
+    if e.soort == "win":
+        return "🏆 Jij wint!" if mij else f"🏆 {wie} wint!"
+    return e.soort
+
+
+def log_regels(game: Game, ik: int, aantal: int = 10) -> list[dict]:
+    """De laatste `aantal` gebeurtenissen als regels voor het log, nieuwste eerst."""
+    return [
+        {"tijd": mmss(tik), "tekst": log_tekst(game, ik, e), "soort": e.soort, "mij": e.speler == ik}
+        for tik, e in list(game.log)[::-1][:aantal]
+    ]
+
+
+def banner(game: Game, ik: int) -> dict | None:
+    """Grote melding over het veld als een robot kapot is (de eigen robot gaat voor)."""
+    if game.afgelopen:
+        return None
+    jij, ander = game.spelers[ik], game.tegenstander(ik)
+    if not jij.leeft:
+        return {"tekst": "💥 Je robot is kapot!", "sub": f"Hij komt terug over {jij.respawn_over}…", "soort": "ik"}
+    if not ander.leeft:
+        return {"tekst": f"💥 De robot van {ander.naam} is kapot!",
+                "sub": f"Komt terug over {ander.respawn_over}…", "soort": "ander"}
+    return None
 
 
 # ---- Jinja-filters ----
@@ -95,13 +157,16 @@ def render(templates, naam: str, game: Game, ik: int) -> str:
 
 
 def editor_html(templates, game: Game, ik: int, met_invoer: bool) -> str:
-    delen = ["regels", "markering", "hint"] + (["invoer"] if met_invoer else [])
+    """Na een editor-actie: regels, markering, hint en de stappenteller (de wachtrij
+    verandert bij bevriezen en bij Stop); bij een bevroren regel ook een lege invoer."""
+    delen = ["regels", "markering", "hint", "teller"] + (["invoer"] if met_invoer else [])
     return "\n".join(render(templates, d, game, ik) for d in delen)
 
 
 def tik_html(templates, game: Game, ik: int) -> str:
-    """Na een tik: kop, veld, status en hint; bij een afgelopen spel ook einde en invoer."""
-    delen = ["kop", "veld", "status", "hint"]
+    """Na een tik: kop, veld, banner, status, log, teller en hint; bij een afgelopen
+    spel ook einde en invoer."""
+    delen = ["kop", "veld", "banner", "status", "log", "teller", "hint"]
     if game.afgelopen:
         delen += ["einde", "invoer"]
     return "\n".join(render(templates, d, game, ik) for d in delen)
