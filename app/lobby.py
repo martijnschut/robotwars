@@ -14,11 +14,22 @@ NAAM_COMPUTER = "Robo"
 
 
 @dataclass
+class Uitslag:
+    """Hoe het laatste potje afliep, vanuit het perspectief van één speler."""
+    tegen: str
+    ik_won: bool
+    opgegeven: bool      # het spel eindigde doordat iemand wegviel
+    ik_was_weg: bool     # ...en dat was ik
+    seconden: int
+
+
+@dataclass
 class Sessie:
     token: str
     naam: str
     game_id: str | None = None
     nummer: int | None = None
+    laatste_uitslag: Uitslag | None = None
 
 
 class Lobby:
@@ -78,6 +89,21 @@ class Lobby:
         self.verlaat_wachtrij(token)
         return self._nieuwe_game(token, None, tegen_computer=True)
 
+    def bewaar_uitslag(self, game: Game) -> None:
+        """Zet de uitslag van een afgelopen spel bij de sessies van zijn spelers, zodat ze
+        hem ook zien als het spel al opgeruimd is (bijvoorbeeld na verbindingsverlies)."""
+        for sessie in self.sessies.values():
+            if sessie.game_id != game.id:
+                continue
+            ik_won = sessie.nummer == game.winnaar
+            sessie.laatste_uitslag = Uitslag(
+                tegen=game.tegenstander(sessie.nummer).naam,
+                ik_won=ik_won,
+                opgegeven=game.opgegeven,
+                ik_was_weg=game.opgegeven and not ik_won,
+                seconden=game.tik,
+            )
+
     def ruim_op(self, nu: float | None = None) -> list[str]:
         """Verwijdert spellen die al OPRUIMEN_NA seconden afgelopen zijn; geeft hun ids."""
         nu = nu or time.time()
@@ -95,7 +121,7 @@ class Lobby:
                     tegen_computer=tegen_computer, brein=kies_stap if tegen_computer else None)
         game.editors = {1: Editor(), 2: Editor()}
         self.games[game_id] = game
-        s1.game_id, s1.nummer = game_id, 1
+        s1.game_id, s1.nummer, s1.laatste_uitslag = game_id, 1, None
         if s2:
-            s2.game_id, s2.nummer = game_id, 2
+            s2.game_id, s2.nummer, s2.laatste_uitslag = game_id, 2, None
         return game

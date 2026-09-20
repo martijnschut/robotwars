@@ -231,6 +231,22 @@ Is een menselijke speler 60 seconden zonder open WebSocket, dan ziet de ander
 "*naam* is weg" en wint hij het potje. Zo'n overwinning komt **niet** op het
 scorebord.
 
+De weggevallen speler mag niet in het duister tasten. Daarom:
+
+- Bij het einde van elk spel bewaart de lobby de uitslag bij de sessie van
+  beide spelers (`Sessie.laatste_uitslag`: tegenstander, gewonnen of niet,
+  weggevallen of niet, tijd). Wie daarna op de startpagina komt, ziet boven het
+  naamformulier een balk: "🏆 Je vorige potje tegen Wessel heb je gewonnen in
+  1:23! Wessel was weg." of "📴 Je verbinding viel weg. Wessel heeft daardoor
+  gewonnen (na 1:00). Dit potje telt niet voor het scorebord." Ook als het spel
+  al opgeruimd is en `/spel/{id}` naar `/` doorstuurt, staat de uitslag daar
+  dus nog. Een nieuw potje wist hem.
+- Een spelpagina die na verbindingsverlies opnieuw verbindt met een spel dat
+  al afgelopen is, krijgt meteen het eindscherm (de overlay) toegestuurd en
+  daarna gaat de socket netjes dicht. De overlay legt vanuit de kijker uit wat
+  er gebeurde: "Je verbinding viel weg; daardoor heeft Wessel gewonnen" voor
+  de verliezer, "Martijn is weg" voor de winnaar.
+
 ### Spelpagina (`/spel/{id}`)
 
 - Bovenaan: "Wessel (jij) tegen Papa" en de lopende tijd.

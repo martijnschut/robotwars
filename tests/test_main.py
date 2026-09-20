@@ -6,6 +6,7 @@ from fastapi.testclient import TestClient
 
 from app import main
 from app.db import ScoreDb
+from app.lobby import OPRUIMEN_NA
 from app.parser import Move, Shoot
 
 
@@ -258,6 +259,94 @@ def test_weg_zijn_is_verlies_zonder_score(client):
     main.tik_alles()
     assert game.afgelopen and game.winnaar == 2 and game.opgegeven
     assert main.db.top(True) == []
+
+
+def start_spel_tegen_elkaar(client, naam1="Martijn", naam2="Wessel"):
+    """Twee mensen in één potje; geeft (game, token1, token2). De client houdt token2."""
+    r1 = client.post("/start", data={"naam": naam1, "modus": "mens"}, follow_redirects=False)
+    token1 = r1.cookies["token"]
+    client.cookies.clear()
+    r2 = client.post("/start", data={"naam": naam2, "modus": "mens"}, follow_redirects=False)
+    token2 = r2.cookies["token"]
+    game = main.lobby.games[r2.headers["location"].split("/")[-1]]
+    return game, token1, token2
+
+
+def test_weg_zijn_bewaart_de_uitslag_voor_beide_spelers(client):
+    game, token1, token2 = start_spel_tegen_elkaar(client)
+    game.laatst_gezien[1] = time.time() - main.WEG_NA - 1
+    main.tik_alles()
+    assert game.afgelopen and game.winnaar == 2
+    s1, s2 = main.lobby.sessie(token1), main.lobby.sessie(token2)
+    assert s1.laatste_uitslag.ik_was_weg is True and s1.laatste_uitslag.ik_won is False
+    assert s1.laatste_uitslag.tegen == "Wessel"
+    assert s2.laatste_uitslag.ik_won is True and s2.laatste_uitslag.ik_was_weg is False
+    assert s2.laatste_uitslag.tegen == "Martijn"
+
+
+def test_startpagina_toont_de_uitslag(client):
+    game, token1, token2 = start_spel_tegen_elkaar(client)
+    game.laatst_gezien[1] = time.time() - main.WEG_NA - 1
+    main.tik_alles()
+    # de weggevallen speler
+    client.cookies.set("token", token1)
+    r = client.get("/", follow_redirects=False)
+    assert r.status_code == 200
+    assert 'class="uitslag verloren"' in r.text
+    assert "Je verbinding viel weg" in r.text and "Wessel" in r.text
+    assert "telt niet voor het scorebord" in r.text
+    # de winnaar
+    client.cookies.set("token", token2)
+    r = client.get("/", follow_redirects=False)
+    assert 'class="uitslag gewonnen"' in r.text
+    assert "gewonnen" in r.text and "Martijn" in r.text and "Martijn was weg." in r.text
+    # een vreemde ziet niets
+    client.cookies.clear()
+    assert 'class="uitslag' not in client.get("/").text
+
+
+def test_herverbinden_op_afgelopen_spel_geeft_meteen_het_eindscherm(client):
+    game, token1, token2 = start_spel_tegen_elkaar(client)
+    game.laatst_gezien[1] = time.time() - main.WEG_NA - 1
+    main.tik_alles()
+    with client.websocket_connect(f"/ws/spel/{game.id}", headers={"cookie": f"token={token1}"}) as ws:
+        html = ws.receive_text()
+        assert 'class="overlay"' in html and "Je verbinding viel weg" in html
+        assert "Wessel" in html and "telt niet voor het scorebord" in html
+        with pytest.raises(Exception):
+            ws.receive_text()                         # daarna is de verbinding dicht
+    assert not main.verbindingen.get(game.id, {}).get(1)
+    # de winnaar ziet zijn eigen uitleg
+    with client.websocket_connect(f"/ws/spel/{game.id}", headers={"cookie": f"token={token2}"}) as ws:
+        html = ws.receive_text()
+        assert 'class="overlay"' in html and "Martijn is weg." in html
+
+
+def test_nieuw_spel_haalt_de_uitslag_van_de_startpagina(client):
+    game, token1, token2 = start_spel_tegen_elkaar(client)
+    game.laatst_gezien[1] = time.time() - main.WEG_NA - 1
+    main.tik_alles()
+    client.cookies.set("token", token1)
+    assert 'class="uitslag' in client.get("/").text
+    r = client.post("/start", data={"naam": "Martijn", "modus": "computer"}, follow_redirects=False)
+    assert r.headers["location"].startswith("/spel/")
+    assert main.lobby.sessie(token1).laatste_uitslag is None
+    nieuw = main.lobby.games[r.headers["location"].split("/")[-1]]
+    nieuw.geef_op(1)                                  # ook dit spel voorbij: terug naar /
+    assert 'class="uitslag' not in client.get("/").text
+
+
+def test_verdwenen_spel_stuurt_naar_de_startpagina_met_uitslag(client):
+    game, token1, token2 = start_spel_tegen_elkaar(client)
+    game.laatst_gezien[1] = time.time() - main.WEG_NA - 1
+    main.tik_alles()
+    game.geeindigd_op = time.time() - OPRUIMEN_NA - 1
+    main.tik_alles()
+    assert game.id not in main.lobby.games
+    client.cookies.set("token", token1)
+    r = client.get(f"/spel/{game.id}", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/"
+    assert "Je verbinding viel weg" in client.get("/").text
 
 
 def test_verbonden_speler_is_niet_weg(client):

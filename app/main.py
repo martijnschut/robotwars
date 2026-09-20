@@ -58,7 +58,8 @@ async def start(request: Request):
     if sessie and (lopend := lobby.game_van(sessie.token)):
         return RedirectResponse(f"/spel/{lopend[0].id}", status_code=303)
     return templates.TemplateResponse(request, "start.html",
-                                      {"naam": sessie.naam if sessie else "", "fout": None})
+                                      {"naam": sessie.naam if sessie else "", "fout": None,
+                                       "uitslag": sessie.laatste_uitslag if sessie else None})
 
 
 @app.post("/start")
@@ -181,6 +182,12 @@ async def ws_spel(ws: WebSocket, game_id: str):
     verbindingen.setdefault(game_id, {}).setdefault(ik, set()).add(ws)
     game.laatst_gezien[ik] = time.time()
     try:
+        if game.afgelopen:
+            # Een pagina die na verbindingsverlies opnieuw verbindt, krijgt alsnog het eindscherm
+            # (de tik-loop stuurt de eindstand maar één keer) en daarna gaat de socket netjes dicht.
+            await ws.send_text(weergave.tik_html(templates, game, ik))
+            await sluit(ws)
+            return
         while True:
             try:
                 bericht = await ws.receive_json()
@@ -220,6 +227,7 @@ def tik_spel(game, nu: float) -> None:
     controleer_weg(game, nu)
     if game.afgelopen and not game.score_opgeslagen:
         game.score_opgeslagen = True
+        lobby.bewaar_uitslag(game)
         winnaar = game.spelers[game.winnaar]
         if not game.opgegeven and not winnaar.is_computer:
             verliezer = game.tegenstander(game.winnaar)

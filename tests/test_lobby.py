@@ -1,4 +1,4 @@
-from app.lobby import Lobby, OPRUIMEN_NA
+from app.lobby import Lobby, OPRUIMEN_NA, Uitslag
 from app.editor import Editor
 
 
@@ -78,3 +78,40 @@ def test_wachtende_die_niet_meer_pollt_wordt_opgeruimd():
     assert lobby.ruim_wachtende_op(nu=1005.5) is True
     assert lobby.wachtende is None
     assert lobby.ruim_wachtende_op(nu=2000.0) is False    # niets meer op te ruimen
+
+
+def test_bewaar_uitslag_bij_weg_zijn():
+    lobby = Lobby()
+    a = lobby.registreer("Martijn")
+    b = lobby.registreer("Wessel")
+    lobby.zoek_tegenstander(a.token)
+    game = lobby.zoek_tegenstander(b.token)
+    game.tik = 61
+    game.geef_op(1)                                   # Martijn is weg, Wessel wint
+    lobby.bewaar_uitslag(game)
+    assert a.laatste_uitslag == Uitslag(tegen="Wessel", ik_won=False, opgegeven=True,
+                                        ik_was_weg=True, seconden=61)
+    assert b.laatste_uitslag == Uitslag(tegen="Martijn", ik_won=True, opgegeven=True,
+                                        ik_was_weg=False, seconden=61)
+
+
+def test_bewaar_uitslag_bij_gewoon_verlies():
+    lobby = Lobby()
+    a = lobby.registreer("A")
+    game = lobby.start_tegen_computer(a.token)
+    game.tik = 83
+    game._zet_winnaar(2)
+    lobby.bewaar_uitslag(game)
+    assert a.laatste_uitslag == Uitslag(tegen="Robo", ik_won=False, opgegeven=False,
+                                        ik_was_weg=False, seconden=83)
+
+
+def test_nieuw_spel_wist_de_uitslag():
+    lobby = Lobby()
+    a = lobby.registreer("A")
+    game = lobby.start_tegen_computer(a.token)
+    game.geef_op(1)
+    lobby.bewaar_uitslag(game)
+    assert a.laatste_uitslag is not None
+    lobby.start_tegen_computer(a.token)
+    assert a.laatste_uitslag is None

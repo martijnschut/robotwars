@@ -36,6 +36,9 @@ a { color: var(--blauw); }
 .knop { display: block; border: 0; border-radius: 10px; padding: 14px 18px; font-size: 17px; font-weight: 700; color: #fff; text-align: center; text-decoration: none; cursor: pointer; }
 .knop.blauw { background: var(--blauw-knop); } .knop.rood { background: var(--rood-knop); } .knop.grijs { background: var(--paneel); font-weight: 500; }
 .fout-melding { color: #ff8a80; text-align: center; }
+.uitslag { max-width: 420px; margin: 0 auto 20px; padding: 12px 16px; border-radius: 10px; border: 2px solid var(--rand); background: var(--paneel); text-align: center; line-height: 1.4; }
+.uitslag.gewonnen { border-color: var(--geel); }
+.uitslag.verloren { border-color: var(--rood); }
 .link { text-align: center; margin-top: 24px; }
 .wacht { text-align: center; }
 .wacht svg { width: 140px; height: 140px; animation: zweef 1.6s ease-in-out infinite; }

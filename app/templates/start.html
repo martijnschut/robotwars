@@ -8,6 +8,17 @@
   <span class="vs">VS</span>
   <svg class="gr spiegel"><use href="#bolbot"/></svg>
 </div>
+{% if uitslag %}
+<div class="uitslag {{ 'gewonnen' if uitslag.ik_won else 'verloren' }}">
+  {% if uitslag.ik_won %}
+    🏆 Je vorige potje tegen {{ uitslag.tegen }} heb je gewonnen in {{ uitslag.seconden|mmss }}!{% if uitslag.opgegeven %} {{ uitslag.tegen }} was weg.{% endif %}
+  {% elif uitslag.ik_was_weg %}
+    📴 Je verbinding viel weg. {{ uitslag.tegen }} heeft daardoor gewonnen (na {{ uitslag.seconden|mmss }}). Dit potje telt niet voor het scorebord.
+  {% else %}
+    💥 Je vorige potje tegen {{ uitslag.tegen }} heb je verloren ({{ uitslag.seconden|mmss }}). Nog een keer?
+  {% endif %}
+</div>
+{% endif %}
 <form class="formulier" method="post" action="/start">
   <label for="naam">Hoe heet je?</label>
   <input type="text" id="naam" name="naam" value="{{ naam }}" maxlength="20" autocomplete="off" autofocus required>
