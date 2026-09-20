@@ -26,6 +26,13 @@ class Shield:
 
 
 @dataclass(frozen=True)
+class Bomb:
+    """Bom op een buurvak: dx en dy zijn -1, 0 of 1 ten opzichte van de robot."""
+    dx: int
+    dy: int
+
+
+@dataclass(frozen=True)
 class RepeatStart:
     n: int
 
@@ -46,16 +53,20 @@ class Invalid:
     hint: str
 
 
-Step = Move | Shoot | Shield
+Step = Move | Shoot | Shield | Bomb
 Command = Step | RepeatStart | RepeatEnd
 ParseResult = Command | Incomplete | Invalid
 
 HINT_ROBOT = 'Ik ken "{}" niet. Probeer vooruit, achteruit, omhoog, omlaag of schiet.'
 HINT_SCHILD = "Schild heeft twee getallen nodig: schild = (x, y), bijvoorbeeld schild = (4, 2)."
+HINT_BOM = ("Bom heeft twee getallen van -1 tot 1 nodig: bom = (dx, dy), "
+            "bijvoorbeeld bom = (1, 0) voor het vak vóór je.")
 HINT_HERHAAL = "Herhaal hoeveel keer? Bijvoorbeeld herhaal 3 keer (maximaal 20)."
-HINT_START = "Begin met robot = ..., schild = (...), herhaal ... keer of klaar."
+HINT_START = "Begin met robot = ..., schild = (...), bom = (...), herhaal ... keer of klaar."
+BOM_BEREIK = 1   # dx en dy lopen van -BOM_BEREIK t/m BOM_BEREIK
 
-# Sjablonen zonder spaties; '#' staat voor een getal van 1 of 2 cijfers.
+# Sjablonen zonder spaties; '#' staat voor een getal van 1 of 2 cijfers,
+# '±' voor een getal van één cijfer met optioneel een minteken ervoor.
 _SJABLONEN = (
     "robot=vooruit",
     "robot=achteruit",
@@ -63,6 +74,7 @@ _SJABLONEN = (
     "robot=omlaag",
     "robot=schiet",
     "schild=(#,#)",
+    "bom=(±,±)",
     "herhaal#keer",
     "klaar",
 )
@@ -93,6 +105,16 @@ def _past(compact: str, sjabloon: str) -> tuple[bool, bool, list[int]]:
             if i == start:
                 return False, False, getallen
             getallen.append(int(compact[start:i]))
+        elif teken == "±":
+            start = i
+            if compact[i] == "-":
+                i += 1
+                if i >= len(compact):
+                    return False, True, getallen
+            if not compact[i].isdigit():
+                return False, False, getallen
+            i += 1
+            getallen.append(int(compact[start:i]))
         else:
             if compact[i] != teken:
                 return False, False, getallen
@@ -121,6 +143,11 @@ def _maak_commando(sjabloon: str, getallen: list[int]) -> ParseResult:
         return Shoot() if waarde == "schiet" else Move(waarde)
     if sjabloon.startswith("schild"):
         return Shield(getallen[0], getallen[1])
+    if sjabloon.startswith("bom"):
+        dx, dy = getallen
+        if not (-BOM_BEREIK <= dx <= BOM_BEREIK and -BOM_BEREIK <= dy <= BOM_BEREIK):
+            return Invalid(HINT_BOM)
+        return Bomb(dx, dy)
     if sjabloon.startswith("herhaal"):
         n = getallen[0]
         if not 1 <= n <= MAX_HERHAAL:
@@ -135,6 +162,8 @@ def _hint(compact: str, tekst: str) -> str:
         return HINT_ROBOT.format(rest[:40])
     if compact.startswith("schild"):
         return HINT_SCHILD
+    if compact.startswith("bom"):
+        return HINT_BOM
     if compact.startswith("herhaal"):
         return HINT_HERHAAL
     return HINT_START

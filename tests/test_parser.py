@@ -1,4 +1,4 @@
-from app.parser import parse_line, Move, Shoot, Incomplete, Invalid
+from app.parser import parse_line, Move, Shoot, Incomplete, Invalid, HINT_START
 
 
 def test_robot_vooruit():
@@ -42,7 +42,7 @@ def test_te_lang_is_invalid():
 def test_onbekend_begin_is_invalid():
     r = parse_line("lamp = aan")
     assert isinstance(r, Invalid)
-    assert r.hint == "Begin met robot = ..., schild = (...), herhaal ... keer of klaar."
+    assert r.hint == HINT_START == "Begin met robot = ..., schild = (...), bom = (...), herhaal ... keer of klaar."
 
 
 from app.parser import Shield, RepeatStart, RepeatEnd, HINT_SCHILD, HINT_HERHAAL
@@ -122,3 +122,42 @@ def test_expand_max_stappen_beperkt_geneste_herhaal_blokken():
         expand(cmds, max_stappen=50)
     # zonder max_stappen blijft het oude gedrag (alles uitrollen)
     assert expand(cmds) == [Move("vooruit")] * 8000
+
+
+# ---- bom ----
+
+from app.parser import Bomb, HINT_BOM, HINT_START
+
+
+def test_bom_met_dx_dy():
+    assert parse_line("bom = (-1,1)") == Bomb(-1, 1)
+    assert parse_line("bom = ( 1 , 0 )") == Bomb(1, 0)
+    assert parse_line("BOM=(0,0)") == Bomb(0, 0)
+    assert parse_line("bom = (0, -1)") == Bomb(0, -1)
+
+
+def test_bom_half_getypt_is_incomplete():
+    for tekst in ["b", "bom", "bom =", "bom = (", "bom = (-", "bom = (-1", "bom = (-1,", "bom = (-1, 1"]:
+        assert parse_line(tekst) == Incomplete(), tekst
+
+
+def test_bom_verder_dan_een_vakje_is_invalid():
+    assert parse_line("bom = (2, 0)") == Invalid(HINT_BOM)
+    assert parse_line("bom = (0, -2)") == Invalid(HINT_BOM)
+    assert parse_line("bom = (10, 0)") == Invalid(HINT_BOM)
+
+
+def test_bom_zonder_of_met_kapotte_getallen_is_invalid():
+    assert parse_line("bom = (a, 1)") == Invalid(HINT_BOM)
+    assert parse_line("bom = (--1, 0)") == Invalid(HINT_BOM)
+    assert parse_line("bom = 1") == Invalid(HINT_BOM)
+
+
+def test_start_hint_noemt_bom():
+    assert parse_line("xyz") == Invalid(HINT_START)
+    assert "bom = (...)" in HINT_START
+
+
+def test_expand_herhaal_met_bom():
+    stappen = expand([RepeatStart(2), Bomb(1, 0), RepeatEnd()])
+    assert stappen == [Bomb(1, 0), Bomb(1, 0)]
