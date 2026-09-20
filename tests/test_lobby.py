@@ -90,9 +90,9 @@ def test_bewaar_uitslag_bij_weg_zijn():
     game.geef_op(1)                                   # Martijn is weg, Wessel wint
     lobby.bewaar_uitslag(game)
     assert a.laatste_uitslag == Uitslag(tegen="Wessel", ik_won=False, opgegeven=True,
-                                        ik_was_weg=True, seconden=61)
+                                        ik_was_weg=True, gestopt=False, seconden=61)
     assert b.laatste_uitslag == Uitslag(tegen="Martijn", ik_won=True, opgegeven=True,
-                                        ik_was_weg=False, seconden=61)
+                                        ik_was_weg=False, gestopt=False, seconden=61)
 
 
 def test_bewaar_uitslag_bij_gewoon_verlies():
@@ -103,7 +103,17 @@ def test_bewaar_uitslag_bij_gewoon_verlies():
     game._zet_winnaar(2)
     lobby.bewaar_uitslag(game)
     assert a.laatste_uitslag == Uitslag(tegen="Robo", ik_won=False, opgegeven=False,
-                                        ik_was_weg=False, seconden=83)
+                                        ik_was_weg=False, gestopt=False, seconden=83)
+
+
+def test_bewaar_uitslag_bij_stoppen_met_de_knop():
+    lobby = Lobby()
+    a = lobby.registreer("A")
+    game = lobby.start_tegen_computer(a.token)
+    game.tik = 20
+    game.geef_op(1, reden="gestopt")
+    lobby.bewaar_uitslag(game)
+    assert a.laatste_uitslag.gestopt and a.laatste_uitslag.ik_was_weg and not a.laatste_uitslag.ik_won
 
 
 def test_nieuw_spel_wist_de_uitslag():

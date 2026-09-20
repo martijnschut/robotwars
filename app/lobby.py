@@ -18,8 +18,9 @@ class Uitslag:
     """Hoe het laatste potje afliep, vanuit het perspectief van één speler."""
     tegen: str
     ik_won: bool
-    opgegeven: bool      # het spel eindigde doordat iemand wegviel
+    opgegeven: bool      # het spel eindigde doordat iemand wegviel of stopte
     ik_was_weg: bool     # ...en dat was ik
+    gestopt: bool        # ...bewust, met de knop "Stop spel" (anders: verbinding weg)
     seconden: int
 
 
@@ -101,6 +102,7 @@ class Lobby:
                 ik_won=ik_won,
                 opgegeven=game.opgegeven,
                 ik_was_weg=game.opgegeven and not ik_won,
+                gestopt=game.opgegeven_reden == "gestopt",
                 seconden=game.tik,
             )
 

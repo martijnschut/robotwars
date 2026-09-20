@@ -265,6 +265,9 @@ De weggevallen speler mag niet in het duister tasten. Daarom:
   flitst, en het log meldt "💥 Je robot is kapot! Hij komt terug over 3
   seconden" en later "Je robot is terug op het startvak". Geen aparte
   pop-up over het veld (bewust weggehaald: het log is genoeg).
+- Knop **Stop spel** (rechts onder de editor): geeft op, de ander wint (telt
+  niet voor het scorebord) en je gaat terug naar de startpagina, waar de
+  uitslag staat. De tegenstander ziet "<naam> is gestopt".
 - Stappenteller naast Stop en Wis: "Nog 4 stappen te gaan" of "Je robot wacht
   op een commando", zodat je ziet dat je stappen echt gepland staan.
 - Onder het veld: de editor (hoofdstuk 5). Op brede schermen (vanaf 1180px)

@@ -22,6 +22,9 @@
           <form ws-send><input type="hidden" name="actie" value="wis"><button type="submit">Wis</button></form>
           {% include "fragments/teller.html" %}
         </div>
+        <form class="stop-spel" method="post" action="/spel/{{ game.id }}/stop">
+          <button type="submit">✖ Stop spel</button>
+        </form>
       </div>
       {% include "fragments/log.html" %}
     </div>

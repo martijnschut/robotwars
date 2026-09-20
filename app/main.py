@@ -152,6 +152,17 @@ async def spel(request: Request, game_id: str):
     return templates.TemplateResponse(request, "spel.html", weergave.context(game, ik))
 
 
+@app.post("/spel/{game_id}/stop")
+async def spel_stop(request: Request, game_id: str):
+    """Knop "Stop spel": geef op, de ander wint (telt niet voor het scorebord), terug naar start."""
+    gevonden = spel_van(request, game_id)
+    if gevonden is not None:
+        game, ik = gevonden
+        game.geef_op(ik, reden="gestopt")
+        tik_spel(game, time.time())          # uitslag bewaren en einde klaarzetten
+    return RedirectResponse("/", status_code=303)
+
+
 def verwerk_bericht(game, ik: int, bericht) -> str | None:
     """Een bericht van de editor: getypte regel of knop. Geeft de HTML om terug te sturen."""
     if game.afgelopen or not isinstance(bericht, dict):

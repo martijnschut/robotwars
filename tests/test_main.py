@@ -259,6 +259,24 @@ def test_computerwinst_komt_niet_op_het_scorebord(client):
     assert main.db.top(True) == []
 
 
+def test_stop_spel_knop_geeft_op_en_gaat_naar_start(client):
+    game, token = start_spel(client)
+    r = client.get(f"/spel/{game.id}")
+    assert f'action="/spel/{game.id}/stop"' in r.text and "Stop spel" in r.text
+    r = client.post(f"/spel/{game.id}/stop", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/"
+    assert game.afgelopen and game.winnaar == 2 and game.opgegeven and game.opgegeven_reden == "gestopt"
+    assert main.db.top(True) == []                       # telt niet voor het scorebord
+    r = client.get("/")
+    assert r.status_code == 200 and "Je hebt het potje tegen Robo gestopt" in r.text
+    # een vreemde kan een spel niet stoppen
+    client.cookies.clear()
+    game2, _ = start_spel(client, "Ander")
+    client.cookies.clear()
+    client.post(f"/spel/{game2.id}/stop", follow_redirects=False)
+    assert not game2.afgelopen
+
+
 def test_weg_zijn_is_verlies_zonder_score(client):
     game, token = start_spel(client)
     game.laatst_gezien[1] = time.time() - main.WEG_NA - 1

@@ -130,7 +130,8 @@ class Game:
         self.log: deque[tuple[int, Gebeurtenis]] = deque(maxlen=LOG_LENGTE)   # (tik, gebeurtenis)
         self.tik = 0
         self.winnaar: int | None = None
-        self.opgegeven = False           # winst doordat de ander wegging: niet voor het scorebord
+        self.opgegeven = False           # winst doordat de ander wegging of stopte: niet voor het scorebord
+        self.opgegeven_reden = ""        # "weg" of "gestopt"
         self.geeindigd_op: float | None = None
         self.score_opgeslagen = False
         self.einde_gezonden = False      # de eindstand is één keer naar de spelers gestuurd
@@ -175,10 +176,12 @@ class Game:
     def stop(self, nummer: int) -> None:
         self.spelers[nummer].wachtrij.clear()
 
-    def geef_op(self, nummer: int) -> None:
-        """Speler `nummer` is weg; de ander wint, maar dit telt niet voor het scorebord."""
+    def geef_op(self, nummer: int, reden: str = "weg") -> None:
+        """Speler `nummer` is weg of is gestopt; de ander wint, maar dit telt niet voor
+        het scorebord. `reden` is "weg" (verbinding verbroken) of "gestopt" (knop)."""
         if not self.afgelopen:
             self.opgegeven = True
+            self.opgegeven_reden = reden
             self._zet_winnaar(self.tegenstander(nummer).nummer)
 
     def tick(self) -> None:
