@@ -1,6 +1,6 @@
 from app.weergave import (veld_matrix, kolommen, kogelbanen, STAP_SECONDEN, mmss, datum, hartjes, kleur, symbool,
                           log_regels)
-from app.game import Game, Schild, Gebeurtenis, MELD_HELFT
+from app.game import Game, Schild, Gebeurtenis, MELD_HELFT, MELD_BEZET
 from app.parser import Shoot
 
 
@@ -172,4 +172,60 @@ def test_log_regels_nieuwste_eerst_en_maximaal_aantal():
     assert [r["tijd"] for r in regels] == ["1:15", "0:13", "0:12"]
     assert log_regels(g, 1) and len(log_regels(g, 1)) == 10
     assert log_regels(Game("leeg", "A", "B"), 1) == []
+
+
+# ---- bommen ----
+
+from app.game import Mijn, MELD_WATER
+
+
+def test_matrix_toont_mijn_en_knal():
+    g = Game("g", "A", "B")
+    g.mijnen.append(Mijn(5, 3, eigenaar=2))
+    g.knallen.append((9, 6))
+    rijen = veld_matrix(g, ik=1)
+    assert rijen[4][4].mijn == Mijn(5, 3, eigenaar=2)     # (5,3): y=3 is gridrij 5
+    assert rijen[4][3].mijn is None
+    knal = rijen[1][8]                                    # (9,6)
+    assert knal.raak and knal.knal_vertraging == 0 and not knal.spoor
+    rijen2 = veld_matrix(g, ik=2)                         # gespiegeld: x=5 staat op schermkolom 9
+    assert rijen2[4][8].mijn is not None
+
+
+def test_log_regels_bommen():
+    g = Game("g", "Wessel", "Robo")
+    for tik, e in [
+        (1, Gebeurtenis("bom", 1, 3, 5)),
+        (2, Gebeurtenis("bom_fout", 1, 7, 3, tekst=MELD_WATER)),
+        (3, Gebeurtenis("bom_raak", 1, 9, 4, doel=2)),
+        (4, Gebeurtenis("bom_raak", 2, 8, 4, doel=1)),
+        (5, Gebeurtenis("bom_raak", 1, 2, 4, doel=1)),
+        (6, Gebeurtenis("mijn_raak", 2, 9, 4, doel=1)),
+        (7, Gebeurtenis("mijn_raak", 1, 4, 4, doel=1)),
+        (8, Gebeurtenis("mijn_dubbel", 2, 7, 2, doel=1)),
+        (9, Gebeurtenis("bom", 2, 10, 3)),
+        (10, Gebeurtenis("bom_fout", 2, 13, 4, tekst=MELD_BEZET)),
+    ]:
+        g.log.append((tik, e))
+    oudste_eerst_1 = [r["tekst"] for r in log_regels(g, 1, aantal=99)][::-1]
+    assert oudste_eerst_1 == [
+        "Jij legt een bom op (3, 5)",
+        f"Bom geweigerd: {MELD_WATER}",
+        "💥 Jouw bom raakt Robo!",
+        "💥 De bom van Robo raakt jou!",
+        "💥 Je legt een bom op jezelf!",
+        "💥 Robo stapt op een mijn!",
+        "💥 Je stapt op een mijn!",
+        "Twee mijnen knallen op (7, 2)",
+        "Robo legt een bom op (10, 3)",
+        "Robo probeert een bom, maar dat mag niet",
+    ]
+    oudste_eerst_2 = [r["tekst"] for r in log_regels(g, 2, aantal=99)][::-1]
+    assert oudste_eerst_2[2:6] == [
+        "💥 De bom van Wessel raakt jou!",
+        "💥 Jouw bom raakt Wessel!",
+        "💥 Wessel legt een bom op zichzelf!",
+        "💥 Je stapt op een mijn!",
+    ]
+    assert oudste_eerst_2[8] == "Jij legt een bom op (4, 3)"   # speler 2 ziet kolommen gespiegeld
 

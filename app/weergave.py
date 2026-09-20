@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .game import (BREEDTE, BRUG_RIJEN, GEBOUW_LEVENS, HOOGTE, RESPAWN_TIKKEN, RIVIER_X,
-                   ROBOT_LEVENS, Game, Gebeurtenis, Schild, Speler, eigen_kolom)
+                   ROBOT_LEVENS, Game, Gebeurtenis, Mijn, Schild, Speler, eigen_kolom)
 
 MAANDEN = ["jan", "feb", "mrt", "apr", "mei", "jun", "jul", "aug", "sep", "okt", "nov", "dec"]
 SYMBOLEN = {"ok": "✓", "wacht": "…", "fout": "!"}
@@ -18,6 +18,7 @@ class Cel:
     robot: Speler | None = None
     gebouw: Speler | None = None
     schild: Schild | None = None
+    mijn: Mijn | None = None
     spoor: bool = False          # de kogel kwam hier langs in de laatste tik
     spoor_index: int = 0         # hoeveelste vakje van de baan (0 = eerste na de schutter)
     raak: bool = False           # hier is iets geraakt in de laatste tik
@@ -84,7 +85,10 @@ def veld_matrix(game: Game, ik: int) -> list[list[Cel]]:
             else:
                 soort = "b" if x < RIVIER_X else "r"
             cel = Cel(x, y, soort, robot=game.robot_op(x, y),
-                      gebouw=game.gebouw_op(x, y), schild=game.schild_op(x, y))
+                      gebouw=game.gebouw_op(x, y), schild=game.schild_op(x, y),
+                      mijn=game.mijn_op(x, y))
+            if (x, y) in game.knallen:          # bom of mijn ging hier af: 💥 zonder kogelbaan
+                cel.raak = True
             for schot in game.schoten:
                 if (x, y) in schot.cellen:
                     cel.spoor = True
@@ -144,6 +148,18 @@ def log_tekst(game: Game, ik: int, e: Gebeurtenis) -> str:
         return f"{wie} zet een schild op ({schermkolom(e.x, ik)}, {e.y})"
     if e.soort == "schild_fout":
         return f"Schild geweigerd: {e.tekst}" if mij else f"{wie} probeert een schild, maar dat mag niet"
+    if e.soort == "bom":
+        return f"{wie} legt een bom op ({schermkolom(e.x, ik)}, {e.y})"
+    if e.soort == "bom_fout":
+        return f"Bom geweigerd: {e.tekst}" if mij else f"{wie} probeert een bom, maar dat mag niet"
+    if e.soort == "bom_raak":
+        if e.doel == e.speler:
+            return "💥 Je legt een bom op jezelf!" if mij else f"💥 {wie} legt een bom op zichzelf!"
+        return f"💥 De bom van {wie} raakt jou!" if doel_mij else f"💥 Jouw bom raakt {doel_naam}!"
+    if e.soort == "mijn_raak":
+        return "💥 Je stapt op een mijn!" if mij else f"💥 {wie} stapt op een mijn!"
+    if e.soort == "mijn_dubbel":
+        return f"Twee mijnen knallen op ({schermkolom(e.x, ik)}, {e.y})"
     if e.soort == "win":
         return "🏆 Jij wint!" if mij else f"🏆 {wie} wint!"
     return e.soort
