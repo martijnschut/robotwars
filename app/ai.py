@@ -65,18 +65,27 @@ def _stap_of_schot(game: Game, ik: Speler, richting: str) -> Step | None:
     return None
 
 
+def _kies_brug(game: Game, ik: Speler) -> int:
+    """De dichtstbijzijnde brug (bij gelijke afstand de onderste), maar een brug waarvan
+    de rij tussen Robo en de rivier een mijn bevat slaat hij over: die kan hij niet
+    wegschieten, en omdat hij elke tik opnieuw kiest zou hij anders eeuwig heen en weer
+    lopen. Liggen er op beide rijen mijnen, dan toch de dichtstbijzijnde."""
+    def afstand(rij: int) -> tuple[int, int]:
+        return abs(rij - ik.y), rij
+    naar_rivier = range(RIVIER_X, ik.x, 1 if ik.x > RIVIER_X else -1)
+    vrij = [rij for rij in BRUG_RIJEN if not any(game.mijn_op(x, rij) for x in naar_rivier)]
+    return min(vrij or BRUG_RIJEN, key=afstand)
+
+
 def _loop_stap(game: Game, ik: Speler, vijand: Speler) -> Step | None:
     if ik.x == RIVIER_X:                         # op de brug: doorlopen
         return _stap_of_schot(game, ik, "vooruit")
     over = (ik.x - RIVIER_X) * ik.richting > 0   # al aan de kant van de vijand
     if not over:
-        brug = min(BRUG_RIJEN, key=lambda rij: (abs(rij - ik.y), rij))
+        brug = _kies_brug(game, ik)
         andere = BRUG_RIJEN[1] if brug == BRUG_RIJEN[0] else BRUG_RIJEN[0]
         if ik.y == brug:
-            stap = _stap_of_schot(game, ik, "vooruit")
-            if stap is None and game.mijn_op(*_doel(ik, "vooruit")) is not None:
-                return _stap_of_schot(game, ik, _verticaal(ik.y, andere))   # mijn op de weg: andere brug
-            return stap
+            return _stap_of_schot(game, ik, "vooruit")
         stap = _stap_of_schot(game, ik, _verticaal(ik.y, brug))
         if stap is not None:
             return stap

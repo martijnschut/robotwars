@@ -165,3 +165,13 @@ def test_robo_schiet_gewoon_over_een_mijn_heen():
     g.spelers[2].x, g.spelers[2].y = 11, 4
     g.mijnen.append(Mijn(9, 4, eigenaar=1))
     assert kies_stap(g, 2) == Shoot()
+
+
+def test_robo_blijft_niet_stuiteren_bij_een_mijn_op_de_brugrij():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 2, 1
+    g.spelers[2].x, g.spelers[2].y = 12, 3       # net boven de onderste brugrij
+    g.mijnen.append(Mijn(11, 2, eigenaar=1))     # mijn op de weg naar de onderste brug
+    assert kies_stap(g, 2) == Move("omhoog")     # meteen naar de andere brug, niet eerst omlaag
+    g.mijnen.append(Mijn(9, 6, eigenaar=1))      # ook de bovenste geblokkeerd: dan toch de dichtstbijzijnde
+    assert kies_stap(g, 2) == Move("omlaag")
