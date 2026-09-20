@@ -62,7 +62,7 @@ Windows Firewall moet poort 8000 toestaan).
 ## Online: robot.schut.me
 
 De app draait op de VPS als Docker-container (`Dockerfile`,
-`docker-compose.production.yml`) achter Caddy. Een push naar `master` wordt
+`docker-compose.production.yml`) achter Caddy. Een push naar `main` wordt
 automatisch uitgerold door de webhook-receiver uit de repo `schut-infra`
 (`webhook-receiver/scripts/deploy-robotwars.sh`); het scorebord staat in het
 volume `robotwars_data`. Details: `schut-infra/VPS_DEPLOYMENT.md`.
