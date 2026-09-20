@@ -84,6 +84,40 @@ async def scorebord(request: Request):
                                       {"computer": db.top(True), "mens": db.top(False)})
 
 
+# ---- wachtkamer ----
+
+@app.get("/wachten", response_class=HTMLResponse)
+async def wachten(request: Request):
+    sessie = huidige_sessie(request)
+    if sessie is None:
+        return RedirectResponse("/", status_code=303)
+    if lopend := lobby.game_van(sessie.token):
+        return RedirectResponse(f"/spel/{lopend[0].id}", status_code=303)
+    if game := lobby.zoek_tegenstander(sessie.token):     # direct gekoppeld
+        return RedirectResponse(f"/spel/{game.id}", status_code=303)
+    return templates.TemplateResponse(request, "wachten.html", {"naam": sessie.naam})
+
+
+@app.get("/wachten/status")
+async def wachten_status(request: Request):
+    sessie = huidige_sessie(request)
+    if sessie and (lopend := lobby.game_van(sessie.token)):
+        return Response(headers={"HX-Redirect": f"/spel/{lopend[0].id}"})
+    wacht = int(time.time() - lobby.wacht_sinds) if lobby.wachtende else 0
+    return HTMLResponse(f"Al {weergave.mmss(wacht)} aan het wachten")
+
+
+@app.post("/wachten/computer")
+async def wachten_computer(request: Request):
+    sessie = huidige_sessie(request)
+    if sessie is None:
+        return RedirectResponse("/", status_code=303)
+    if lopend := lobby.game_van(sessie.token):
+        return RedirectResponse(f"/spel/{lopend[0].id}", status_code=303)
+    game = lobby.start_tegen_computer(sessie.token)
+    return RedirectResponse(f"/spel/{game.id}", status_code=303)
+
+
 # ---- tik-taak (wordt in Task 15 uitgebreid) ----
 
 def tik_alles() -> None:

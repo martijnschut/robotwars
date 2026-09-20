@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block titel %}Wachten – Robot Wars{% endblock %}
+{% block inhoud %}
+{% include "fragments/sprites.html" %}
+<div class="wacht">
+  <svg class="gb"><use href="#bolbot"/></svg>
+  <h2>Wachten op een tegenstander</h2>
+  <p>Jij bent <b class="naam gb">{{ naam }}</b>. Zodra iemand anders zijn naam invult, begint het spel vanzelf.</p>
+  <div class="puntjes"><span></span><span></span><span></span></div>
+  <p class="sub" hx-get="/wachten/status" hx-trigger="every 1s" hx-swap="innerHTML">Al 0:00 aan het wachten</p>
+  <form method="post" action="/wachten/computer">
+    <button class="knop grijs">🤖 Toch tegen de computer</button>
+  </form>
+</div>
+{% endblock %}

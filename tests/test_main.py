@@ -52,3 +52,28 @@ def test_scorebord(client):
     assert r.status_code == 200
     assert "Wessel" in r.text and "1:23" in r.text and "2:00" in r.text
     assert "Tegen de computer" in r.text and "Tegen een mens" in r.text
+
+
+def test_wachtkamer_en_koppelen(client):
+    a = client.post("/start", data={"naam": "A", "modus": "mens"}, follow_redirects=False)
+    assert a.headers["location"] == "/wachten"
+    token_a = a.cookies["token"]
+    r = client.get("/wachten")
+    assert r.status_code == 200 and "Wachten op een tegenstander" in r.text
+    r = client.get("/wachten/status")
+    assert r.status_code == 200 and "HX-Redirect" not in r.headers and "aan het wachten" in r.text
+    # tweede speler in een andere browser (andere cookies)
+    client.cookies.clear()
+    b = client.post("/start", data={"naam": "B", "modus": "mens"}, follow_redirects=False)
+    assert b.headers["location"].startswith("/spel/")
+    # A pollt en wordt doorgestuurd
+    client.cookies.set("token", token_a)
+    r = client.get("/wachten/status")
+    assert r.headers["HX-Redirect"] == b.headers["location"]
+
+
+def test_toch_tegen_de_computer(client):
+    client.post("/start", data={"naam": "A", "modus": "mens"}, follow_redirects=False)
+    r = client.post("/wachten/computer", follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"].startswith("/spel/")
+    assert main.lobby.wachtende is None

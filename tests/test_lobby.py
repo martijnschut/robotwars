@@ -56,3 +56,12 @@ def test_afgelopen_spel_is_geen_lopend_spel_en_wordt_opgeruimd():
     assert verwijderd == [] and game.id in lobby.games
     verwijderd = lobby.ruim_op(nu=game.geeindigd_op + OPRUIMEN_NA + 1)
     assert verwijderd == [game.id] and game.id not in lobby.games
+
+
+def test_wacht_sinds_blijft_staan_bij_nog_een_keer_zoeken():
+    lobby = Lobby()
+    a = lobby.registreer("A")
+    lobby.zoek_tegenstander(a.token)
+    lobby.wacht_sinds = 123.0
+    assert lobby.zoek_tegenstander(a.token) is None
+    assert lobby.wacht_sinds == 123.0

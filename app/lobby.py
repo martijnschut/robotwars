@@ -53,8 +53,9 @@ class Lobby:
     def zoek_tegenstander(self, token: str) -> Game | None:
         """Zet de speler in de wachtrij, of koppelt hem aan wie al wacht."""
         if self.wachtende is None or self.wachtende == token:
+            if self.wachtende is None:
+                self.wacht_sinds = time.time()
             self.wachtende = token
-            self.wacht_sinds = time.time()
             return None
         ander = self.wachtende
         self.wachtende = None
