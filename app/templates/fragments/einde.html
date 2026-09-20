@@ -3,10 +3,17 @@
   {% set winnaar = game.spelers[game.winnaar] %}
   <div class="overlay">
     <div class="win">
+      {% if game.opgegeven_reden == "tijd" %}
+      <div class="beker">⏱</div>
+      <h2>De tijd is om</h2>
+      {% else %}
       <div class="beker">🏆</div>
       <h2><span class="naam {{ winnaar.nummer|kleur }}">{{ winnaar.naam }}</span> wint!</h2>
+      {% endif %}
       <div class="tijd">{{ game.tik|mmss }}</div>
-      {% if game.opgegeven and ik != game.winnaar %}
+      {% if game.opgegeven_reden == "tijd" %}
+        <p>Het potje duurde te lang en is gestopt. Dit potje telt niet voor het scorebord.</p>
+      {% elif game.opgegeven and ik != game.winnaar %}
         <p>{% if game.opgegeven_reden == "gestopt" %}Je bent gestopt{% else %}Je verbinding viel weg{% endif %}; daardoor heeft {{ winnaar.naam }} gewonnen. Dit potje telt niet voor het scorebord.</p>
       {% elif game.opgegeven %}
         <p>{{ game.tegenstander(game.winnaar).naam }} is {% if game.opgegeven_reden == "gestopt" %}gestopt{% else %}weg{% endif %}. Dit potje telt niet voor het scorebord.</p>

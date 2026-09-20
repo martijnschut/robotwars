@@ -5,6 +5,7 @@ import pytest
 from fastapi.testclient import TestClient
 from starlette.websockets import WebSocketDisconnect
 
+from app import lobby as lobby_module
 from app import main
 from app.db import ScoreDb
 from app.editor import MAX_REGEL_LENGTE
@@ -56,6 +57,43 @@ def test_terugkomen_stuurt_door_naar_lopend_spel(client):
     doel = r.headers["location"]
     r2 = client.get("/", follow_redirects=False)
     assert r2.status_code == 303 and r2.headers["location"] == doel
+
+
+def test_volle_server_geeft_503(client, monkeypatch):
+    monkeypatch.setattr(lobby_module, "MAX_SPELLEN", 1)
+    start_spel(client, "Eerste")
+    client.cookies.clear()
+    r = client.post("/start", data={"naam": "Tweede", "modus": "computer"}, follow_redirects=False)
+    assert r.status_code == 503 and "druk op de server" in r.text
+    assert "token" not in r.cookies and len(main.lobby.games) == 1
+    # ook via de wachtkamer ("Toch tegen de computer")
+    client.cookies.clear()
+    main.lobby.registreer("Wachter")
+    token = next(t for t, s in main.lobby.sessies.items() if s.naam == "Wachter")
+    client.cookies.set("token", token)
+    r = client.post("/wachten/computer", follow_redirects=False)
+    assert r.status_code == 503 and "druk op de server" in r.text
+    assert len(main.lobby.games) == 1
+
+
+def test_bezoek_werkt_laatst_gezien_bij(client):
+    game, token = start_spel(client)
+    sessie = main.lobby.sessie(token)
+    sessie.laatst_gezien = 0.0
+    client.get("/", follow_redirects=False)
+    assert sessie.laatst_gezien > time.time() - 5
+
+
+def test_te_lang_spel_wordt_gestopt(client):
+    game, token = start_spel(client)
+    game.tik = main.MAX_SPELDUUR - 1
+    main.tik_alles()
+    assert game.afgelopen and game.opgegeven and game.opgegeven_reden == "tijd"
+    assert main.db.top(True) == []
+    html = main.weergave.tik_html(main.templates, game, 1)
+    assert "Het potje duurde te lang en is gestopt." in html
+    r = client.get("/")
+    assert r.status_code == 200 and "duurde te lang" in r.text and 'class="uitslag' in r.text
 
 
 def test_health(client):

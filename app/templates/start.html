@@ -9,8 +9,10 @@
   <svg class="gr spiegel"><use href="#bolbot"/></svg>
 </div>
 {% if uitslag %}
-<div class="uitslag {{ 'gewonnen' if uitslag.ik_won else 'verloren' }}">
-  {% if uitslag.ik_won %}
+<div class="uitslag {{ 'gewonnen' if uitslag.ik_won and not uitslag.te_lang else 'verloren' }}">
+  {% if uitslag.te_lang %}
+    ⏱ Het potje tegen {{ uitslag.tegen }} duurde te lang en is gestopt (na {{ uitslag.seconden|mmss }}). Dit potje telt niet voor het scorebord.
+  {% elif uitslag.ik_won %}
     🏆 Je vorige potje tegen {{ uitslag.tegen }} heb je gewonnen in {{ uitslag.seconden|mmss }}!{% if uitslag.gestopt %} {{ uitslag.tegen }} is gestopt.{% elif uitslag.opgegeven %} {{ uitslag.tegen }} was weg.{% endif %}
   {% elif uitslag.gestopt %}
     ⏹ Je hebt het potje tegen {{ uitslag.tegen }} gestopt (na {{ uitslag.seconden|mmss }}). Dit potje telt niet voor het scorebord.

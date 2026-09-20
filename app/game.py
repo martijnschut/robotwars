@@ -22,6 +22,7 @@ SCHILD_LEVENS = 3
 SCHILDEN_PER_SPELER = 3
 RESPAWN_TIKKEN = 3
 MAX_WACHTRIJ = 50
+MAX_SPELDUUR = 30 * 60   # tikken; daarna stopt de server het potje (reden "tijd")
 
 # per spelernummer: gebouw, startvak en looprichting (+1 = naar rechts)
 GEBOUW = {1: (1, 4), 2: (13, 4)}
@@ -138,7 +139,7 @@ class Game:
         self.tik = 0
         self.winnaar: int | None = None
         self.opgegeven = False           # winst doordat de ander wegging of stopte: niet voor het scorebord
-        self.opgegeven_reden = ""        # "weg" of "gestopt"
+        self.opgegeven_reden = ""        # "weg", "gestopt" of "tijd"
         self.geeindigd_op: float | None = None
         self.score_opgeslagen = False
         self.einde_gezonden = False      # de eindstand is één keer naar de spelers gestuurd
@@ -185,7 +186,8 @@ class Game:
 
     def geef_op(self, nummer: int, reden: str = "weg") -> None:
         """Speler `nummer` is weg of is gestopt; de ander wint, maar dit telt niet voor
-        het scorebord. `reden` is "weg" (verbinding verbroken) of "gestopt" (knop)."""
+        het scorebord. `reden` is "weg" (verbinding verbroken), "gestopt" (knop) of
+        "tijd" (het potje duurde langer dan MAX_SPELDUUR)."""
         if not self.afgelopen:
             self.opgegeven = True
             self.opgegeven_reden = reden

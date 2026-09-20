@@ -17,6 +17,7 @@ from fastapi.templating import Jinja2Templates
 from . import weergave
 from .db import ScoreDb
 from .editor import MAX_REGEL_LENGTE
+from .game import MAX_SPELDUUR
 from .lobby import Lobby
 
 HIER = Path(__file__).parent
@@ -73,7 +74,18 @@ app.mount("/static", StaticFiles(directory=str(HIER / "static")), name="static")
 
 
 def huidige_sessie(request: Request):
-    return lobby.sessie(request.cookies.get("token"))
+    sessie = lobby.sessie(request.cookies.get("token"))
+    if sessie is not None:
+        sessie.laatst_gezien = time.time()
+    return sessie
+
+
+def druk(request: Request, naam: str = ""):
+    """Antwoord als er geen spel meer bij kan: de startpagina met een melding, status 503."""
+    return templates.TemplateResponse(
+        request, "start.html",
+        {"naam": naam, "fout": "Het is druk op de server, probeer het over een paar minuten nog eens."},
+        status_code=503)
 
 
 # ---- startpagina en scorebord ----
@@ -95,7 +107,10 @@ async def start_post(request: Request, naam: str = Form(""), modus: str = Form("
         return templates.TemplateResponse(request, "start.html",
                                           {"naam": naam, "fout": "Vul een naam in van 1 tot 20 tekens."},
                                           status_code=400)
-    sessie = lobby.registreer(naam, request.cookies.get("token"))
+    token = request.cookies.get("token")
+    if lobby.vol() and not (token and lobby.game_van(token)):
+        return druk(request, naam)
+    sessie = lobby.registreer(naam, token)
     if lopend := lobby.game_van(sessie.token):
         doel = f"/spel/{lopend[0].id}"
     elif modus == "mens":
@@ -160,6 +175,8 @@ async def wachten_computer(request: Request):
         return RedirectResponse("/", status_code=303)
     if lopend := lobby.game_van(sessie.token):
         return RedirectResponse(f"/spel/{lopend[0].id}", status_code=303)
+    if lobby.vol():
+        return druk(request, sessie.naam)
     game = lobby.start_tegen_computer(sessie.token)
     return RedirectResponse(f"/spel/{game.id}", status_code=303)
 
@@ -280,6 +297,8 @@ def tik_spel(game, nu: float) -> None:
             game.editors[nummer].hint = speler.melding
             speler.melding = None
     controleer_weg(game, nu)
+    if game.tik >= MAX_SPELDUUR and not game.afgelopen:
+        game.geef_op(1, reden="tijd")       # niemand wint echt; telt niet voor het scorebord
     if game.afgelopen and not game.score_opgeslagen:
         game.score_opgeslagen = True
         lobby.bewaar_uitslag(game)

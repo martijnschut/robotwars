@@ -1,5 +1,9 @@
-from app.lobby import Lobby, OPRUIMEN_NA, Uitslag
+import time
+
+from app import lobby as lobby_module
 from app.editor import Editor
+from app.game import MAX_SPELDUUR
+from app.lobby import Lobby, OPRUIMEN_NA, SESSIE_TTL, Uitslag
 
 
 def test_registreren_geeft_token_en_onthoudt_naam():
@@ -125,3 +129,59 @@ def test_nieuw_spel_wist_de_uitslag():
     assert a.laatste_uitslag is not None
     lobby.start_tegen_computer(a.token)
     assert a.laatste_uitslag is None
+
+
+def test_vol_bij_max_spellen(monkeypatch):
+    monkeypatch.setattr(lobby_module, "MAX_SPELLEN", 2)
+    lobby = Lobby()
+    assert lobby.vol() is False
+    g1 = lobby.start_tegen_computer(lobby.registreer("A").token)
+    lobby.start_tegen_computer(lobby.registreer("B").token)
+    assert lobby.vol() is True
+    g1.geef_op(1)                                   # afgelopen spellen tellen niet mee
+    assert lobby.vol() is False
+
+
+def test_te_veel_sessies_de_oudste_zonder_spel_gaat_weg(monkeypatch):
+    monkeypatch.setattr(lobby_module, "MAX_SESSIES", 3)
+    lobby = Lobby()
+    a, b, c = (lobby.registreer(n) for n in "ABC")
+    a.laatst_gezien, b.laatst_gezien, c.laatst_gezien = 100.0, 50.0, 200.0
+    lobby.start_tegen_computer(b.token)             # B is de oudste, maar speelt
+    d = lobby.registreer("D")
+    assert len(lobby.sessies) == 3
+    assert lobby.sessie(a.token) is None            # A is de oudste zonder spel
+    assert {b.token, c.token, d.token} <= set(lobby.sessies)
+    assert d.laatst_gezien > 200.0
+
+
+def test_ruim_op_vergeet_oude_sessies_zonder_spel():
+    lobby = Lobby()
+    a, b, c = (lobby.registreer(n) for n in "ABC")
+    nu = time.time()
+    a.laatst_gezien = b.laatst_gezien = nu - SESSIE_TTL - 1
+    lobby.start_tegen_computer(b.token)
+    lobby.ruim_op(nu)
+    assert lobby.sessie(a.token) is None
+    assert lobby.sessie(b.token) is b and lobby.sessie(c.token) is c
+
+
+def test_spelers_per_spel_worden_bijgehouden_en_opgeruimd():
+    lobby = Lobby()
+    a, b = lobby.registreer("A"), lobby.registreer("B")
+    lobby.zoek_tegenstander(a.token)
+    game = lobby.zoek_tegenstander(b.token)
+    assert lobby.spelers_van[game.id] == [a.token, b.token]
+    game.geef_op(1)
+    lobby.ruim_op(nu=game.geeindigd_op + OPRUIMEN_NA + 1)
+    assert game.id not in lobby.spelers_van
+
+
+def test_bewaar_uitslag_bij_te_lang_spel():
+    lobby = Lobby()
+    a = lobby.registreer("A")
+    game = lobby.start_tegen_computer(a.token)
+    game.tik = MAX_SPELDUUR
+    game.geef_op(1, reden="tijd")
+    lobby.bewaar_uitslag(game)
+    assert a.laatste_uitslag.te_lang and a.laatste_uitslag.opgegeven and not a.laatste_uitslag.gestopt
