@@ -7,11 +7,26 @@ services:
     container_name: robotwars_app
     init: true
     restart: unless-stopped
+    # Hardening: geen root, alleen-lezen bestandssysteem (behalve /tmp en het volume),
+    # geen capabilities, geen setuid-escalatie, begrensd geheugen en aantal processen.
+    user: "10001:10001"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    pids_limit: 128
     environment:
       - ROBOTWARS_DB=/data/robotwars.db
       - TZ=Europe/Amsterdam
     volumes:
       # Het scorebord (SQLite) overleeft deploys en herstarts.
+      # Een nieuw volume krijgt de eigenaar van /data uit de image (uid 10001). Bij een
+      # BESTAAND volume (aangemaakt toen de container nog als root draaide) eenmalig:
+      #   docker run --rm -v robotwars_data:/data alpine chown 10001:10001 /data
       - robotwars_data:/data
     # Poort bewust NIET gepubliceerd: alleen bereikbaar via Caddy op deployment_web.
     networks:
