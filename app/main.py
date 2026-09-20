@@ -231,12 +231,19 @@ def tik_alles() -> None:
         verbindingen.pop(game_id, None)
 
 
+async def sluit(ws: WebSocket, code: int = 1000) -> None:
+    with contextlib.suppress(Exception):
+        await asyncio.wait_for(ws.close(code=code), timeout=TIK_SECONDEN)
+
+
 async def zend(ws: WebSocket, html: str, sockets: set[WebSocket]) -> None:
-    """Stuurt naar één socket; een trage of dode socket wordt uit de set gehaald."""
+    """Stuurt naar één socket; een trage of dode socket gaat uit de set en wordt gesloten
+    met code 1013 (daarop verbindt HTMX opnieuw), los van de tik-loop."""
     try:
         await asyncio.wait_for(ws.send_text(html), timeout=TIK_SECONDEN)
     except Exception:
         sockets.discard(ws)
+        asyncio.create_task(sluit(ws, code=1013))
 
 
 async def zend_alles() -> None:
@@ -255,8 +262,7 @@ async def zend_alles() -> None:
             game.einde_gezonden = True
             for sockets in list(per_speler.values()):
                 for ws in list(sockets):
-                    with contextlib.suppress(Exception):
-                        await ws.close()
+                    await sluit(ws)
                     sockets.discard(ws)
 
 

@@ -1,3 +1,4 @@
+import asyncio
 import time
 
 import pytest
@@ -193,6 +194,32 @@ def test_kapot_spel_houdt_de_rest_niet_tegen(client):
     kapot.brein = lambda g, n: 1 / 0
     main.tik_alles()
     assert gezond.tik == 1
+
+
+class NepSocket:
+    """Een socket die niet meer reageert op send_text."""
+    def __init__(self):
+        self.gesloten_met = None
+
+    async def send_text(self, html):
+        raise asyncio.TimeoutError()
+
+    async def close(self, code=1000, reason=None):
+        self.gesloten_met = code
+
+
+def test_stokkende_socket_wordt_gesloten_met_1013(client):
+    game, token = start_spel(client)
+    nep = NepSocket()
+    main.verbindingen[game.id] = {1: {nep}}
+
+    async def zend_en_wacht():
+        await main.zend_alles()
+        await asyncio.sleep(0)            # de losse sluit-taak laten lopen
+
+    client.portal.call(zend_en_wacht)
+    assert nep not in main.verbindingen[game.id][1]
+    assert nep.gesloten_met == 1013
 
 
 def test_melding_wordt_hint_na_tik(client):
