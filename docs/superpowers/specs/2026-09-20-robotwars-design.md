@@ -18,6 +18,8 @@ Je speelt tegen een andere mens (online) of tegen de computer ("Robo").
 ## 2. Techniek
 
 - **Backend:** Python 3.12+, FastAPI, uvicorn (met `websockets`), Jinja2-templates.
+  Pakketbeheer uitsluitend met **uv** (`pyproject.toml`, `uv add`, `uv run`);
+  geen pip, geen handmatige venv, geen requirements.txt.
 - **Frontend:** HTML5, HTMX + de HTMX WebSocket-extensie (`ws`). Geen eigen
   JavaScript, geen Node.js, geen bundler. HTMX-bestanden staan lokaal in `static/`.
 - **Opslag:** SQLite (alleen voor het scorebord). Lopende spellen staan in het
@@ -278,8 +280,10 @@ Donker thema (achtergrond `#1a1d2b`, panelen `#2a2f45`), teamkleuren blauw
 - Robo speelt als speler 2 en heeft geen WebSocket; verder gelden dezelfde
   regels (wachtrij, respawn, schilden).
 - **Tempo:** Robo doet niets uit zichzelf. Telkens als de mens een commando
-  uitvoert dat N stappen in zijn wachtrij zet, kiest Robo N stappen voor zijn
-  eigen wachtrij. Typt de mens niets, dan staat Robo stil.
+  uitvoert dat N stappen in zijn wachtrij zet, krijgt Robo N stappen
+  **tegoed**. Elke tik waarin Robo tegoed heeft, kiest hij op dat moment één
+  stap (op basis van het actuele veld), voert die uit en verbruikt één tegoed.
+  Typt de mens niets, dan staat Robo stil.
 - **Keuze per stap**, eerste regel die past:
   1. Staat de vijandelijke robot vóór Robo in dezelfde rij, binnen 4 vakjes,
      zonder schild ertussen? → `schiet`.
@@ -292,8 +296,8 @@ Donker thema (achtergrond `#1a1d2b`, panelen `#2a2f45`), teamkleuren blauw
      tot over de brug, dan naar rij 4, dan vooruit tot binnen 4 vakjes van het
      vijandelijke gebouw. Is de volgende stap geblokkeerd, dan wordt de andere
      brug het doel.
-- Robo's keuzes worden op het moment van kiezen bepaald (niet vooruit
-  gepland), zodat hij reageert op de actuele situatie.
+- Doordat Robo per tik kiest (niet vooruit plant), reageert hij op de actuele
+  situatie.
 
 ## 8. Scorebord en opslag (`app/db.py`)
 
@@ -328,14 +332,12 @@ robotwars/
     static/        style.css, htmx.min.js, ws.js
   tests/
     test_parser.py, test_game.py, test_ai.py, test_lobby.py
-  docs/superpowers/specs/   dit ontwerp
-  requirements.txt
+  docs/superpowers/specs/   dit ontwerp + sprites.svg
+  pyproject.toml            uv-project: fastapi, uvicorn[standard], jinja2,
+                            python-multipart; dev: pytest, httpx
   Caddyfile
   README.md
 ```
-
-`requirements.txt`: fastapi, uvicorn[standard], jinja2, python-multipart,
-pytest, httpx.
 
 ## 10. Testen
 

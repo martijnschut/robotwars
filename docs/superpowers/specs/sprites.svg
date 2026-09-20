@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0">
+  <defs>
+    <linearGradient id="steen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfd3dc"/><stop offset="1" stop-color="#6b7080"/></linearGradient>
+    <linearGradient id="steenL" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#e2e5ec"/><stop offset=".5" stop-color="#9aa0ae"/><stop offset="1" stop-color="#5d6270"/></linearGradient>
+    <pattern id="bakstenen" width="10" height="6" patternUnits="userSpaceOnUse"><path d="M0 3H10M5 0V3M0 3V6M10 3V6" stroke="rgba(0,0,0,.22)" stroke-width="1" fill="none"/></pattern>
+    <linearGradient id="metaal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5b6170"/><stop offset=".35" stop-color="#e6e9f0"/><stop offset=".6" stop-color="#aab0be"/><stop offset="1" stop-color="#3f4452"/></linearGradient>
+    <linearGradient id="metaalV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8d93a3"/><stop offset="1" stop-color="#3a3f4c"/></linearGradient>
+    <linearGradient id="glas" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".85"/><stop offset="1" stop-color="#9fd8ff" stop-opacity=".35"/></linearGradient>
+    <pattern id="waarschuwing" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><rect width="4" height="8" fill="#ffd23f"/><rect x="4" width="4" height="8" fill="#222"/></pattern>
+    <radialGradient id="gloed"><stop offset="0" stop-color="#fff"/><stop offset=".4" stop-color="#ffd23f"/><stop offset="1" stop-color="#ffd23f" stop-opacity="0"/></radialGradient>
+    <radialGradient id="vuur"><stop offset="0" stop-color="#fff7a0"/><stop offset=".35" stop-color="#ff9f1c"/><stop offset=".8" stop-color="#ff3d00" stop-opacity=".9"/><stop offset="1" stop-color="#ff3d00" stop-opacity="0"/></radialGradient>
+    <filter id="schaduw" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#000" flood-opacity=".5"/></filter>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+
+    <!-- B. RUIMTETOREN — lampjes: l5 baken, l4 ring boven, l3 ring midden, l2 ring onder, l1 kern -->
+    <symbol id="toren" viewBox="0 0 100 100">
+      <ellipse cx="50" cy="95" rx="42" ry="4" fill="rgba(0,0,0,.45)"/>
+      <path d="M14 94 L20 84 H80 L86 94 Z" fill="url(#metaalV)" filter="url(#schaduw)"/>
+      <rect x="20" y="84" width="60" height="3" fill="var(--kleur)" filter="url(#glow)"><animate attributeName="opacity" values="1;.5;1" dur="1.6s" repeatCount="indefinite"/></rect>
+      <path d="M30 84 L24 70 H36 Z M70 84 L64 70 H76 Z" fill="#3f4452"/>
+      <path d="M33 86 L37 32 H63 L67 86 Z" fill="url(#metaal)" filter="url(#schaduw)"/>
+      <path d="M37 32 H63 L64 46 H36 Z" fill="rgba(0,0,0,.15)"/>
+      <path d="M50 32 V86" stroke="rgba(0,0,0,.25)" stroke-width="1"/>
+      <path d="M36.5 46 H63.5 M35.5 60 H64.5 M34.5 74 H65.5" stroke="rgba(0,0,0,.3)" stroke-width="1"/>
+      <rect x="36" y="42" width="28" height="3" rx="1.5" fill="var(--kleur)" filter="url(#glow)" style="visibility:var(--l4,visible)"><animate attributeName="opacity" values="1;.3;1" dur="1.2s" begin="0s" repeatCount="indefinite"/></rect>
+      <rect x="35" y="56" width="30" height="3" rx="1.5" fill="var(--kleur)" filter="url(#glow)" style="visibility:var(--l3,visible)"><animate attributeName="opacity" values="1;.3;1" dur="1.2s" begin=".4s" repeatCount="indefinite"/></rect>
+      <rect x="34" y="70" width="32" height="3" rx="1.5" fill="var(--kleur)" filter="url(#glow)" style="visibility:var(--l2,visible)"><animate attributeName="opacity" values="1;.3;1" dur="1.2s" begin=".8s" repeatCount="indefinite"/></rect>
+      <g fill="#ffe680" filter="url(#glow)"><rect x="41" y="48" width="5" height="5" rx="1"/><rect x="54" y="48" width="5" height="5" rx="1"/><rect x="41" y="62" width="5" height="5" rx="1"/><rect x="54" y="62" width="5" height="5" rx="1"/><rect x="41" y="76" width="5" height="5" rx="1"/><rect x="54" y="76" width="5" height="5" rx="1"/></g>
+      <rect x="45" y="76" width="10" height="10" rx="2" fill="#1a1d2b" stroke="var(--kleur)" stroke-width="1.2"/>
+      <path d="M35 32 a15 14 0 0 1 30 0 z" fill="var(--kleur)"/><path d="M35 32 a15 14 0 0 1 30 0 z" fill="url(#glas)"/>
+      <ellipse cx="44" cy="24" rx="5" ry="3" fill="#fff" opacity=".6"/>
+      <circle cx="50" cy="26" r="4" fill="var(--kleur)" filter="url(#glow)" style="visibility:var(--l1,visible)"><animate attributeName="r" values="3.5;5;3.5" dur="1s" repeatCount="indefinite"/></circle>
+      <line x1="50" y1="18" x2="50" y2="5" stroke="#d8dbe3" stroke-width="2"/><path d="M44 12 H56 M46 8 H54" stroke="#d8dbe3" stroke-width="1.5"/>
+      <circle cx="50" cy="4" r="3" fill="#ff5252" filter="url(#glow)" style="visibility:var(--l5,visible)"><animate attributeName="opacity" values="1;.1;1" dur=".8s" repeatCount="indefinite"/></circle>
+    </symbol>
+
+    <!-- SCHADE-LAGEN (over elk gebouw heen) -->
+    <symbol id="barst1" viewBox="0 0 100 100">
+      <path d="M70 58 l-3 5 l4 4 l-2 6" stroke="#1a1d2b" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="barst2" viewBox="0 0 100 100">
+      <path d="M70 58 l-3 5 l4 4 l-2 6 l3 4" stroke="#1a1d2b" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      <path d="M28 66 l4 4 l-3 5 l5 3 l-1 6" stroke="#1a1d2b" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+      <path d="M44 30 l3 4 l-2 4" stroke="#1a1d2b" stroke-width="1.4" fill="none" stroke-linecap="round"/>
+    </symbol>
+    <symbol id="rook" viewBox="0 0 100 100">
+      <g fill="#b8bcc8" opacity=".9">
+        <circle cx="62" cy="52" r="5"><animateTransform attributeName="transform" type="translate" values="0 0;3 -22" dur="1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="1.8s" repeatCount="indefinite"/></circle>
+        <circle cx="66" cy="54" r="4"><animateTransform attributeName="transform" type="translate" values="0 0;-2 -20" dur="1.8s" begin=".6s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="1.8s" begin=".6s" repeatCount="indefinite"/></circle>
+        <circle cx="58" cy="56" r="3.5"><animateTransform attributeName="transform" type="translate" values="0 0;4 -18" dur="1.8s" begin="1.2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="1.8s" begin="1.2s" repeatCount="indefinite"/></circle>
+      </g>
+    </symbol>
+    <symbol id="vlammen" viewBox="0 0 100 100">
+      <g>
+        <ellipse cx="30" cy="64" rx="7" ry="10" fill="url(#vuur)"><animate attributeName="ry" values="10;14;9;12;10" dur=".5s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="66" cy="50" rx="8" ry="12" fill="url(#vuur)"><animate attributeName="ry" values="12;16;11;14;12" dur=".45s" repeatCount="indefinite"/></ellipse>
+        <ellipse cx="50" cy="40" rx="6" ry="9" fill="url(#vuur)"><animate attributeName="ry" values="9;13;8;11;9" dur=".55s" repeatCount="indefinite"/></ellipse>
+      </g>
+      <g fill="#333844" opacity=".85">
+        <circle cx="66" cy="38" r="5"><animateTransform attributeName="transform" type="translate" values="0 0;3 -24" dur="1.5s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="1.5s" repeatCount="indefinite"/></circle>
+        <circle cx="30" cy="52" r="4.5"><animateTransform attributeName="transform" type="translate" values="0 0;-3 -22" dur="1.7s" begin=".5s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="1.7s" begin=".5s" repeatCount="indefinite"/></circle>
+      </g>
+    </symbol>
+    <symbol id="puin" viewBox="0 0 100 100">
+      <ellipse cx="50" cy="95" rx="46" ry="4" fill="rgba(0,0,0,.45)"/>
+      <g fill="#6b7080" stroke="#3a3f4c" stroke-width="1">
+        <polygon points="10,94 18,78 30,82 34,94"/><polygon points="30,94 36,84 50,80 58,88 60,94"/><polygon points="58,94 62,84 74,80 84,86 90,94"/>
+        <polygon points="40,84 44,70 56,72 54,84"/><polygon points="66,82 70,74 78,76 76,84"/><polygon points="20,82 26,72 32,76 30,84"/>
+      </g>
+      <g fill="#9aa0ae"><rect x="44" y="60" width="6" height="12" transform="rotate(20 47 66)"/><rect x="24" y="66" width="5" height="10" transform="rotate(-30 26 71)"/></g>
+      <path d="M14 78 h8 M24 84 h6 M70 76 h6" stroke="var(--kleur)" stroke-width="3" stroke-linecap="round"/>
+      <ellipse cx="46" cy="76" rx="7" ry="9" fill="url(#vuur)"><animate attributeName="ry" values="9;12;8;9" dur=".5s" repeatCount="indefinite"/></ellipse>
+      <ellipse cx="72" cy="80" rx="4" ry="6" fill="url(#vuur)"><animate attributeName="ry" values="6;9;5;6" dur=".4s" repeatCount="indefinite"/></ellipse>
+      <g fill="#333844" opacity=".85">
+        <circle cx="46" cy="66" r="6"><animateTransform attributeName="transform" type="translate" values="0 0;2 -30" dur="2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="2s" repeatCount="indefinite"/></circle>
+        <circle cx="30" cy="70" r="5"><animateTransform attributeName="transform" type="translate" values="0 0;-4 -26" dur="2.2s" begin=".7s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="2.2s" begin=".7s" repeatCount="indefinite"/></circle>
+        <circle cx="66" cy="72" r="5.5"><animateTransform attributeName="transform" type="translate" values="0 0;4 -28" dur="1.9s" begin="1.3s" repeatCount="indefinite"/><animate attributeName="opacity" values=".9;0" dur="1.9s" begin="1.3s" repeatCount="indefinite"/></circle>
+      </g>
+    </symbol>
+    <radialGradient id="bol" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#f4f6fa"/><stop offset=".5" stop-color="#aab0be"/><stop offset="1" stop-color="#3f4452"/></radialGradient>
+    <radialGradient id="oog"><stop offset="0" stop-color="#fff"/><stop offset=".3" stop-color="#7ff5ff"/><stop offset="1" stop-color="#0aa3c2"/></radialGradient>
+    <radialGradient id="kogelG"><stop offset="0" stop-color="#fff"/><stop offset=".35" stop-color="#fff2a8"/><stop offset=".7" stop-color="#ffb300"/><stop offset="1" stop-color="#ff6d00" stop-opacity="0"/></radialGradient>
+    <linearGradient id="staart" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffb300" stop-opacity="0"/><stop offset="1" stop-color="#ffd23f"/></linearGradient>
+    <clipPath id="zeshoek"><polygon points="50,8 86,29 86,71 50,92 14,71 14,29"/></clipPath>
+    <pattern id="rups" width="6" height="10" patternUnits="userSpaceOnUse"><rect width="6" height="10" fill="#2a2e3a"/><rect x="1" y="2" width="4" height="6" rx="1" fill="#4a4f5e"/></pattern>
+
+    <!-- B. BOLBOT (zweeft) -->
+    <symbol id="bolbot" viewBox="0 0 100 100">
+      <ellipse cx="50" cy="93" rx="22" ry="4" fill="rgba(0,0,0,.45)"><animate attributeName="rx" values="22;18;22" dur="1.6s" repeatCount="indefinite"/></ellipse>
+      <!-- straalmotor gloed -->
+      <ellipse cx="50" cy="86" rx="10" ry="3" fill="var(--kleur)" filter="url(#glow)" opacity=".8"><animate attributeName="ry" values="3;5;3" dur=".5s" repeatCount="indefinite"/></ellipse>
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0 0;0 -4;0 0" dur="1.6s" repeatCount="indefinite"/>
+        <!-- lichaam -->
+        <circle cx="50" cy="58" r="26" fill="url(#bol)" filter="url(#schaduw)"/>
+        <path d="M24 58 a26 26 0 0 0 52 0" fill="none" stroke="var(--kleur)" stroke-width="5"/>
+        <path d="M30 44 a26 26 0 0 1 40 0" fill="none" stroke="var(--kleur)" stroke-width="3" opacity=".7"/>
+        <circle cx="50" cy="58" r="8" fill="#1a1d2b"/><circle cx="50" cy="58" r="4" fill="var(--kleur)" filter="url(#glow)"><animate attributeName="r" values="3;5;3" dur="1s" repeatCount="indefinite"/></circle>
+        <!-- blaster rechts -->
+        <rect x="74" y="54" width="20" height="8" rx="3" fill="url(#metaalV)"/><rect x="90" y="52" width="6" height="12" rx="2" fill="#3f4452"/><circle cx="93" cy="58" r="2" fill="#1a1d2b"/>
+        <rect x="72" y="52" width="6" height="12" rx="2" fill="var(--kleur)"/>
+        <!-- kleine arm links -->
+        <rect x="8" y="54" width="18" height="7" rx="3.5" fill="url(#metaalV)"/><circle cx="9" cy="57.5" r="4" fill="#3f4452"/>
+        <!-- hoofd (koepel) -->
+        <path d="M32 34 a18 16 0 0 1 36 0 z" fill="url(#bol)" filter="url(#schaduw)"/>
+        <path d="M32 34 h36" stroke="var(--kleur)" stroke-width="3"/>
+        <!-- één groot oog, kijkt vooruit -->
+        <circle cx="56" cy="26" r="7" fill="#1a1d2b"/>
+        <circle cx="57" cy="26" r="5" fill="url(#oog)" filter="url(#glow)"><animate attributeName="r" values="5;5;.8;5;5" keyTimes="0;.4;.45;.5;1" dur="2.8s" repeatCount="indefinite"/></circle>
+        <circle cx="59" cy="24" r="1.5" fill="#fff"/>
+        <!-- antenne -->
+        <line x1="44" y1="20" x2="40" y2="8" stroke="#d8dbe3" stroke-width="2"/>
+        <circle cx="39.5" cy="7" r="2.5" fill="#ff5252" filter="url(#glow)"><animate attributeName="opacity" values="1;.2;1" dur=".9s" repeatCount="indefinite"/></circle>
+      </g>
+    </symbol>
+
+    <!-- SCHILD (3 treffers) -->
+    <symbol id="schild" viewBox="0 0 100 100">
+      <ellipse cx="50" cy="94" rx="30" ry="4" fill="rgba(0,0,0,.45)"/>
+      <polygon points="50,8 86,29 86,71 50,92 14,71 14,29" fill="var(--kleur)" opacity=".28"/>
+      <polygon points="50,8 86,29 86,71 50,92 14,71 14,29" fill="none" stroke="var(--kleur)" stroke-width="4" filter="url(#glow)"/>
+      <polygon points="50,22 74,36 74,64 50,78 26,64 26,36" fill="none" stroke="var(--kleur)" stroke-width="1.5" opacity=".7"/>
+      <path d="M50 8 V92 M14 29 L86 71 M86 29 L14 71" stroke="var(--kleur)" stroke-width="1" opacity=".35"/>
+      <rect x="0" y="0" width="100" height="100" fill="url(#glans)" opacity=".5" clip-path="url(#zeshoek)"><animate attributeName="y" values="-100;100" dur="2.2s" repeatCount="indefinite"/></rect>
+      <g stroke="#1a1d2b" stroke-width="2.2" fill="none" stroke-linecap="round" style="visibility:var(--b1,hidden)"><path d="M58 30 l-6 9 l7 6 l-4 9"/></g>
+      <g stroke="#1a1d2b" stroke-width="2.2" fill="none" stroke-linecap="round" style="visibility:var(--b2,hidden)"><path d="M30 50 l8 3 l-3 8 l9 4" /><path d="M70 62 l-6 -6 l4 -8 l-7 -3"/><path d="M40 20 l4 6 l-5 4"/></g>
+    </symbol>
+    <linearGradient id="glans" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+
+    <!-- KOGEL -->
+    <symbol id="kogel" viewBox="0 0 100 100">
+      <path d="M8 50 L62 40 L62 60 Z" fill="url(#staart)" opacity=".9"/>
+      <circle cx="64" cy="50" r="14" fill="url(#kogelG)" filter="url(#glow)"><animate attributeName="r" values="13;16;13" dur=".25s" repeatCount="indefinite"/></circle>
+      <circle cx="64" cy="50" r="6" fill="#fff"/>
+    </symbol>
+  </defs>
+</svg>
