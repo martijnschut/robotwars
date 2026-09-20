@@ -77,3 +77,7 @@ WebSocket-verbinding automatisch: `caddy run`.
 - `app/main.py` – de webserver (FastAPI + HTMX over een WebSocket)
 
 Het ontwerp staat in `docs/superpowers/specs/2026-09-20-robotwars-design.md`.
+
+## Licentie
+
+MIT, zie `LICENSE`. De sprites en het idee zijn geïnspireerd door [CT-3000](https://github.com/Q42/CT-3000) (ook MIT).
