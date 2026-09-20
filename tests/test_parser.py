@@ -126,7 +126,7 @@ def test_expand_max_stappen_beperkt_geneste_herhaal_blokken():
 
 # ---- bom ----
 
-from app.parser import Bomb, HINT_BOM, HINT_START
+from app.parser import Bomb, HINT_BOM
 
 
 def test_bom_met_dx_dy():

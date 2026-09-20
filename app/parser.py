@@ -63,7 +63,7 @@ HINT_BOM = ("Bom heeft twee getallen van -1 tot 1 nodig: bom = (dx, dy), "
             "bijvoorbeeld bom = (1, 0) voor het vak vóór je.")
 HINT_HERHAAL = "Herhaal hoeveel keer? Bijvoorbeeld herhaal 3 keer (maximaal 20)."
 HINT_START = "Begin met robot = ..., schild = (...), bom = (...), herhaal ... keer of klaar."
-BOM_BEREIK = 1   # dx en dy lopen van -BOM_BEREIK t/m BOM_BEREIK
+BOM_BEREIK = 1   # dx en dy lopen van -BOM_BEREIK t/m BOM_BEREIK (blijft < 10: '±' leest één cijfer)
 
 # Sjablonen zonder spaties; '#' staat voor een getal van 1 of 2 cijfers,
 # '±' voor een getal van één cijfer met optioneel een minteken ervoor.
@@ -91,7 +91,7 @@ def _past(compact: str, sjabloon: str) -> tuple[bool, bool, list[int]]:
     Geeft (compleet, kan_nog, getallen):
     - compleet: de tekst is precies dit sjabloon;
     - kan_nog: de tekst is een begin van dit sjabloon;
-    - getallen: de gevonden getallen op de '#'-plekken.
+    - getallen: de gevonden getallen op de '#'- en '±'-plekken.
     """
     i = 0
     getallen: list[int] = []
