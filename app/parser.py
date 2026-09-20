@@ -51,7 +51,7 @@ Command = Step | RepeatStart | RepeatEnd
 ParseResult = Command | Incomplete | Invalid
 
 HINT_ROBOT = 'Ik ken "{}" niet. Probeer vooruit, achteruit, omhoog, omlaag of schiet.'
-HINT_SCHILD = "Schild heeft twee getallen nodig, zoals schild = (4, 2)."
+HINT_SCHILD = "Schild heeft twee getallen nodig: schild = (x, y), bijvoorbeeld schild = (4, 2)."
 HINT_HERHAAL = "Herhaal hoeveel keer? Bijvoorbeeld herhaal 3 keer (maximaal 20)."
 HINT_START = "Begin met robot = ..., schild = (...), herhaal ... keer of klaar."
 

@@ -12,14 +12,15 @@ Spelen: **https://robot.schut.me**
 robot = vooruit      robot = achteruit
 robot = omhoog       robot = omlaag
 robot = schiet       (schiet 4 vakjes vooruit)
-schild = (4, 2)      (kolom, rij; 3 per potje, alleen op je eigen helft)
+schild = (4, 2)      (x, y; 3 per potje, alleen op je eigen helft)
 herhaal 3 keer
   robot = vooruit
 klaar
 ```
 
-De kolommen tel je vanaf jouw eigen kant: 1 staat bij jouw toren, 13 bij die
-van de ander; de rijen lopen van boven (1) naar beneden (7).
+De kolommen (x) tel je vanaf jouw eigen kant: 1 bij jouw toren, 13 bij die van
+de ander; de rijen (y) tellen van onder (1) naar boven (7), net als in een
+assenstelsel. `robot = omhoog` is dus y + 1.
 
 Je hoeft niet op Enter te drukken: zodra een regel klopt, doet je robot hem.
 Wie de toren van de ander op 0 schiet, wint. De snelste tijd staat bovenaan het

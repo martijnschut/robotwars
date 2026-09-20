@@ -38,26 +38,31 @@ Je speelt tegen een andere mens (online) of tegen de computer ("Robo").
 
 ### Het veld
 
-13 kolommen × 7 rijen. Coördinaten zijn `(kolom, rij)`, beide beginnend bij 1,
-en staan langs de rand van het veld. Kolom 7 is de rivier; op rij 2 en rij 6
-ligt een brug.
+13 kolommen × 7 rijen. Coördinaten zijn `(x, y)`, beide beginnend bij 1, en
+staan langs de rand van het veld. Het veld is bewust een **wiskundig
+assenstelsel**, zoals kinderen dat op school leren: x loopt naar rechts vanaf
+je eigen kant, y loopt omhoog en de oorsprong ligt linksonder. Rij (y) 1 is dus
+de onderste rij, rij 7 de bovenste. Kolom 7 is de rivier; op y=2 en y=6 ligt
+een brug.
 
 ```
-     1  2  3  4  5  6  7  8  9 10 11 12 13
-  1  .  .  .  .  .  .  ~  .  .  .  .  .  .
-  2  .  .  .  .  .  .  =  .  .  .  .  .  .   brug
-  3  .  .  .  .  .  .  ~  .  .  .  .  .  .
-  4  B  R  .  .  .  .  ~  .  .  .  .  R  B   gebouwen + startvakken
-  5  .  .  .  .  .  .  ~  .  .  .  .  .  .
-  6  .  .  .  .  .  .  =  .  .  .  .  .  .   brug
   7  .  .  .  .  .  .  ~  .  .  .  .  .  .
+  6  .  .  .  .  .  .  =  .  .  .  .  .  .   brug
+  5  .  .  .  .  .  .  ~  .  .  .  .  .  .
+  4  B  R  .  .  .  .  ~  .  .  .  .  R  B   gebouwen + startvakken
+  3  .  .  .  .  .  .  ~  .  .  .  .  .  .
+  2  .  .  .  .  .  .  =  .  .  .  .  .  .   brug
+  1  .  .  .  .  .  .  ~  .  .  .  .  .  .
+     1  2  3  4  5  6  7  8  9 10 11 12 13
 ```
 
 - Speler 1 (blauw): helft = kolom 1–6, gebouw op (1,4), robot start op (2,4).
 - Speler 2 (rood): helft = kolom 8–13, gebouw op (13,4), robot start op (12,4).
 - `vooruit` is voor speler 1 kolom +1, voor speler 2 kolom −1: altijd richting
-  de tegenstander. `achteruit` is het omgekeerde. `omhoog` = rij −1,
-  `omlaag` = rij +1.
+  de tegenstander. `achteruit` is het omgekeerde. `omhoog` = y + 1,
+  `omlaag` = y − 1.
+- Op het scherm staan de y-nummers links (7 boven, 1 onder) en de x-nummers
+  onder het veld, met de lege hoek linksonder als oorsprong.
 - Speler 2 ziet het veld gespiegeld, zodat "vooruit" op het scherm altijd naar
   rechts is en de eigen kant links staat.
 - **Iedere speler telt de kolommen vanaf zijn eigen kant**: links staat 1 (bij
@@ -92,7 +97,7 @@ beide spelers zichtbaar.
 
 ### Schilden
 
-`schild = (kolom, rij)` zet een schild neer. Voorwaarden:
+`schild = (x, y)` zet een schild neer. Voorwaarden:
 - op de eigen helft (speler 1: kolom 1–6, speler 2: kolom 8–13);
 - op een leeg vak (geen robot, gebouw, schild) en niet op een startvak
   ((2,4) of (12,4)), anders kan een robot nooit meer terugkomen;
@@ -177,7 +182,7 @@ Pure Python, geen afhankelijkheden. Twee functies:
 
 Foutmeldingen (hints) zijn in het Nederlands, bijvoorbeeld:
 - `Ik ken "links" niet. Probeer vooruit, achteruit, omhoog, omlaag of schiet.`
-- `Schild heeft twee getallen nodig, zoals schild = (4, 2).`
+- `Schild heeft twee getallen nodig: schild = (x, y), bijvoorbeeld schild = (4, 2).`
 - `Herhaal hoeveel keer? Bijvoorbeeld herhaal 3 keer (maximaal 20).`
 
 ## 5. Het typen (de editor)
@@ -338,10 +343,10 @@ Donker thema (achtergrond `#1a1d2b`, panelen `#2a2f45`), teamkleuren blauw
   3. Is de vijandelijke robot op Robo's helft, heeft Robo nog schilden, en is
      het vak (11,4) leeg? → `schild = (11, 4)` (vóór zijn startvak, dus de
      kogel raakt het schild voordat hij het gebouw raakt).
-  4. Anders lopen: naar de rij van de dichtstbijzijnde brug (2 of 6), vooruit
-     tot over de brug, dan naar rij 4, dan vooruit tot binnen 4 vakjes van het
-     vijandelijke gebouw. Is de volgende stap geblokkeerd, dan wordt de andere
-     brug het doel.
+  4. Anders lopen: naar de y van de dichtstbijzijnde brug (2 of 6; bij gelijke
+     afstand de onderste, y=2), vooruit tot over de brug, dan naar y=4, dan
+     vooruit tot binnen 4 vakjes van het vijandelijke gebouw. Is de volgende
+     stap geblokkeerd, dan wordt de andere brug het doel.
 - Doordat Robo per tik kiest (niet vooruit plant), reageert hij op de actuele
   situatie.
 

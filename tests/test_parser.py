@@ -62,6 +62,7 @@ def test_schild_zonder_getallen_is_invalid():
     r = parse_line("schild = (a, b)")
     assert isinstance(r, Invalid)
     assert r.hint == HINT_SCHILD
+    assert r.hint == "Schild heeft twee getallen nodig: schild = (x, y), bijvoorbeeld schild = (4, 2)."
 
 
 def test_herhaal():
