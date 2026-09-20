@@ -1,10 +1,14 @@
 <div id="veld" class="rw-veld">
-  <div class="co"></div>
-  {% for x in kolommen %}<div class="co">{{ x }}</div>{% endfor %}
+  {# elk vakje krijgt een vaste gridpositie (kolom 1 en rij 1 zijn de nummers), zodat de
+     kogelbanen als extra grid-items óver de vakjes heen kunnen liggen zonder ze te verschuiven #}
+  <div class="co" style="grid-area: 1 / 1"></div>
+  {% for x in kolommen %}<div class="co" style="grid-area: 1 / {{ loop.index + 1 }}">{{ x }}</div>{% endfor %}
   {% for rij in rijen %}
-  <div class="co">{{ loop.index }}</div>
+  {% set r = loop.index + 1 %}
+  <div class="co" style="grid-area: {{ r }} / 1">{{ loop.index }}</div>
   {% for cel in rij %}
-  <div class="c {{ cel.soort }}{% if cel.spoor %} spoor{% endif %}{% if cel.raak %} boem{% endif %}">
+  <div class="c {{ cel.soort }}{% if cel.spoor %} spoor{% endif %}{% if cel.raak %} boem{% endif %}"
+       style="grid-area: {{ r }} / {{ loop.index + 1 }}{% if cel.spoor %}; --vertraging: {{ (cel.spoor_index + 1) * 0.18 }}s{% endif %}">
     {% if cel.gebouw %}
       {% set g = cel.gebouw %}
       <svg class="{{ g.nummer|kleur }}{% if g.nummer != ik %} spiegel{% endif %} t{{ g.gebouw_levens }}">
@@ -18,11 +22,16 @@
       <svg class="{{ cel.schild.eigenaar|kleur }} sc{{ cel.schild.levens }}"><use href="#schild"/></svg>
     {% elif cel.robot %}
       <svg class="{{ cel.robot.nummer|kleur }}{% if cel.robot.nummer != ik %} spiegel{% endif %}"><use href="#bolbot"/></svg>
-    {% elif cel.kogel %}
-      <svg class="{{ cel.kogel|kleur }}{% if cel.kogel != ik %} spiegel{% endif %}"><use href="#kogel"/></svg>
     {% endif %}
-    {% if cel.raak %}<span class="knal">💥</span>{% endif %}
+    {% if cel.raak %}<span class="knal" style="animation-delay: {{ cel.knal_vertraging }}s">💥</span>{% endif %}
   </div>
   {% endfor %}
+  {% endfor %}
+  {# de kogels: één per schot, vliegen in de tik van de schutter naar het eindvakje #}
+  {% for b in kogelbanen %}
+  <div class="kogelbaan {{ b.richting }}{% if not b.raak %} mis{% endif %}"
+       style="grid-area: {{ b.rij }} / {{ b.kol_van }} / {{ b.rij + 1 }} / {{ b.kol_tot }}; --n: {{ b.n }}; --duur: {{ b.duur }}s">
+    <svg class="{{ b.schutter|kleur }}"><use href="#kogel"/></svg>
+  </div>
   {% endfor %}
 </div>

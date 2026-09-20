@@ -72,7 +72,11 @@ gebouw bevat, of de andere robot bevat.
 `robot = schiet` vuurt vooruit. De kogel legt maximaal 4 vakjes af, vliegt over
 water en bruggen heen, en raakt het eerste voorwerp dat hij tegenkomt: schild,
 robot of gebouw. Dat voorwerp krijgt 1 schade. Niets geraakt binnen 4 vakjes:
-kogel verdwijnt. De kogelbaan wordt één tik (1 seconde) getoond.
+kogel verdwijnt. In de tik van het schot vliegt de kogel zichtbaar vakje voor
+vakje (0,18 s per vakje) van de robot naar het eindpunt: elk vakje flitst als
+de kogel erlangs komt, bij een treffer verschijnt de 💥 pas bij aankomst, bij
+een misser dooft de kogel aan het eind uit. Schoten van beide spelers zijn voor
+beide spelers zichtbaar.
 
 ### Levens
 

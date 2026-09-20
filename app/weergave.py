@@ -19,13 +19,48 @@ class Cel:
     gebouw: Speler | None = None
     schild: Schild | None = None
     spoor: bool = False          # de kogel kwam hier langs in de laatste tik
+    spoor_index: int = 0         # hoeveelste vakje van de baan (0 = eerste na de schutter)
     raak: bool = False           # hier is iets geraakt in de laatste tik
-    kogel: int | None = None     # nummer van de schutter als de kogel hier eindigde zonder te raken
+    knal_vertraging: float = 0.0 # seconden tot de kogel hier aankomt (de 💥 wacht daarop)
+
+
+STAP_SECONDEN = 0.18   # vliegtijd van de kogel per vakje; 4 vakjes passen ruim in één tik
 
 
 def kolommen(ik: int) -> range:
     """Kolomvolgorde op het scherm: speler 2 ziet het veld gespiegeld."""
     return range(1, BREEDTE + 1) if ik == 1 else range(BREEDTE, 0, -1)
+
+
+def schermkolom(x: int, ik: int) -> int:
+    """Op welke schermkolom (1..13) staat veldkolom x voor kijker ik."""
+    return x if ik == 1 else BREEDTE + 1 - x
+
+
+def kogelbanen(game: Game, ik: int) -> list[dict]:
+    """Per schot van de laatste tik: waar de kogel over het scherm vliegt.
+
+    Gridkolommen tellen vanaf 2 (kolom 1 is de rijnummers), gridrijen vanaf 2
+    (rij 1 is de kolomnummers). `n` = aantal vakjes inclusief dat van de schutter.
+    """
+    banen = []
+    for schot in game.schoten:
+        if not schot.cellen:
+            continue
+        schutter = game.spelers[schot.schutter]
+        van = schermkolom(schutter.x, ik)
+        tot = schermkolom(schot.cellen[-1][0], ik)
+        banen.append({
+            "kol_van": min(van, tot) + 1,
+            "kol_tot": max(van, tot) + 2,
+            "rij": schutter.y + 1,
+            "n": len(schot.cellen) + 1,
+            "richting": "rechts" if tot > van else "links",
+            "duur": round(len(schot.cellen) * STAP_SECONDEN, 2),
+            "schutter": schot.schutter,
+            "raak": schot.raak is not None,
+        })
+    return banen
 
 
 def veld_matrix(game: Game, ik: int) -> list[list[Cel]]:
@@ -42,10 +77,10 @@ def veld_matrix(game: Game, ik: int) -> list[list[Cel]]:
             for schot in game.schoten:
                 if (x, y) in schot.cellen:
                     cel.spoor = True
+                    cel.spoor_index = schot.cellen.index((x, y))
                     if schot.raak == (x, y):
                         cel.raak = True
-                    elif schot.raak is None and schot.cellen[-1] == (x, y):
-                        cel.kogel = schot.schutter
+                        cel.knal_vertraging = round(len(schot.cellen) * STAP_SECONDEN, 2)
             rij.append(cel)
         rijen.append(rij)
     return rijen
@@ -59,6 +94,7 @@ def context(game: Game, ik: int) -> dict:
         "ander": game.tegenstander(ik),
         "rijen": veld_matrix(game, ik),
         "kolommen": list(kolommen(ik)),
+        "kogelbanen": kogelbanen(game, ik),
         "editor": game.editors[ik],
         "log": log_regels(game, ik),
     }
