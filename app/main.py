@@ -16,6 +16,7 @@ from fastapi.templating import Jinja2Templates
 
 from . import weergave
 from .db import ScoreDb
+from .editor import MAX_REGEL_LENGTE
 from .lobby import Lobby
 
 HIER = Path(__file__).parent
@@ -175,7 +176,10 @@ def verwerk_bericht(game, ik: int, bericht) -> str | None:
         return None
     editor = game.editors[ik]
     if "regel" in bericht:
-        bevroren = editor.verwerk(game, ik, str(bericht["regel"]))
+        regel = str(bericht["regel"])
+        if len(regel) > MAX_REGEL_LENGTE:     # geen eerlijke invoer: negeren
+            return None
+        bevroren = editor.verwerk(game, ik, regel)
         return weergave.editor_html(templates, game, ik, met_invoer=bevroren)
     actie = bericht.get("actie")
     if actie == "stop":

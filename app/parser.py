@@ -132,7 +132,7 @@ def _maak_commando(sjabloon: str, getallen: list[int]) -> ParseResult:
 def _hint(compact: str, tekst: str) -> str:
     if compact.startswith("robot"):
         rest = tekst.split("=", 1)[1].strip() if "=" in tekst else tekst.strip()
-        return HINT_ROBOT.format(rest)
+        return HINT_ROBOT.format(rest[:40])
     if compact.startswith("schild"):
         return HINT_SCHILD
     if compact.startswith("herhaal"):

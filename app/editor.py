@@ -14,6 +14,7 @@ from .parser import (Command, Incomplete, Invalid, RepeatEnd, RepeatStart, Shiel
 
 HINT_KLAAR = "Je bent niet in een herhaal. Typ eerst herhaal 3 keer."
 MAX_REGELS = 100   # bevroren regels die we bewaren (en elke keer meesturen)
+MAX_REGEL_LENGTE = 200   # tekens per getypte regel; langere berichten negeert de server
 
 
 @dataclass
@@ -98,6 +99,6 @@ class Editor:
         return False
 
     def _bevries(self, markering: str, tekst: str, inspringing: int) -> None:
-        self.regels.append(Regel(markering, tekst.strip(), inspringing))
+        self.regels.append(Regel(markering, tekst.strip()[:MAX_REGEL_LENGTE], inspringing))
         del self.regels[:-MAX_REGELS]
         self.markering = "wacht" if self.diepte else ""

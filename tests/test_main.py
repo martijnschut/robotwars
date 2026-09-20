@@ -6,8 +6,9 @@ from fastapi.testclient import TestClient
 
 from app import main
 from app.db import ScoreDb
+from app.editor import MAX_REGEL_LENGTE
 from app.lobby import OPRUIMEN_NA
-from app.parser import Move, Shoot
+from app.parser import HINT_ROBOT, Invalid, Move, Shoot, parse_line
 
 
 @pytest.fixture
@@ -158,6 +159,24 @@ def test_websocket_typen_voert_uit(client):
         ws.send_json({"regel": "robot = links"})
         html = ws.receive_text()
         assert 'id="hint"' in html and "links" in html
+
+
+def test_te_lange_regel_wordt_genegeerd(client):
+    game, token = start_spel(client)
+    with client.websocket_connect(f"/ws/spel/{game.id}", headers={"cookie": f"token={token}"}) as ws:
+        ws.send_json({"regel": "robot = vooruit" + " " * 10_000})
+        ws.send_json({"regel": "robot = schiet"})            # dit bericht komt wél door
+        html = ws.receive_text()
+        assert "robot = schiet" in html
+    assert game.editors[1].regels[-1].tekst == "robot = schiet"
+    assert len(game.editors[1].regels) == 1                  # de lange regel is niet bevroren
+    assert list(game.spelers[1].wachtrij) == [Shoot()]
+    assert all(len(r.tekst) <= MAX_REGEL_LENGTE for r in game.editors[1].regels)
+
+
+def test_hint_bij_onbekend_commando_is_kort():
+    r = parse_line("robot = " + "x" * 5000)
+    assert isinstance(r, Invalid) and len(r.hint) <= len(HINT_ROBOT) + 40 < 120
 
 
 def test_websocket_ongeldig_bericht_wordt_genegeerd(client):

@@ -1,4 +1,4 @@
-from app.editor import Editor, Regel, HINT_KLAAR, MAX_REGELS
+from app.editor import Editor, Regel, HINT_KLAAR, MAX_REGELS, MAX_REGEL_LENGTE
 from app.game import Game, MELD_DRUK
 from app.parser import Move, Shoot
 
@@ -124,3 +124,9 @@ def test_alleen_de_laatste_honderd_regels_blijven_bewaard():
     assert len(e.regels) == MAX_REGELS
     e.verwerk(g, 1, "robot = links")                # fout: niets bevroren, dus niets afgeknipt
     assert len(e.regels) == MAX_REGELS
+
+
+def test_bevroren_regel_wordt_afgekapt():
+    g, e = nieuw()
+    e.verwerk(g, 1, "robot = schiet" + " " * 5000)     # spaties: geldig, maar erg lang
+    assert len(e.regels) == 1 and len(e.regels[-1].tekst) <= MAX_REGEL_LENGTE
