@@ -6,7 +6,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-RICHTINGEN = ("vooruit", "achteruit", "omhoog", "omlaag")
 MAX_HERHAAL = 20
 
 
@@ -141,10 +140,12 @@ def _hint(compact: str, tekst: str) -> str:
     return HINT_START
 
 
-def expand(commands: list[Command]) -> list[Step]:
+def expand(commands: list[Command], max_stappen: int | None = None) -> list[Step]:
     """Rolt herhaal-blokken uit tot een platte lijst stappen.
 
-    Gooit ValueError bij een 'klaar' zonder 'herhaal' of andersom.
+    Gooit ValueError bij een 'klaar' zonder 'herhaal' of andersom, en (als
+    max_stappen is opgegeven) zodra een gesloten blok, of het eindresultaat,
+    meer dan max_stappen stappen bevat.
     """
     stapel: list[list[Step]] = [[]]
     tellers: list[int] = []
@@ -157,8 +158,12 @@ def expand(commands: list[Command]) -> list[Step]:
                 raise ValueError("klaar zonder herhaal")
             blok = stapel.pop()
             stapel[-1].extend(blok * tellers.pop())
+            if max_stappen is not None and len(stapel[-1]) > max_stappen:
+                raise ValueError("te veel stappen")
         else:
             stapel[-1].append(c)
     if len(stapel) > 1:
         raise ValueError("herhaal zonder klaar")
+    if max_stappen is not None and len(stapel[-1]) > max_stappen:
+        raise ValueError("te veel stappen")
     return stapel[0]

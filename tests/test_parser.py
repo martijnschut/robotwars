@@ -112,3 +112,12 @@ def test_expand_klaar_zonder_herhaal():
 def test_expand_herhaal_zonder_klaar():
     with pytest.raises(ValueError):
         expand([RepeatStart(2), Move("vooruit")])
+
+
+def test_expand_max_stappen_beperkt_geneste_herhaal_blokken():
+    cmds = [RepeatStart(20), RepeatStart(20), RepeatStart(20), Move("vooruit"),
+            RepeatEnd(), RepeatEnd(), RepeatEnd()]
+    with pytest.raises(ValueError):
+        expand(cmds, max_stappen=50)
+    # zonder max_stappen blijft het oude gedrag (alles uitrollen)
+    assert expand(cmds) == [Move("vooruit")] * 8000

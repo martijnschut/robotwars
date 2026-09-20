@@ -82,3 +82,13 @@ def test_wis_maakt_regels_leeg():
     e.verwerk(g, 1, "robot = vooruit")
     e.wis()
     assert e.regels == []
+
+
+def test_te_veel_geneste_stappen_is_fout_net_als_volle_wachtrij():
+    g, e = nieuw()
+    for tekst in ("herhaal 20 keer", "herhaal 20 keer", "herhaal 20 keer",
+                  "robot = vooruit", "klaar", "klaar", "klaar"):
+        e.verwerk(g, 1, tekst)
+    assert e.regels[-1].markering == "fout"
+    assert e.hint == MELD_DRUK
+    assert len(g.spelers[1].wachtrij) == 0

@@ -45,7 +45,7 @@ def is_water(x: int, y: int) -> bool:
 
 
 def eigen_helft(nummer: int, x: int) -> bool:
-    return 1 <= x <= 6 if nummer == 1 else 8 <= x <= BREEDTE
+    return 1 <= x <= RIVIER_X - 1 if nummer == 1 else RIVIER_X + 1 <= x <= BREEDTE
 
 
 @dataclass
@@ -272,3 +272,4 @@ class Game:
         else:
             self.schilden.append(Schild(x, y, speler.nummer))
             speler.schilden_over -= 1
+            speler.melding = None

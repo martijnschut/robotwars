@@ -237,3 +237,13 @@ def test_wachtrij_maximaal_50():
     assert len(g.spelers[1].wachtrij) == MAX_WACHTRIJ
     g.stop(1)
     assert len(g.spelers[1].wachtrij) == 0
+
+
+def test_zet_schild_wist_oude_foutmelding_bij_succes():
+    g = nieuw()
+    g.voeg_stappen_toe(1, [ShieldCmd(9, 3)])       # geweigerd: andere helft
+    g.tick()
+    assert g.spelers[1].melding == MELD_HELFT
+    g.voeg_stappen_toe(1, [ShieldCmd(4, 3)])       # geslaagd
+    g.tick()
+    assert g.spelers[1].melding is None

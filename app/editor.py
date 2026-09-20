@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .game import Game, MELD_DRUK
+from .game import Game, MAX_WACHTRIJ, MELD_DRUK
 from .parser import (Command, Incomplete, Invalid, RepeatEnd, RepeatStart,
                      expand, parse_line)
 
@@ -60,9 +60,13 @@ class Editor:
             if self.diepte > 0:
                 self._bevries("wacht", tekst, self.diepte)
                 return True
-            stappen = expand(self.blok)
+            try:
+                stappen = expand(self.blok, max_stappen=MAX_WACHTRIJ)
+            except ValueError:
+                gelukt = False
+            else:
+                gelukt = game.voeg_stappen_toe(nummer, stappen)
             self.blok = []
-            gelukt = game.voeg_stappen_toe(nummer, stappen)
             nieuw = "ok" if gelukt else "fout"
             for regel in self.regels:
                 if regel.markering == "wacht":
