@@ -4,6 +4,8 @@ Een programmeerspel voor kinderen van 8–12 jaar, gemaakt door Martijn en Wesse
 Je bestuurt een robot door commando's te typen (zoals in CT-3000) en probeert de
 toren van de tegenstander kapot te schieten (zoals in Clash Royale).
 
+Spelen: **https://robot.schut.me**
+
 ## Spelen
 
 ```
