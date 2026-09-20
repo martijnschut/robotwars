@@ -92,22 +92,22 @@ zodat `bom = (1, 0)` voor allebei "het vak vóór je" is. dy blijft gelijk.
 Logteksten (vanuit de kijker, zoals de andere regels):
 
 - `Jij legt een bom op (5, 3)` / `Wessel legt een bom op (9, 3)`
-- `💥 Jouw bom raakt Wessel! Zijn robot is kapot` / `💥 De bom van Wessel raakt
-  jou! Je robot is kapot`
-- `💥 Wessel stapt op een mijn! Zijn robot is kapot` / `💥 Je stapt op een
-  mijn! Je robot is kapot`
+- `💥 Jouw bom raakt Wessel!` / `💥 De bom van Wessel raakt jou!`
+- `💥 Je legt een bom op jezelf!` / `💥 Wessel legt een bom op zichzelf!`
+- `💥 Wessel stapt op een mijn!` / `💥 Je stapt op een mijn!`
 - `Twee mijnen knallen op (7, 2)`
 - `Bom geweigerd: Dat vak is niet leeg.` / `Wessel probeert een bom, maar dat
   mag niet`
 
-Daarna volgt het bestaande "komt terug over 3 seconden"/"is terug"-verhaal.
+Na een treffer volgt de bestaande regel "💥 Je robot is kapot! Hij komt terug
+over 3 seconden" en later "Je robot is terug op het startvak".
 
 Beeld:
 
 - Nieuwe sprite `bom`: zwarte bol met lont en vonk, met een dun ringetje in de
   teamkleur van de eigenaar. Als `<symbol>` naast de andere sprites.
 - Bij een knal de bestaande 💥 op dat vak, één tik lang (zonder kogelbaan).
-- Statuskaart: "💣 3" naast de schilden-teller.
+- Statuskaart: "💣 nog 3" naast de schilden-teller.
 
 ## 5. Techniek
 

@@ -13,6 +13,7 @@ robot = vooruit      robot = achteruit
 robot = omhoog       robot = omlaag
 robot = schiet       (schiet 4 vakjes vooruit)
 schild = (4, 2)      (x, y; 3 per potje, alleen op je eigen helft; kapot na 8 treffers)
+bom = (1, 0)         (dx, dy van -1 tot 1 rondom je robot; 3 per potje; robot erop = kapot)
 herhaal 3 keer
   robot = vooruit
 klaar
@@ -82,7 +83,7 @@ Zelf ergens anders draaien achter Caddy kan ook; zie de meegeleverde
 ## Hoe het werkt
 
 - `app/parser.py` – zet een getypte regel om in een commando
-- `app/game.py` – de spelregels (veld, lopen, schieten, schilden, winnen)
+- `app/game.py` – de spelregels (veld, lopen, schieten, schilden, bommen, winnen)
 - `app/ai.py` – Robo, de computerspeler
 - `app/editor.py` – de editor: regels bevriezen, herhaal-blokken, hints
 - `app/lobby.py` – wie speelt tegen wie

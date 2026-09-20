@@ -107,6 +107,18 @@ Een schild verdwijnt na 8 treffers. Voldoet het commando niet aan de
 voorwaarden, dan zie je een foutmelding en gebeurt er niets (het commando telt
 niet als gebruikt schild).
 
+### Bommen
+
+`bom = (dx, dy)` legt een bom op een buurvak van de robot: dx en dy zijn elk
+−1, 0 of 1, met dx = 1 "vooruit" (richting tegenstander) en dy = 1 omhoog.
+Elke speler heeft er 3 per potje. Staat er een robot (ook jijzelf bij
+`(0, 0)`), dan is die meteen kapot. Ligt er al een mijn, dan knallen beide en
+raakt niemand gewond. Anders blijft de bom liggen als **mijn**, zichtbaar voor
+allebei: een robot die erop stapt (van wie ook) is meteen kapot. Kogels
+vliegen over mijnen heen. Niet toegestaan (foutmelding, bom niet verbruikt):
+buiten het veld, water, gebouw, schild, leeg startvak. Robo legt geen bommen
+en loopt om mijnen heen. Volledig ontwerp: `2026-09-20-bom-design.md`.
+
 ### Winnen
 
 Het gebouw van de tegenstander op 0 → jij wint. De tijd = seconden vanaf de
@@ -156,6 +168,7 @@ robot = omhoog
 robot = omlaag
 robot = schiet
 schild = (4, 2)
+bom = (1, 0)
 herhaal 3 keer
   robot = vooruit
   robot = schiet
@@ -172,17 +185,18 @@ Pure Python, geen afhankelijkheden. Twee functies:
 
 - `parse_line(text) -> ParseResult` — geeft één van:
   - `Command(...)`: een geldig, compleet commando (`Move(richting)`, `Shoot()`,
-    `Shield(x, y)`, `RepeatStart(n)`, `RepeatEnd()`);
+    `Shield(x, y)`, `Bomb(dx, dy)`, `RepeatStart(n)`, `RepeatEnd()`);
   - `Incomplete`: nog geen commando, maar het kan er nog één worden
     (`robot = vo`);
   - `Invalid(hint)`: dit kan geen commando meer worden (`robot = links`),
     met een kindvriendelijke Nederlandse hint.
 - `expand(commands) -> list[Step]` — rolt `herhaal`-blokken uit tot een platte
-  lijst stappen (`Move`, `Shoot`, `Shield`).
+  lijst stappen (`Move`, `Shoot`, `Shield`, `Bomb`).
 
 Foutmeldingen (hints) zijn in het Nederlands, bijvoorbeeld:
 - `Ik ken "links" niet. Probeer vooruit, achteruit, omhoog, omlaag of schiet.`
 - `Schild heeft twee getallen nodig: schild = (x, y), bijvoorbeeld schild = (4, 2).`
+- `Bom heeft twee getallen van -1 tot 1 nodig: bom = (dx, dy), bijvoorbeeld bom = (1, 0) voor het vak vóór je.`
 - `Herhaal hoeveel keer? Bijvoorbeeld herhaal 3 keer (maximaal 20).`
 
 ## 5. Het typen (de editor)
@@ -265,7 +279,8 @@ De weggevallen speler mag niet in het duister tasten. Daarom:
 
 - Bovenaan: "Wessel (jij) tegen Papa" en de lopende tijd.
 - Het veld (gespiegeld voor speler 2).
-- Status: hartjes van beide robots, levens van beide gebouwen, schilden over.
+- Status: hartjes van beide robots, levens van beide gebouwen, schilden over,
+  bommen over.
 - Log "Wat gebeurt er?" onder de editor: de laatste 10 gebeurtenissen (lopen,
   geblokkeerd, treffers met resterende hartjes, mis, kapot, terug, schild,
   winst), nieuwste bovenaan, met tijd, en verteld vanuit de kijker ("Jij
@@ -375,7 +390,7 @@ robotwars/
   app/
     main.py        FastAPI: routes, WebSocket, tik-taak
     parser.py      taal → commando's/stappen
-    game.py        spelregels (veld, lopen, schieten, schilden, respawn, winnen)
+    game.py        spelregels (veld, lopen, schieten, schilden, bommen, respawn, winnen)
     ai.py          Robo
     lobby.py       wachtrij, koppelen, cookie → speler
     db.py          SQLite scorebord
