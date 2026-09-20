@@ -181,3 +181,59 @@ def test_geef_op():
     g = nieuw()
     g.geef_op(2)
     assert g.winnaar == 1 and g.opgegeven and g.geeindigd_op is not None
+
+
+from app.game import (MELD_OP, MELD_BESTAAT_NIET, MELD_HELFT, MELD_STARTVAK,
+                      MELD_BEZET, MAX_WACHTRIJ)
+from app.parser import Shield as ShieldCmd
+
+
+def zet(g, nummer, x, y):
+    g.spelers[nummer].melding = None      # de server wist meldingen na het tonen; hier doen we dat zelf
+    g.voeg_stappen_toe(nummer, [ShieldCmd(x, y)])
+    g.tick()
+    return g.spelers[nummer].melding
+
+
+def test_schild_zetten_op_eigen_helft():
+    g = nieuw()
+    assert zet(g, 1, 4, 3) is None
+    assert g.schild_op(4, 3).eigenaar == 1
+    assert g.spelers[1].schilden_over == 2
+    assert zet(g, 2, 11, 5) is None
+    assert g.spelers[2].schilden_over == 2
+
+
+def test_schild_niet_op_andere_helft_of_rivier():
+    g = nieuw()
+    assert zet(g, 1, 9, 3) == MELD_HELFT
+    assert zet(g, 1, 7, 2) == MELD_HELFT
+    assert zet(g, 2, 4, 3) == MELD_HELFT
+    assert g.spelers[1].schilden_over == 3     # geweigerd telt niet
+
+
+def test_schild_niet_buiten_veld_startvak_of_bezet():
+    g = nieuw()
+    assert zet(g, 1, 0, 3) == MELD_BESTAAT_NIET
+    assert zet(g, 1, 2, 4) == MELD_STARTVAK
+    assert zet(g, 1, 1, 4) == MELD_BEZET       # gebouw
+    g.spelers[2].x, g.spelers[2].y = 5, 5
+    assert zet(g, 1, 5, 5) == MELD_BEZET       # robot
+    assert zet(g, 1, 4, 3) is None
+    assert zet(g, 1, 4, 3) == MELD_BEZET       # al een schild
+
+
+def test_maximaal_drie_schilden():
+    g = nieuw()
+    for y in (1, 2, 3):
+        assert zet(g, 1, 4, y) is None
+    assert zet(g, 1, 4, 5) == MELD_OP
+
+
+def test_wachtrij_maximaal_50():
+    g = nieuw()
+    assert g.voeg_stappen_toe(1, [Move("omhoog")] * MAX_WACHTRIJ)
+    assert not g.voeg_stappen_toe(1, [Move("omhoog")])
+    assert len(g.spelers[1].wachtrij) == MAX_WACHTRIJ
+    g.stop(1)
+    assert len(g.spelers[1].wachtrij) == 0

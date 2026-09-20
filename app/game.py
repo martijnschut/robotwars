@@ -259,4 +259,16 @@ class Game:
         self.schoten.append(Schot(speler.nummer, cellen, raak))
 
     def _zet_schild(self, speler: Speler, x: int, y: int) -> None:
-        raise NotImplementedError   # Task 7
+        if speler.schilden_over == 0:
+            speler.melding = MELD_OP
+        elif not in_veld(x, y):
+            speler.melding = MELD_BESTAAT_NIET
+        elif not eigen_helft(speler.nummer, x):
+            speler.melding = MELD_HELFT
+        elif (x, y) in START.values():
+            speler.melding = MELD_STARTVAK
+        elif not self.is_vrij(x, y):
+            speler.melding = MELD_BEZET
+        else:
+            self.schilden.append(Schild(x, y, speler.nummer))
+            speler.schilden_over -= 1
