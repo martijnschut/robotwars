@@ -582,3 +582,19 @@ def test_schiet_zonder_graden_is_vooruit():
     g.voeg_stappen_toe(1, [Shoot()])
     g.tick()
     assert g.schoten[0].raak == (6, 3)
+
+
+def test_schiet_vanaf_de_rand_het_veld_uit_is_mis_zonder_baan():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 3, 1        # onderste rij, schiet omlaag
+    g.voeg_stappen_toe(1, [Shoot(270)])
+    g.tick()
+    assert g.schoten[0].cellen == [] and g.schoten[0].raak is None
+
+
+def test_schiet_omhoog_is_voor_speler_2_ook_omhoog():
+    g = nieuw()                                  # verticaal wordt niet gespiegeld, alleen vooruit/achteruit
+    g.spelers[2].x, g.spelers[2].y = 10, 3
+    g.voeg_stappen_toe(2, [Shoot(90)])
+    g.tick()
+    assert g.schoten[0].cellen == [(10, 4), (10, 5), (10, 6), (10, 7)]
