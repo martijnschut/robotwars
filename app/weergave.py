@@ -50,6 +50,8 @@ def kogelbanen(game: Game, ik: int) -> list[dict]:
 
     Gridkolommen tellen vanaf 2 (kolom 1 is de y-nummers). Gridrijen 1..7 zijn het
     veld met y=7 bovenaan (gridrij = HOOGTE - y + 1); gridrij 8 is de x-nummers.
+    De baan is het grid-gebied rij_van/kol_van t/m rij_tot/kol_tot (exclusief, zoals
+    CSS grid-area): één rij hoog bij horizontaal, één kolom breed bij verticaal.
     `n` = aantal vakjes inclusief dat van de schutter.
     """
     if game.afgelopen:          # na het winnende schot geen kogel meer laten staan
@@ -59,14 +61,23 @@ def kogelbanen(game: Game, ik: int) -> list[dict]:
         if not schot.cellen:
             continue
         schutter = game.spelers[schot.schutter]
-        van = schermkolom(schutter.x, ik)
-        tot = schermkolom(schot.cellen[-1][0], ik)
+        van = (schermkolom(schutter.x, ik), gridrij(schutter.y))
+        tot = (schermkolom(schot.cellen[-1][0], ik), gridrij(schot.cellen[-1][1]))
+        if tot[0] > van[0]:
+            richting = "rechts"
+        elif tot[0] < van[0]:
+            richting = "links"
+        elif tot[1] < van[1]:   # kleinere gridrij = hoger op het scherm
+            richting = "omhoog"
+        else:
+            richting = "omlaag"
         banen.append({
-            "kol_van": min(van, tot) + 1,
-            "kol_tot": max(van, tot) + 2,
-            "rij": gridrij(schutter.y),
+            "kol_van": min(van[0], tot[0]) + 1,
+            "kol_tot": max(van[0], tot[0]) + 2,
+            "rij_van": min(van[1], tot[1]),
+            "rij_tot": max(van[1], tot[1]) + 1,
             "n": len(schot.cellen) + 1,
-            "richting": "rechts" if tot > van else "links",
+            "richting": richting,
             "duur": round(len(schot.cellen) * STAP_SECONDEN, 2),
             "schutter": schot.schutter,
             "raak": schot.raak is not None,

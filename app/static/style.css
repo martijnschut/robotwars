@@ -87,12 +87,21 @@ a { color: var(--blauw); }
 @keyframes schud { from { transform: translate(-2px, 0); } to { transform: translate(2px, 0); } }
 /* de kogel zelf: een grid-item over de baan heen, dat in --duur van de schutter naar het eindvak glijdt */
 .kogelbaan { position: relative; z-index: 3; pointer-events: none; }
+/* horizontaal: de kogel is één vakje breed (100% / n) en schuift met `left` over de baan */
 .kogelbaan svg { position: absolute; top: 2%; left: 0; height: 96%; width: calc(100% / var(--n)); filter: drop-shadow(0 0 6px var(--geel)); animation: vlieg-rechts var(--duur) linear forwards; }
 .kogelbaan.links svg { transform: scaleX(-1); animation-name: vlieg-links; }
+/* verticaal: één vakje hoog, schuift met `top`; de sprite wijst naar rechts, dus draaien */
+.kogelbaan.omhoog svg, .kogelbaan.omlaag svg { left: 2%; width: 96%; height: calc(100% / var(--n)); }
+.kogelbaan.omhoog svg { transform: rotate(-90deg); animation-name: vlieg-omhoog; }
+.kogelbaan.omlaag svg { transform: rotate(90deg); animation-name: vlieg-omlaag; }
 .kogelbaan.mis svg { animation: vlieg-rechts var(--duur) linear forwards, doof var(--duur) linear forwards; }
 .kogelbaan.mis.links svg { animation-name: vlieg-links, doof; }
+.kogelbaan.mis.omhoog svg { animation-name: vlieg-omhoog, doof; }
+.kogelbaan.mis.omlaag svg { animation-name: vlieg-omlaag, doof; }
 @keyframes vlieg-rechts { from { left: 0; } to { left: calc(100% - 100% / var(--n)); } }
 @keyframes vlieg-links { from { left: calc(100% - 100% / var(--n)); } to { left: 0; } }
+@keyframes vlieg-omhoog { from { top: calc(100% - 100% / var(--n)); } to { top: 0; } }
+@keyframes vlieg-omlaag { from { top: 0; } to { top: calc(100% - 100% / var(--n)); } }
 @keyframes doof { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
 /* explosie op het geraakte vak: kort en groot, dan weg */
 .c .knal { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 44px; line-height: 1; pointer-events: none; opacity: 0; animation: knal .6s ease-out forwards; }

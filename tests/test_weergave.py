@@ -67,7 +67,7 @@ def test_kogelbanen_vliegen_over_het_scherm():
     (baan,) = kogelbanen(g, 1)
     # speler 1 kijkt normaal: schutter op schermkolom 2, eind op 6; gridkolom = schermkolom + 1;
     # y=1 is de onderste veldrij, dus gridrij 7 (y=7 is gridrij 1)
-    assert baan == {"kol_van": 3, "kol_tot": 8, "rij": 7, "n": 5, "richting": "rechts",
+    assert baan == {"kol_van": 3, "kol_tot": 8, "rij_van": 7, "rij_tot": 8, "n": 5, "richting": "rechts",
                     "duur": round(4 * STAP_SECONDEN, 2), "schutter": 1, "raak": False}
     # speler 2 ziet het gespiegeld: x=2 wordt schermkolom 12, x=6 wordt 8 → kogel vliegt naar links
     (baan2,) = kogelbanen(g, 2)
@@ -83,13 +83,34 @@ def test_kogelbanen_vliegen_over_het_scherm():
     g.spelers[1].x, g.spelers[1].y = 2, 7
     g.voeg_stappen_toe(1, [Shoot()])
     g.tick()
-    assert kogelbanen(g, 1)[0]["rij"] == 1
+    assert kogelbanen(g, 1)[0]["rij_van"] == 1
     g.spelers[2].gebouw_levens = 1
     g.spelers[1].x, g.spelers[1].y = 9, 4
     g.spelers[2].x, g.spelers[2].y = 12, 1
     g.voeg_stappen_toe(1, [Shoot()])
     g.tick()                                # winnend schot
     assert g.afgelopen and g.schoten and kogelbanen(g, 1) == []
+
+
+def test_kogelbanen_verticaal():
+    g = Game("g", "A", "B")
+    g.spelers[1].x, g.spelers[1].y = 3, 2
+    g.voeg_stappen_toe(1, [Shoot(90)])
+    g.tick()                                # mis: cellen (3,3)..(3,6)
+    (baan,) = kogelbanen(g, 1)
+    # één kolom breed (schermkolom 3 → gridkolom 4); schutter op y=2 is gridrij 6, eind y=6 is gridrij 2
+    assert baan == {"kol_van": 4, "kol_tot": 5, "rij_van": 2, "rij_tot": 7, "n": 5, "richting": "omhoog",
+                    "duur": round(4 * STAP_SECONDEN, 2), "schutter": 1, "raak": False}
+    # speler 2 ziet het gespiegeld in x, maar omhoog blijft omhoog
+    (baan2,) = kogelbanen(g, 2)
+    assert baan2["kol_van"] == 12 and baan2["richting"] == "omhoog"
+    # omlaag, treffer op het vakje eronder: n = 2, gridrijen 6 t/m 7
+    g.spelers[2].x, g.spelers[2].y = 3, 1
+    g.voeg_stappen_toe(1, [Shoot(270)])
+    g.tick()
+    (baan3,) = kogelbanen(g, 1)
+    assert baan3["richting"] == "omlaag" and baan3["n"] == 2 and baan3["raak"] is True
+    assert baan3["rij_van"] == 6 and baan3["rij_tot"] == 8 and baan3["kol_van"] == 4
 
 
 def test_filters():

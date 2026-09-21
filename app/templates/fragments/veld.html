@@ -38,7 +38,7 @@
   {# de kogels: één per schot, vliegen in de tik van de schutter naar het eindvakje #}
   {% for b in kogelbanen %}
   <div class="kogelbaan {{ b.richting }}{% if not b.raak %} mis{% endif %}"
-       style="grid-area: {{ b.rij }} / {{ b.kol_van }} / {{ b.rij + 1 }} / {{ b.kol_tot }}; --n: {{ b.n }}; --duur: {{ b.duur }}s">
+       style="grid-area: {{ b.rij_van }} / {{ b.kol_van }} / {{ b.rij_tot }} / {{ b.kol_tot }}; --n: {{ b.n }}; --duur: {{ b.duur }}s">
     <svg class="{{ b.schutter|kleur }}"><use href="#kogel"/></svg>
   </div>
   {% endfor %}
