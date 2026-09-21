@@ -103,7 +103,8 @@ def test_kogelbanen_verticaal():
                     "duur": round(4 * STAP_SECONDEN, 2), "schutter": 1, "raak": False}
     # speler 2 ziet het gespiegeld in x, maar omhoog blijft omhoog
     (baan2,) = kogelbanen(g, 2)
-    assert baan2["kol_van"] == 12 and baan2["richting"] == "omhoog"
+    assert baan2["kol_van"] == 12 and baan2["kol_tot"] == 13 and baan2["richting"] == "omhoog"
+    assert baan2["rij_van"] == 2 and baan2["rij_tot"] == 7   # rijen worden niet gespiegeld
     # omlaag, treffer op het vakje eronder: n = 2, gridrijen 6 t/m 7
     g.spelers[2].x, g.spelers[2].y = 3, 1
     g.voeg_stappen_toe(1, [Shoot(270)])
@@ -111,6 +112,17 @@ def test_kogelbanen_verticaal():
     (baan3,) = kogelbanen(g, 1)
     assert baan3["richting"] == "omlaag" and baan3["n"] == 2 and baan3["raak"] is True
     assert baan3["rij_van"] == 6 and baan3["rij_tot"] == 8 and baan3["kol_van"] == 4
+
+
+def test_matrix_toont_verticaal_spoor():
+    g = Game("g", "A", "B")
+    g.spelers[1].x, g.spelers[1].y = 3, 2
+    g.voeg_stappen_toe(1, [Shoot(90)])
+    g.tick()                                # mis: cellen (3,3)..(3,6)
+    rijen = veld_matrix(g, 1)
+    kolom = [rij[2] for rij in rijen]       # schermkolom 3, van y=7 (boven) naar y=1
+    assert [c.spoor for c in kolom] == [False, True, True, True, True, False, False]
+    assert [c.spoor_index for c in kolom[1:5]] == [3, 2, 1, 0]
 
 
 def test_filters():
