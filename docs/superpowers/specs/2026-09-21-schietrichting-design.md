@@ -51,7 +51,8 @@ het nu is.
   is geen geldig commando. Hint (`HINT_KANON`):
   *"Kanon draait naar 0, 90, 180 of 270 graden, bijvoorbeeld kanon = 90 voor
   omhoog. 0 is vooruit, 180 achteruit, 270 omlaag."*
-- Voorloopnullen zijn geen fout: `kanon = 090` leest als 90.
+- Voorloopnullen keurt de parser niet af (`090` leest als 90), maar in de editor
+  bevriest `kanon = 0` al bij de 0, dus in de praktijk typ je ze nooit.
 - `kanon =` en `kanon = 9` zijn nog onaf (Incomplete), geen fout.
 - Iets fouts dat met `kanon` begint (`kanon = omhoog`, `kanon 90`) krijgt ook
   `HINT_KANON`.
