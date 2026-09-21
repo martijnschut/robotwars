@@ -515,13 +515,37 @@ def test_schild_niet_op_een_mijn():
 
 
 from app.game import GEBOUW_LEVENS
+from app.parser import Aim
+
+
+def test_kanon_richten_kost_een_tik_en_blijft_staan():
+    g = nieuw()
+    g.voeg_stappen_toe(1, [Aim(90), Move("vooruit")])
+    g.tick()
+    assert g.spelers[1].kanon == 90
+    assert (g.spelers[1].x, g.spelers[1].y) == (2, 4)     # het lopen komt pas in de volgende tik
+    assert g.log[-1][1].soort == "kanon" and g.log[-1][1].graden == 90
+    g.tick()
+    assert g.spelers[1].kanon == 90 and (g.spelers[1].x, g.spelers[1].y) == (3, 4)
+
+
+def test_kanon_staat_op_nul_na_sneuvelen():
+    g = nieuw()
+    g.spelers[1].kanon = 270
+    g.spelers[1].x, g.spelers[1].y = 4, 3
+    g.spelers[2].x, g.spelers[2].y = 6, 3
+    g.spelers[1].robot_levens = 1
+    g.voeg_stappen_toe(2, [Shoot()])
+    g.tick()
+    assert not g.spelers[1].leeft and g.spelers[1].kanon == 0
 
 
 def test_schiet_omhoog_raakt_robot_in_dezelfde_kolom():
     g = nieuw()
+    g.spelers[1].kanon = 90
     g.spelers[1].x, g.spelers[1].y = 4, 2
     g.spelers[2].x, g.spelers[2].y = 4, 5        # drie vakjes erboven
-    g.voeg_stappen_toe(1, [Shoot(90)])
+    g.voeg_stappen_toe(1, [Shoot()])
     g.tick()
     assert g.spelers[2].robot_levens == 4
     assert g.schoten[0].cellen == [(4, 3), (4, 4), (4, 5)]
@@ -530,10 +554,11 @@ def test_schiet_omhoog_raakt_robot_in_dezelfde_kolom():
 
 def test_schiet_omlaag_stopt_bij_schild():
     g = nieuw()
+    g.spelers[1].kanon = 270
     g.spelers[1].x, g.spelers[1].y = 3, 6
     g.schilden.append(Schild(3, 4, eigenaar=1))
     g.spelers[2].x, g.spelers[2].y = 3, 3
-    g.voeg_stappen_toe(1, [Shoot(270)])
+    g.voeg_stappen_toe(1, [Shoot()])
     g.tick()
     assert g.spelers[2].robot_levens == 5
     assert g.schild_op(3, 4).levens == SCHILD_LEVENS - 1
@@ -542,13 +567,14 @@ def test_schiet_omlaag_stopt_bij_schild():
 
 def test_schiet_achteruit_is_gespiegeld_per_speler():
     g = nieuw()
+    g.spelers[1].kanon = g.spelers[2].kanon = 180
     g.spelers[1].x, g.spelers[1].y = 8, 1        # speler 1 staat rechts van speler 2
     g.spelers[2].x, g.spelers[2].y = 5, 1
-    g.voeg_stappen_toe(1, [Shoot(180)])          # achteruit = naar links voor speler 1
+    g.voeg_stappen_toe(1, [Shoot()])             # achteruit = naar links voor speler 1
     g.tick()
     assert g.spelers[2].robot_levens == 4
     assert g.schoten[0].cellen == [(7, 1), (6, 1), (5, 1)]   # over het water heen
-    g.voeg_stappen_toe(2, [Shoot(180)])          # achteruit = naar rechts voor speler 2
+    g.voeg_stappen_toe(2, [Shoot()])             # achteruit = naar rechts voor speler 2
     g.tick()
     assert g.spelers[1].robot_levens == 4
     assert g.schoten[0].cellen == [(6, 1), (7, 1), (8, 1)]
@@ -556,26 +582,28 @@ def test_schiet_achteruit_is_gespiegeld_per_speler():
 
 def test_schiet_achteruit_vanaf_startvak_raakt_eigen_toren():
     g = nieuw()                                  # speler 1 op (2,4), eigen toren op (1,4)
-    g.voeg_stappen_toe(1, [Shoot(180)])
+    g.voeg_stappen_toe(1, [Aim(180), Shoot()])
+    g.tick()
     g.tick()
     assert g.spelers[1].gebouw_levens == GEBOUW_LEVENS - 1
     assert g.schoten[0].cellen == [(1, 4)] and g.schoten[0].raak == (1, 4)
     g.spelers[1].gebouw_levens = 1
-    g.voeg_stappen_toe(1, [Shoot(180)])
+    g.voeg_stappen_toe(1, [Shoot()])
     g.tick()
     assert g.winnaar == 2 and g.afgelopen        # eigen toren kapot: de ander wint
 
 
 def test_schiet_omhoog_aan_de_rand_is_mis():
     g = nieuw()
+    g.spelers[1].kanon = 90
     g.spelers[1].x, g.spelers[1].y = 2, 6        # één vakje onder de bovenrand
-    g.voeg_stappen_toe(1, [Shoot(90)])
+    g.voeg_stappen_toe(1, [Shoot()])
     g.tick()
     assert g.schoten[0].raak is None
     assert g.schoten[0].cellen == [(2, 7)]       # alleen het vakje binnen het veld
 
 
-def test_schiet_zonder_graden_is_vooruit():
+def test_schiet_zonder_richten_is_vooruit():
     g = nieuw()
     g.spelers[1].x, g.spelers[1].y = 4, 3
     g.spelers[2].x, g.spelers[2].y = 6, 3
@@ -586,15 +614,17 @@ def test_schiet_zonder_graden_is_vooruit():
 
 def test_schiet_vanaf_de_rand_het_veld_uit_is_mis_zonder_baan():
     g = nieuw()
+    g.spelers[1].kanon = 270
     g.spelers[1].x, g.spelers[1].y = 3, 1        # onderste rij, schiet omlaag
-    g.voeg_stappen_toe(1, [Shoot(270)])
+    g.voeg_stappen_toe(1, [Shoot()])
     g.tick()
     assert g.schoten[0].cellen == [] and g.schoten[0].raak is None
 
 
 def test_schiet_omhoog_is_voor_speler_2_ook_omhoog():
     g = nieuw()                                  # verticaal wordt niet gespiegeld, alleen vooruit/achteruit
+    g.spelers[2].kanon = 90
     g.spelers[2].x, g.spelers[2].y = 10, 3
-    g.voeg_stappen_toe(2, [Shoot(90)])
+    g.voeg_stappen_toe(2, [Shoot()])
     g.tick()
     assert g.schoten[0].cellen == [(10, 4), (10, 5), (10, 6), (10, 7)]

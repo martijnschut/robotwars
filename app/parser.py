@@ -16,7 +16,7 @@ class Move:
 
 @dataclass(frozen=True)
 class Shoot:
-    graden: int = 0   # tijdelijk; wordt in de ombouw vervangen door Speler.kanon
+    pass
 
 
 @dataclass(frozen=True)
