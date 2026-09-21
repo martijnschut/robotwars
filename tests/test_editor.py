@@ -1,7 +1,7 @@
 from app.editor import (Editor, Regel, HINT_KLAAR, HINT_TE_DIEP, HINT_TE_VEEL, MAX_DIEPTE, MAX_REGELS,
                         MAX_REGEL_LENGTE)
 from app.game import Game, MELD_DRUK, MAX_WACHTRIJ
-from app.parser import Move, Shoot
+from app.parser import Move, Shoot, Aim
 
 
 def nieuw():
@@ -163,3 +163,14 @@ def test_te_diep_nesten_is_fout():
     assert e.verwerk(g, 1, "herhaal 2 keer") is False
     assert e.markering == "fout" and e.hint == HINT_TE_DIEP
     assert e.diepte == MAX_DIEPTE and len(e.regels) == MAX_DIEPTE
+
+
+def test_kanon_en_schiet_teken_voor_teken():
+    """De editor voert een regel uit zodra hij klopt; onderweg mag niets afgaan of rood worden."""
+    g, e = nieuw()
+    for regel in ("kanon = 90", "robot = schiet"):
+        for i in range(1, len(regel) + 1):
+            bevroren = e.verwerk(g, 1, regel[:i])
+            assert bevroren is (i == len(regel)), regel[:i]
+            assert e.hint is None, regel[:i]
+    assert list(g.spelers[1].wachtrij) == [Aim(90), Shoot()]
