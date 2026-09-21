@@ -16,7 +16,8 @@ class Move:
 
 @dataclass(frozen=True)
 class Shoot:
-    pass
+    """Schiet in graden: 0 vooruit, 90 omhoog, 180 achteruit, 270 omlaag."""
+    graden: int = 0
 
 
 @dataclass(frozen=True)
@@ -58,6 +59,9 @@ Command = Step | RepeatStart | RepeatEnd
 ParseResult = Command | Incomplete | Invalid
 
 HINT_ROBOT = 'Ik ken "{}" niet. Probeer vooruit, achteruit, omhoog, omlaag of schiet.'
+HINT_GRADEN = ("Schiet in 0, 90, 180 of 270 graden, bijvoorbeeld robot = schiet(90) voor omhoog. "
+               "0 is vooruit, 180 achteruit, 270 omlaag.")
+GRADEN = (0, 90, 180, 270)
 HINT_SCHILD = "Schild heeft twee getallen nodig: schild = (x, y), bijvoorbeeld schild = (4, 2)."
 HINT_BOM = ("Bom heeft twee getallen van -1 tot 1 nodig: bom = (dx, dy), "
             "bijvoorbeeld bom = (1, 0) voor het vak vóór je.")
@@ -65,7 +69,7 @@ HINT_HERHAAL = "Herhaal hoeveel keer? Bijvoorbeeld herhaal 3 keer (maximaal 20).
 HINT_START = "Begin met robot = ..., schild = (...), bom = (...), herhaal ... keer of klaar."
 BOM_BEREIK = 1   # dx en dy lopen van -BOM_BEREIK t/m BOM_BEREIK (blijft < 10: '±' leest één cijfer)
 
-# Sjablonen zonder spaties; '#' staat voor een getal van 1 of 2 cijfers,
+# Sjablonen zonder spaties; '#' staat voor een getal van 1 tot 3 cijfers,
 # '±' voor een getal van één cijfer met optioneel een minteken ervoor.
 _SJABLONEN = (
     "robot=vooruit",
@@ -73,6 +77,7 @@ _SJABLONEN = (
     "robot=omhoog",
     "robot=omlaag",
     "robot=schiet",
+    "robot=schiet(#)",
     "schild=(#,#)",
     "bom=(±,±)",
     "herhaal#keer",
@@ -100,7 +105,7 @@ def _past(compact: str, sjabloon: str) -> tuple[bool, bool, list[int]]:
             return False, True, getallen
         if teken == "#":
             start = i
-            while i < len(compact) and compact[i].isdigit() and i - start < 2:
+            while i < len(compact) and compact[i].isdigit() and i - start < 3:
                 i += 1
             if i == start:
                 return False, False, getallen
@@ -140,7 +145,12 @@ def parse_line(tekst: str) -> ParseResult:
 def _maak_commando(sjabloon: str, getallen: list[int]) -> ParseResult:
     if sjabloon.startswith("robot="):
         waarde = sjabloon[len("robot="):]
-        return Shoot() if waarde == "schiet" else Move(waarde)
+        if waarde == "schiet":
+            return Shoot()
+        if waarde == "schiet(#)":
+            graden = getallen[0]
+            return Shoot(graden) if graden in GRADEN else Invalid(HINT_GRADEN)
+        return Move(waarde)
     if sjabloon.startswith("schild"):
         return Shield(getallen[0], getallen[1])
     if sjabloon.startswith("bom"):
@@ -157,6 +167,8 @@ def _maak_commando(sjabloon: str, getallen: list[int]) -> ParseResult:
 
 
 def _hint(compact: str, tekst: str) -> str:
+    if compact.startswith("robot=schiet"):
+        return HINT_GRADEN       # haakjes vergeten, of een woord in plaats van graden
     if compact.startswith("robot"):
         rest = tekst.split("=", 1)[1].strip() if "=" in tekst else tekst.strip()
         return HINT_ROBOT.format(rest[:40])

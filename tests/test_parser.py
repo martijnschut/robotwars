@@ -161,3 +161,38 @@ def test_start_hint_noemt_bom():
 def test_expand_herhaal_met_bom():
     stappen = expand([RepeatStart(2), Bomb(1, 0), RepeatEnd()])
     assert stappen == [Bomb(1, 0), Bomb(1, 0)]
+
+
+# ---- schiet in graden ----
+
+from app.parser import HINT_GRADEN, HINT_ROBOT
+
+
+def test_schiet_zonder_haakjes_is_nul_graden():
+    assert parse_line("robot = schiet") == Shoot(0)
+    assert Shoot() == Shoot(0)
+
+
+def test_schiet_in_vier_richtingen():
+    for graden in (0, 90, 180, 270):
+        assert parse_line(f"robot = schiet({graden})") == Shoot(graden)
+    assert parse_line("robot=schiet( 90 )") == Shoot(90)     # spaties maken niet uit
+    assert parse_line("robot = schiet(090)") == Shoot(90)     # voorloopnul is geen fout
+
+
+def test_schiet_foute_graden_geeft_graden_hint():
+    assert parse_line("robot = schiet(45)") == Invalid(HINT_GRADEN)
+    assert parse_line("robot = schiet(360)") == Invalid(HINT_GRADEN)
+    assert parse_line("robot = schiet 90") == Invalid(HINT_GRADEN)      # haakjes vergeten
+    assert parse_line("robot = schiet omhoog") == Invalid(HINT_GRADEN)  # woord in plaats van graden
+    assert "robot = schiet(90)" in HINT_GRADEN
+
+
+def test_schiet_half_getypt_is_incomplete():
+    assert parse_line("robot = schiet(") == Incomplete()
+    assert parse_line("robot = schiet(9") == Incomplete()
+    assert parse_line("robot = schiet(270") == Incomplete()
+
+
+def test_andere_robot_fouten_houden_de_oude_hint():
+    assert parse_line("robot = links") == Invalid(HINT_ROBOT.format("links"))
