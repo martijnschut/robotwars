@@ -173,6 +173,7 @@ a { color: var(--blauw); }
 @media (max-width: 860px) {
   .rw-veld { grid-template-columns: 20px repeat(13, minmax(0, 1fr)); }
   .rw-veld .c svg { width: 90%; height: 90%; }
+  .rw-veld .c .kanon { font-size: 8px; }   /* kleinere vakjes: kleiner driehoekje */
   .rw-status { flex-direction: column; }
   .kolommen { grid-template-columns: 1fr; }
 }

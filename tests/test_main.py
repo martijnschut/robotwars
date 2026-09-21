@@ -577,6 +577,7 @@ def test_melding_wordt_hint_na_tik(client):
     assert game.editors[1].hint == "Hier kan geen schild." and game.spelers[1].melding is None
     html = main.weergave.tik_html(main.templates, game, 1)
     assert 'id="hint"' in html and "Hier kan geen schild." in html
+    assert 'class="kanon rechts"' in html and "🔫 0°" in html   # eigen robot: kanon vooruit
     assert game.editors[1].hint == "Hier kan geen schild."   # renderen verandert niets
 
 

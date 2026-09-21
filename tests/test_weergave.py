@@ -281,6 +281,8 @@ def test_kanon_richting_op_het_scherm():
     assert veld_matrix(g, 2)[3][11].kanon == "omhoog"    # verticaal spiegelt niet
     assert veld_matrix(g, 1)[3][11].kanon == "rechts"    # achteruit van speler 2, gezien door speler 1
     assert veld_matrix(g, 2)[3][1].kanon == "links"      # … en door speler 2 zelf
+    g.spelers[1].kanon = 270
+    assert veld_matrix(g, 1)[3][1].kanon == "omlaag"
 
 
 def test_logtekst_kanon():
