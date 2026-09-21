@@ -1,4 +1,4 @@
-from app.parser import parse_line, Move, Shoot, Incomplete, Invalid, HINT_START
+from app.parser import parse_line, Move, Shoot, Incomplete, Invalid, HINT_START, HINT_GRADEN, HINT_ROBOT
 
 
 def test_robot_vooruit():
@@ -165,8 +165,6 @@ def test_expand_herhaal_met_bom():
 
 # ---- schiet in graden ----
 
-from app.parser import HINT_GRADEN, HINT_ROBOT
-
 
 def test_schiet_zonder_haakjes_is_nul_graden():
     assert parse_line("robot = schiet") == Shoot(0)
@@ -185,6 +183,8 @@ def test_schiet_foute_graden_geeft_graden_hint():
     assert parse_line("robot = schiet(360)") == Invalid(HINT_GRADEN)
     assert parse_line("robot = schiet 90") == Invalid(HINT_GRADEN)      # haakjes vergeten
     assert parse_line("robot = schiet omhoog") == Invalid(HINT_GRADEN)  # woord in plaats van graden
+    assert parse_line("robot = schiet()") == Invalid(HINT_GRADEN)       # geen getal tussen de haakjes
+    assert parse_line("robot = schiet(-90)") == Invalid(HINT_GRADEN)    # negatieve graden bestaan niet
     assert "robot = schiet(90)" in HINT_GRADEN
 
 

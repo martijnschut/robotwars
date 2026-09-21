@@ -49,9 +49,13 @@ Alleen deze vier hoeken bestaan; er wordt niet schuin geschoten.
   editor, tests) betekenen daardoor nog steeds "vooruit".
 - Nieuw sjabloon `robot=schiet(#)` naast `robot=schiet`. Het `#`-teken leest
   nu 1–2 cijfers; dat wordt 1–3 cijfers, want 180 en 270 hebben er drie. Voor
-  `schild = (123, 4)` en `herhaal 100 keer` verandert daardoor de uitkomst
-  niet: die geven dezelfde melding als nu ("Dat vak bestaat niet." /
-  "maximaal 20").
+  `herhaal 100 keer` verandert de uitkomst niet: dat geeft dezelfde melding als
+  nu ("maximaal 20"). Voor `schild = (123, 4)` verandert de uitkomst wél: waar
+  de parser dat getal eerst zelf afkeurde met `HINT_SCHILD`, wordt het nu wel
+  gelezen als `Shield(123, 4)` en pas een tick later door het spel afgekeurd
+  met "Dat vak bestaat niet." — hetzelfde als nu al gebeurt bij bijvoorbeeld
+  `schild = (99, 4)`. Dat is acceptabel: de melding blijft kindvriendelijk en
+  correct, alleen de laag die hem geeft verschuift van parser naar spel.
 
 ## 3. Spelregels
 
