@@ -265,3 +265,26 @@ def test_log_regels_bommen():
     ]
     assert oudste_eerst_2[8] == "Jij legt een bom op (4, 3)"   # speler 2 ziet kolommen gespiegeld
 
+
+
+def test_kanon_richting_op_het_scherm():
+    g = Game("g", "A", "B")
+    rijen = veld_matrix(g, 1)
+    assert rijen[3][1].kanon == "rechts"      # eigen robot (2,4): 0 = vooruit = naar rechts
+    assert rijen[3][11].kanon == "links"      # robot van de ander (12,4) kijkt naar mij toe
+    assert rijen[3][0].kanon is None          # geen robot: geen kanon
+    rijen2 = veld_matrix(g, 2)
+    assert rijen2[3][1].kanon == "rechts"     # speler 2 ziet zijn eigen robot ook links, vooruit = rechts
+    assert rijen2[3][11].kanon == "links"
+    g.spelers[1].kanon, g.spelers[2].kanon = 90, 180
+    assert veld_matrix(g, 1)[3][1].kanon == "omhoog"
+    assert veld_matrix(g, 2)[3][11].kanon == "omhoog"    # verticaal spiegelt niet
+    assert veld_matrix(g, 1)[3][11].kanon == "rechts"    # achteruit van speler 2, gezien door speler 1
+    assert veld_matrix(g, 2)[3][1].kanon == "links"      # … en door speler 2 zelf
+
+
+def test_logtekst_kanon():
+    g = Game("g", "Wessel", "Papa")
+    g.log.append((1, Gebeurtenis("kanon", 1, graden=90)))
+    assert log_regels(g, 1)[0]["tekst"] == "Jij draait je kanon naar 90°"
+    assert log_regels(g, 2)[0]["tekst"] == "Wessel draait het kanon naar 90°"

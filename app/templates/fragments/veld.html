@@ -25,6 +25,7 @@
       <svg class="{{ cel.mijn.eigenaar|kleur }}"><use href="#bom"/></svg>
     {% elif cel.robot %}
       <svg class="{{ cel.robot.nummer|kleur }}{% if cel.robot.nummer != ik %} spiegel{% endif %}"><use href="#bolbot"/></svg>
+      <span class="kanon {{ cel.kanon }}">▲</span>
     {% endif %}
     {% if cel.raak %}<span class="knal" style="animation-delay: {{ cel.knal_vertraging }}s">💥</span>{% endif %}
   </div>
