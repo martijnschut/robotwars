@@ -23,6 +23,7 @@ class Cel:
     spoor_index: int = 0         # hoeveelste vakje van de baan (0 = eerste na de schutter)
     raak: bool = False           # hier is iets geraakt in de laatste tik
     knal_vertraging: float = 0.0 # seconden tot de kogel hier aankomt (de 💥 wacht daarop)
+    kanon: str | None = None     # schermrichting van het kanon van de robot hier (rechts/links/omhoog/omlaag)
 
 
 STAP_SECONDEN = 0.18   # vliegtijd van de kogel per vakje; 4 vakjes passen ruim in één tik
@@ -45,11 +46,26 @@ def gridrij(y: int) -> int:
     return HOOGTE - y + 1
 
 
+def kanonrichting(speler: Speler, ik: int) -> str:
+    """Waar het kanon van `speler` op het scherm van kijker `ik` heen wijst. 90 en 270 zijn
+    voor iedereen omhoog/omlaag; 0 en 180 zijn 'vooruit'/'achteruit', en op ieders scherm
+    kijkt de eigen robot naar rechts en die van de ander naar links."""
+    if speler.kanon == 90:
+        return "omhoog"
+    if speler.kanon == 270:
+        return "omlaag"
+    eigen = speler.nummer == ik
+    naar_rechts = eigen if speler.kanon == 0 else not eigen
+    return "rechts" if naar_rechts else "links"
+
+
 def kogelbanen(game: Game, ik: int) -> list[dict]:
     """Per schot van de laatste tik: waar de kogel over het scherm vliegt.
 
     Gridkolommen tellen vanaf 2 (kolom 1 is de y-nummers). Gridrijen 1..7 zijn het
     veld met y=7 bovenaan (gridrij = HOOGTE - y + 1); gridrij 8 is de x-nummers.
+    De baan is het grid-gebied van rij_van/kol_van tot rij_tot/kol_tot (exclusief, zoals
+    CSS grid-area): één rij hoog bij horizontaal, één kolom breed bij verticaal.
     `n` = aantal vakjes inclusief dat van de schutter.
     """
     if game.afgelopen:          # na het winnende schot geen kogel meer laten staan
@@ -59,14 +75,23 @@ def kogelbanen(game: Game, ik: int) -> list[dict]:
         if not schot.cellen:
             continue
         schutter = game.spelers[schot.schutter]
-        van = schermkolom(schutter.x, ik)
-        tot = schermkolom(schot.cellen[-1][0], ik)
+        kol_van, rij_van = schermkolom(schutter.x, ik), gridrij(schutter.y)
+        kol_tot, rij_tot = schermkolom(schot.cellen[-1][0], ik), gridrij(schot.cellen[-1][1])
+        if kol_tot > kol_van:
+            richting = "rechts"
+        elif kol_tot < kol_van:
+            richting = "links"
+        elif rij_tot < rij_van:   # kleinere gridrij = hoger op het scherm
+            richting = "omhoog"
+        else:
+            richting = "omlaag"
         banen.append({
-            "kol_van": min(van, tot) + 1,
-            "kol_tot": max(van, tot) + 2,
-            "rij": gridrij(schutter.y),
+            "kol_van": min(kol_van, kol_tot) + 1,
+            "kol_tot": max(kol_van, kol_tot) + 2,
+            "rij_van": min(rij_van, rij_tot),
+            "rij_tot": max(rij_van, rij_tot) + 1,
             "n": len(schot.cellen) + 1,
-            "richting": "rechts" if tot > van else "links",
+            "richting": richting,
             "duur": round(len(schot.cellen) * STAP_SECONDEN, 2),
             "schutter": schot.schutter,
             "raak": schot.raak is not None,
@@ -87,6 +112,8 @@ def veld_matrix(game: Game, ik: int) -> list[list[Cel]]:
             cel = Cel(x, y, soort, robot=game.robot_op(x, y),
                       gebouw=game.gebouw_op(x, y), schild=game.schild_op(x, y),
                       mijn=game.mijn_op(x, y))
+            if cel.robot is not None:
+                cel.kanon = kanonrichting(cel.robot, ik)
             if (x, y) in game.knallen:          # bom of mijn ging hier af: 💥 zonder kogelbaan
                 cel.raak = True
             for schot in game.schoten:
@@ -127,6 +154,8 @@ def log_tekst(game: Game, ik: int, e: Gebeurtenis) -> str:
         return f"{wie} loopt {e.tekst} naar ({schermkolom(e.x, ik)}, {e.y})"
     if e.soort == "geblokkeerd":
         return f"{wie} loopt tegen iets aan en blijft staan"
+    if e.soort == "kanon":
+        return f"Jij draait je kanon naar {e.graden}°" if mij else f"{wie} draait het kanon naar {e.graden}°"
     if e.soort == "raak_robot":
         geraakt = "jou" if doel_mij else doel_naam
         return f"{wie} schiet → raakt {geraakt}! {hartjes(e.levens, ROBOT_LEVENS)}"

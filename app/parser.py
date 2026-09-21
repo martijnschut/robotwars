@@ -16,7 +16,13 @@ class Move:
 
 @dataclass(frozen=True)
 class Shoot:
-    pass
+    """Schiet in de richting van het kanon (Speler.kanon)."""
+
+
+@dataclass(frozen=True)
+class Aim:
+    """Richt het kanon: 0 vooruit, 90 omhoog, 180 achteruit, 270 omlaag."""
+    graden: int
 
 
 @dataclass(frozen=True)
@@ -53,19 +59,24 @@ class Invalid:
     hint: str
 
 
-Step = Move | Shoot | Shield | Bomb
+Step = Move | Shoot | Aim | Shield | Bomb
 Command = Step | RepeatStart | RepeatEnd
 ParseResult = Command | Incomplete | Invalid
 
 HINT_ROBOT = 'Ik ken "{}" niet. Probeer vooruit, achteruit, omhoog, omlaag of schiet.'
+HINT_KANON = ("Kanon draait naar 0, 90, 180 of 270 graden, bijvoorbeeld kanon = 90 voor omhoog. "
+              "0 is vooruit, 180 achteruit, 270 omlaag.")
+HINT_SCHIET = ("Schieten is gewoon robot = schiet. De richting kies je met kanon = 90 "
+               "(0 vooruit, 90 omhoog, 180 achteruit, 270 omlaag).")
+GRADEN = (0, 90, 180, 270)
 HINT_SCHILD = "Schild heeft twee getallen nodig: schild = (x, y), bijvoorbeeld schild = (4, 2)."
 HINT_BOM = ("Bom heeft twee getallen van -1 tot 1 nodig: bom = (dx, dy), "
             "bijvoorbeeld bom = (1, 0) voor het vak vóór je.")
 HINT_HERHAAL = "Herhaal hoeveel keer? Bijvoorbeeld herhaal 3 keer (maximaal 20)."
-HINT_START = "Begin met robot = ..., schild = (...), bom = (...), herhaal ... keer of klaar."
+HINT_START = "Begin met robot = ..., kanon = ..., schild = (...), bom = (...), herhaal ... keer of klaar."
 BOM_BEREIK = 1   # dx en dy lopen van -BOM_BEREIK t/m BOM_BEREIK (blijft < 10: '±' leest één cijfer)
 
-# Sjablonen zonder spaties; '#' staat voor een getal van 1 of 2 cijfers,
+# Sjablonen zonder spaties; '#' staat voor een getal van 1 tot 3 cijfers,
 # '±' voor een getal van één cijfer met optioneel een minteken ervoor.
 _SJABLONEN = (
     "robot=vooruit",
@@ -73,6 +84,7 @@ _SJABLONEN = (
     "robot=omhoog",
     "robot=omlaag",
     "robot=schiet",
+    "kanon=#",
     "schild=(#,#)",
     "bom=(±,±)",
     "herhaal#keer",
@@ -100,7 +112,7 @@ def _past(compact: str, sjabloon: str) -> tuple[bool, bool, list[int]]:
             return False, True, getallen
         if teken == "#":
             start = i
-            while i < len(compact) and compact[i].isdigit() and i - start < 2:
+            while i < len(compact) and compact[i].isdigit() and i - start < 3:
                 i += 1
             if i == start:
                 return False, False, getallen
@@ -141,6 +153,13 @@ def _maak_commando(sjabloon: str, getallen: list[int]) -> ParseResult:
     if sjabloon.startswith("robot="):
         waarde = sjabloon[len("robot="):]
         return Shoot() if waarde == "schiet" else Move(waarde)
+    if sjabloon.startswith("kanon"):
+        graden = getallen[0]
+        if graden in GRADEN:
+            return Aim(graden)
+        if any(str(g).startswith(str(graden)) for g in GRADEN):
+            return Incomplete()      # het getal staat aan het eind: "9" kan nog 90 worden, "18" nog 180
+        return Invalid(HINT_KANON)
     if sjabloon.startswith("schild"):
         return Shield(getallen[0], getallen[1])
     if sjabloon.startswith("bom"):
@@ -157,9 +176,13 @@ def _maak_commando(sjabloon: str, getallen: list[int]) -> ParseResult:
 
 
 def _hint(compact: str, tekst: str) -> str:
+    if compact.startswith("robot=schiet"):
+        return HINT_SCHIET       # bijv. robot = schiet(90): de richting gaat via kanon = ...
     if compact.startswith("robot"):
         rest = tekst.split("=", 1)[1].strip() if "=" in tekst else tekst.strip()
         return HINT_ROBOT.format(rest[:40])
+    if compact.startswith("kanon"):
+        return HINT_KANON
     if compact.startswith("schild"):
         return HINT_SCHILD
     if compact.startswith("bom"):

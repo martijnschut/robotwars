@@ -10,7 +10,7 @@ from collections import deque
 from dataclasses import dataclass, field
 from typing import Callable
 
-from .parser import Move, Shoot, Shield, Bomb, Step
+from .parser import Move, Shoot, Aim, Shield, Bomb, Step
 
 # Het veld is een wiskundig assenstelsel: x loopt naar rechts (1..13), y omhoog (1 onderaan,
 # 7 bovenaan). Bruggen, torens en startvakken liggen symmetrisch, dus (x, y) is eenduidig.
@@ -90,13 +90,14 @@ class Gebeurtenis:
     """Eén regel voor het log "Wat gebeurt er?" (de weergave maakt er tekst van)."""
     soort: str                   # loop, geblokkeerd, raak_schild, raak_robot, raak_gebouw, mis,
                                  # dood, terug, schild, schild_fout, bom, bom_fout, bom_raak,
-                                 # mijn_raak, mijn_dubbel, win
+                                 # mijn_raak, mijn_dubbel, kanon, win
     speler: int                  # wie het deed (of wie het overkwam bij dood/terug/win)
     x: int = 0
     y: int = 0
     doel: int | None = None      # geraakte speler / eigenaar van het geraakte voorwerp
     levens: int | None = None    # resterende levens van het geraakte voorwerp
     tekst: str | None = None     # richting bij lopen, melding bij schild_fout / bom_fout
+    graden: int | None = None    # hoek bij kanon
 
 
 LOG_LENGTE = 30
@@ -113,6 +114,7 @@ class Speler:
     gebouw_levens: int = GEBOUW_LEVENS
     schilden_over: int = SCHILDEN_PER_SPELER
     bommen_over: int = BOMMEN_PER_SPELER
+    kanon: int = 0               # hoek van het kanon in graden (0 = vooruit), zie parser.GRADEN
     wachtrij: deque[Step] = field(default_factory=deque)
     respawn_over: int = 0        # tikken tot de robot terugkomt (0 = leeft of wacht niet)
     tegoed: int = 0              # stappen die Robo nog mag doen (één per uitgevoerde stap van de mens)
@@ -264,10 +266,11 @@ class Game:
                 speler.respawn_over = 1   # volgende tik opnieuw proberen
 
     def _robot_kapot(self, robot: Speler, x: int, y: int) -> None:
-        """Robot sneuvelt op (x, y): hartjes op 0, wachtrij leeg, terug na RESPAWN_TIKKEN."""
+        """Robot sneuvelt op (x, y): hartjes op 0, wachtrij leeg, kanon op 0, terug na RESPAWN_TIKKEN."""
         robot.robot_levens = 0
         robot.respawn_over = RESPAWN_TIKKEN
         robot.wachtrij.clear()
+        robot.kanon = 0           # alles wordt gereset, zoals in een spel hoort
         self._meld("dood", robot.nummer, x, y)
 
     def _voer_uit(self, speler: Speler, stap: Step) -> None:
@@ -275,6 +278,8 @@ class Game:
             self._loop(speler, stap.richting)
         elif isinstance(stap, Shoot):
             self._schiet(speler)
+        elif isinstance(stap, Aim):
+            self._richt(speler, stap.graden)
         elif isinstance(stap, Shield):
             self._zet_schild(speler, stap.x, stap.y)
         elif isinstance(stap, Bomb):
@@ -301,13 +306,25 @@ class Game:
         else:
             self._meld("geblokkeerd", speler.nummer, tekst=richting)
 
+    def _richt(self, speler: Speler, graden: int) -> None:
+        speler.kanon = graden
+        self._meld("kanon", speler.nummer, graden=graden)
+
     def _schiet(self, speler: Speler) -> None:
-        """Kogel vliegt vooruit, max SCHIET_BEREIK vakjes, en raakt het eerste
-        schild, de eerste robot of het eerste gebouw dat hij tegenkomt."""
+        """Kogel vliegt max SCHIET_BEREIK vakjes in de richting van het kanon (0 vooruit, 90 omhoog,
+        180 achteruit, 270 omlaag; vooruit/achteruit gespiegeld per speler zoals bij lopen)
+        en raakt het eerste schild, de eerste robot of het eerste gebouw dat hij tegenkomt.
+        Ook je eigen toren: een kogel raakt wat hij tegenkomt."""
+        dx, dy = {
+            0: (speler.richting, 0),
+            180: (-speler.richting, 0),
+            90: (0, 1),      # y + 1
+            270: (0, -1),    # y - 1
+        }[speler.kanon]
         cellen: list[tuple[int, int]] = []
         raak: tuple[int, int] | None = None
         for i in range(1, SCHIET_BEREIK + 1):
-            x, y = speler.x + speler.richting * i, speler.y
+            x, y = speler.x + dx * i, speler.y + dy * i
             if not in_veld(x, y):
                 break
             cellen.append((x, y))

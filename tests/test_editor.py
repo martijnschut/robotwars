@@ -1,7 +1,7 @@
 from app.editor import (Editor, Regel, HINT_KLAAR, HINT_TE_DIEP, HINT_TE_VEEL, MAX_DIEPTE, MAX_REGELS,
                         MAX_REGEL_LENGTE)
 from app.game import Game, MELD_DRUK, MAX_WACHTRIJ
-from app.parser import Move, Shoot
+from app.parser import Move, Shoot, Aim
 
 
 def nieuw():
@@ -48,12 +48,12 @@ def test_herhaal_blok_wordt_pas_bij_klaar_uitgevoerd():
 
 def test_genest_blok():
     g, e = nieuw()
-    for tekst in ("herhaal 2 keer", "robot = omhoog", "herhaal 2 keer", "robot = schiet", "klaar"):
+    for tekst in ("herhaal 2 keer", "robot = omhoog", "herhaal 2 keer", "kanon = 180", "robot = schiet", "klaar"):
         e.verwerk(g, 1, tekst)
     assert e.markering == "wacht"                  # buitenste blok nog open
     assert e.regels[3].inspringing == 2
     e.verwerk(g, 1, "klaar")
-    assert list(g.spelers[1].wachtrij) == [Move("omhoog"), Shoot(), Shoot()] * 2
+    assert list(g.spelers[1].wachtrij) == [Move("omhoog"), Aim(180), Shoot(), Aim(180), Shoot()] * 2
 
 
 def test_klaar_zonder_herhaal_is_fout():
@@ -163,3 +163,14 @@ def test_te_diep_nesten_is_fout():
     assert e.verwerk(g, 1, "herhaal 2 keer") is False
     assert e.markering == "fout" and e.hint == HINT_TE_DIEP
     assert e.diepte == MAX_DIEPTE and len(e.regels) == MAX_DIEPTE
+
+
+def test_kanon_en_schiet_teken_voor_teken():
+    """De editor voert een regel uit zodra hij klopt; onderweg mag niets afgaan of rood worden."""
+    g, e = nieuw()
+    for regel in ("kanon = 90", "robot = schiet"):
+        for i in range(1, len(regel) + 1):
+            bevroren = e.verwerk(g, 1, regel[:i])
+            assert bevroren is (i == len(regel)), regel[:i]
+            assert e.hint is None, regel[:i]
+    assert list(g.spelers[1].wachtrij) == [Aim(90), Shoot()]

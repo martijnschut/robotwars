@@ -67,7 +67,7 @@ def test_kogelbanen_vliegen_over_het_scherm():
     (baan,) = kogelbanen(g, 1)
     # speler 1 kijkt normaal: schutter op schermkolom 2, eind op 6; gridkolom = schermkolom + 1;
     # y=1 is de onderste veldrij, dus gridrij 7 (y=7 is gridrij 1)
-    assert baan == {"kol_van": 3, "kol_tot": 8, "rij": 7, "n": 5, "richting": "rechts",
+    assert baan == {"kol_van": 3, "kol_tot": 8, "rij_van": 7, "rij_tot": 8, "n": 5, "richting": "rechts",
                     "duur": round(4 * STAP_SECONDEN, 2), "schutter": 1, "raak": False}
     # speler 2 ziet het gespiegeld: x=2 wordt schermkolom 12, x=6 wordt 8 → kogel vliegt naar links
     (baan2,) = kogelbanen(g, 2)
@@ -83,13 +83,49 @@ def test_kogelbanen_vliegen_over_het_scherm():
     g.spelers[1].x, g.spelers[1].y = 2, 7
     g.voeg_stappen_toe(1, [Shoot()])
     g.tick()
-    assert kogelbanen(g, 1)[0]["rij"] == 1
+    assert kogelbanen(g, 1)[0]["rij_van"] == 1
     g.spelers[2].gebouw_levens = 1
     g.spelers[1].x, g.spelers[1].y = 9, 4
     g.spelers[2].x, g.spelers[2].y = 12, 1
     g.voeg_stappen_toe(1, [Shoot()])
     g.tick()                                # winnend schot
     assert g.afgelopen and g.schoten and kogelbanen(g, 1) == []
+
+
+def test_kogelbanen_verticaal():
+    g = Game("g", "A", "B")
+    g.spelers[1].x, g.spelers[1].y = 3, 2
+    g.spelers[1].kanon = 90
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()                                # mis: cellen (3,3)..(3,6)
+    (baan,) = kogelbanen(g, 1)
+    # één kolom breed (schermkolom 3 → gridkolom 4); schutter op y=2 is gridrij 6, eind y=6 is gridrij 2
+    assert baan == {"kol_van": 4, "kol_tot": 5, "rij_van": 2, "rij_tot": 7, "n": 5, "richting": "omhoog",
+                    "duur": round(4 * STAP_SECONDEN, 2), "schutter": 1, "raak": False}
+    # speler 2 ziet het gespiegeld in x, maar omhoog blijft omhoog
+    (baan2,) = kogelbanen(g, 2)
+    assert baan2["kol_van"] == 12 and baan2["kol_tot"] == 13 and baan2["richting"] == "omhoog"
+    assert baan2["rij_van"] == 2 and baan2["rij_tot"] == 7   # rijen worden niet gespiegeld
+    # omlaag, treffer op het vakje eronder: n = 2, gridrijen 6 t/m 7
+    g.spelers[2].x, g.spelers[2].y = 3, 1
+    g.spelers[1].kanon = 270
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    (baan3,) = kogelbanen(g, 1)
+    assert baan3["richting"] == "omlaag" and baan3["n"] == 2 and baan3["raak"] is True
+    assert baan3["rij_van"] == 6 and baan3["rij_tot"] == 8 and baan3["kol_van"] == 4
+
+
+def test_matrix_toont_verticaal_spoor():
+    g = Game("g", "A", "B")
+    g.spelers[1].x, g.spelers[1].y = 3, 2
+    g.spelers[1].kanon = 90
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()                                # mis: cellen (3,3)..(3,6)
+    rijen = veld_matrix(g, 1)
+    kolom = [rij[2] for rij in rijen]       # schermkolom 3, van y=7 (boven) naar y=1
+    assert [c.spoor for c in kolom] == [False, True, True, True, True, False, False]
+    assert [c.spoor_index for c in kolom[1:5]] == [3, 2, 1, 0]
 
 
 def test_filters():
@@ -229,3 +265,28 @@ def test_log_regels_bommen():
     ]
     assert oudste_eerst_2[8] == "Jij legt een bom op (4, 3)"   # speler 2 ziet kolommen gespiegeld
 
+
+
+def test_kanon_richting_op_het_scherm():
+    g = Game("g", "A", "B")
+    rijen = veld_matrix(g, 1)
+    assert rijen[3][1].kanon == "rechts"      # eigen robot (2,4): 0 = vooruit = naar rechts
+    assert rijen[3][11].kanon == "links"      # robot van de ander (12,4) kijkt naar mij toe
+    assert rijen[3][0].kanon is None          # geen robot: geen kanon
+    rijen2 = veld_matrix(g, 2)
+    assert rijen2[3][1].kanon == "rechts"     # speler 2 ziet zijn eigen robot ook links, vooruit = rechts
+    assert rijen2[3][11].kanon == "links"
+    g.spelers[1].kanon, g.spelers[2].kanon = 90, 180
+    assert veld_matrix(g, 1)[3][1].kanon == "omhoog"
+    assert veld_matrix(g, 2)[3][11].kanon == "omhoog"    # verticaal spiegelt niet
+    assert veld_matrix(g, 1)[3][11].kanon == "rechts"    # achteruit van speler 2, gezien door speler 1
+    assert veld_matrix(g, 2)[3][1].kanon == "links"      # … en door speler 2 zelf
+    g.spelers[1].kanon = 270
+    assert veld_matrix(g, 1)[3][1].kanon == "omlaag"
+
+
+def test_logtekst_kanon():
+    g = Game("g", "Wessel", "Papa")
+    g.log.append((1, Gebeurtenis("kanon", 1, graden=90)))
+    assert log_regels(g, 1)[0]["tekst"] == "Jij draait je kanon naar 90°"
+    assert log_regels(g, 2)[0]["tekst"] == "Wessel draait het kanon naar 90°"

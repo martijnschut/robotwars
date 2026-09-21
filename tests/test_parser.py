@@ -1,4 +1,5 @@
-from app.parser import parse_line, Move, Shoot, Incomplete, Invalid, HINT_START
+from app.parser import (parse_line, Move, Shoot, Aim, Incomplete, Invalid, HINT_START, HINT_ROBOT,
+                        HINT_KANON, HINT_SCHIET)
 
 
 def test_robot_vooruit():
@@ -42,7 +43,7 @@ def test_te_lang_is_invalid():
 def test_onbekend_begin_is_invalid():
     r = parse_line("lamp = aan")
     assert isinstance(r, Invalid)
-    assert r.hint == HINT_START == "Begin met robot = ..., schild = (...), bom = (...), herhaal ... keer of klaar."
+    assert r.hint == HINT_START == "Begin met robot = ..., kanon = ..., schild = (...), bom = (...), herhaal ... keer of klaar."
 
 
 from app.parser import Shield, RepeatStart, RepeatEnd, HINT_SCHILD, HINT_HERHAAL
@@ -161,3 +162,53 @@ def test_start_hint_noemt_bom():
 def test_expand_herhaal_met_bom():
     stappen = expand([RepeatStart(2), Bomb(1, 0), RepeatEnd()])
     assert stappen == [Bomb(1, 0), Bomb(1, 0)]
+
+
+# ---- kanon richten ----
+
+
+def test_kanon_in_vier_richtingen():
+    for graden in (0, 90, 180, 270):
+        assert parse_line(f"kanon = {graden}") == Aim(graden)
+    assert parse_line("kanon=90") == Aim(90)            # spaties maken niet uit
+    assert parse_line("kanon = 090") == Aim(90)         # voorloopnul is geen fout
+
+
+def test_kanon_foute_graden_geeft_kanon_hint():
+    assert parse_line("kanon = 5") == Invalid(HINT_KANON)       # los cijfer, geen prefix
+    assert parse_line("kanon = 19") == Invalid(HINT_KANON)      # begint als 180, maar wijkt af
+    assert parse_line("kanon = 45") == Invalid(HINT_KANON)
+    assert parse_line("kanon = 360") == Invalid(HINT_KANON)
+    assert parse_line("kanon = 1800") == Invalid(HINT_KANON)
+    assert parse_line("kanon = omhoog") == Invalid(HINT_KANON)
+    assert parse_line("kanon 90") == Invalid(HINT_KANON)
+    assert "kanon = 90" in HINT_KANON
+
+
+def test_kanon_half_getypt_is_incomplete():
+    # het getal staat aan het eind, dus "9" en "18" moeten nog 90 en 180 kunnen worden
+    for tekst in ("kan", "kanon", "kanon =", "kanon = 9", "kanon = 1", "kanon = 18", "kanon = 27", "kanon = 09"):
+        assert parse_line(tekst) == Incomplete(), tekst
+
+
+def test_schiet_blijft_zonder_richting():
+    assert parse_line("robot = schiet") == Shoot()
+
+
+def test_schiet_met_richting_wijst_naar_kanon():
+    assert parse_line("robot = schiet(90)") == Invalid(HINT_SCHIET)
+    assert parse_line("robot = schiet omhoog") == Invalid(HINT_SCHIET)
+    assert "kanon = 90" in HINT_SCHIET
+
+
+def test_andere_robot_fouten_houden_de_oude_hint():
+    assert parse_line("robot = links") == Invalid(HINT_ROBOT.format("links"))
+
+
+def test_start_hint_noemt_kanon():
+    assert parse_line("xyz") == Invalid(HINT_START)
+    assert "kanon = ..." in HINT_START
+
+
+def test_schild_met_drie_cijfers_is_voor_het_spel():
+    assert parse_line("schild = (123, 4)") == Shield(123, 4)   # het spel keurt dat vak af

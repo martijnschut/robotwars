@@ -139,7 +139,7 @@ In `_hint` vervang de `robot`-tak:
 - [ ] **Step 4: Draai alle tests**
 
 Run: `uv run pytest -q`
-Expected: alles slaagt. (`schild = (123, 4)` en `herhaal 100 keer` geven nog steeds dezelfde melding als eerst: het getal wordt nu gelezen en daarna afgekeurd door het spel resp. `MAX_HERHAAL`.)
+Expected: alles slaagt. (`herhaal 100 keer` geeft nog steeds dezelfde melding als eerst: het getal wordt nu gelezen en daarna afgekeurd door `MAX_HERHAAL`, met dezelfde hint. `schild = (123, 4)` verandert wél van laag: waar de parser dat getal eerst zelf afkeurde met `HINT_SCHILD`, wordt het nu gelezen als `Shield(123, 4)` en pas een tick later door het spel afgekeurd met "Dat vak bestaat niet." — hetzelfde als nu al gebeurt bij bijvoorbeeld `schild = (99, 4)`. Dat is acceptabel.)
 
 - [ ] **Step 5: Commit**
 

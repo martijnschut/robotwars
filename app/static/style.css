@@ -76,6 +76,12 @@ a { color: var(--blauw); }
 .rw-veld .as-x { bottom: 0; left: 100%; margin-left: 2px; }
 .rw-veld .c { position: relative; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 6px; }
 .rw-veld .c svg { width: 96%; height: 96%; }
+/* kanon: geel driehoekje aan de rand van het robotvakje, in de schietrichting */
+.rw-veld .c .kanon { position: absolute; font-size: 11px; line-height: 1; color: var(--geel); text-shadow: 0 0 4px var(--geel); pointer-events: none; }
+.rw-veld .c .kanon.omhoog { top: 2px; left: 50%; transform: translateX(-50%); }
+.rw-veld .c .kanon.omlaag { bottom: 2px; left: 50%; transform: translateX(-50%) rotate(180deg); }
+.rw-veld .c .kanon.rechts { right: 2px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+.rw-veld .c .kanon.links { left: 2px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
 .c.b { background: var(--helft-b); } .c.r { background: var(--helft-r); }
 .c.w { background: var(--water); background-image: repeating-linear-gradient(90deg, transparent 0 10px, rgba(255,255,255,.18) 10px 14px); }
 .c.br { background: var(--brug); background-image: repeating-linear-gradient(0deg, transparent 0 8px, rgba(0,0,0,.25) 8px 10px); box-shadow: inset 0 0 0 2px #5a3a1b; }
@@ -87,12 +93,21 @@ a { color: var(--blauw); }
 @keyframes schud { from { transform: translate(-2px, 0); } to { transform: translate(2px, 0); } }
 /* de kogel zelf: een grid-item over de baan heen, dat in --duur van de schutter naar het eindvak glijdt */
 .kogelbaan { position: relative; z-index: 3; pointer-events: none; }
+/* horizontaal: de kogel is één vakje breed (100% / n) en schuift met `left` over de baan */
 .kogelbaan svg { position: absolute; top: 2%; left: 0; height: 96%; width: calc(100% / var(--n)); filter: drop-shadow(0 0 6px var(--geel)); animation: vlieg-rechts var(--duur) linear forwards; }
 .kogelbaan.links svg { transform: scaleX(-1); animation-name: vlieg-links; }
+/* verticaal: één vakje hoog, schuift met `top`; de sprite wijst naar rechts, dus draaien */
+.kogelbaan.omhoog svg, .kogelbaan.omlaag svg { left: 2%; width: 96%; height: calc(100% / var(--n)); }
+.kogelbaan.omhoog svg { transform: rotate(-90deg); animation-name: vlieg-omhoog; }
+.kogelbaan.omlaag svg { transform: rotate(90deg); animation-name: vlieg-omlaag; }
 .kogelbaan.mis svg { animation: vlieg-rechts var(--duur) linear forwards, doof var(--duur) linear forwards; }
 .kogelbaan.mis.links svg { animation-name: vlieg-links, doof; }
+.kogelbaan.mis.omhoog svg { animation-name: vlieg-omhoog, doof; }
+.kogelbaan.mis.omlaag svg { animation-name: vlieg-omlaag, doof; }
 @keyframes vlieg-rechts { from { left: 0; } to { left: calc(100% - 100% / var(--n)); } }
 @keyframes vlieg-links { from { left: calc(100% - 100% / var(--n)); } to { left: 0; } }
+@keyframes vlieg-omhoog { from { top: calc(100% - 100% / var(--n)); } to { top: 0; } }
+@keyframes vlieg-omlaag { from { top: 0; } to { top: calc(100% - 100% / var(--n)); } }
 @keyframes doof { 0%, 75% { opacity: 1; } 100% { opacity: 0; } }
 /* explosie op het geraakte vak: kort en groot, dan weg */
 .c .knal { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 44px; line-height: 1; pointer-events: none; opacity: 0; animation: knal .6s ease-out forwards; }
@@ -158,6 +173,7 @@ a { color: var(--blauw); }
 @media (max-width: 860px) {
   .rw-veld { grid-template-columns: 20px repeat(13, minmax(0, 1fr)); }
   .rw-veld .c svg { width: 90%; height: 90%; }
+  .rw-veld .c .kanon { font-size: 8px; }   /* kleinere vakjes: kleiner driehoekje */
   .rw-status { flex-direction: column; }
   .kolommen { grid-template-columns: 1fr; }
 }
