@@ -16,7 +16,7 @@ class Move:
 
 @dataclass(frozen=True)
 class Shoot:
-    pass
+    """Schiet in de richting van het kanon (Speler.kanon)."""
 
 
 @dataclass(frozen=True)

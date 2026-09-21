@@ -266,7 +266,7 @@ class Game:
                 speler.respawn_over = 1   # volgende tik opnieuw proberen
 
     def _robot_kapot(self, robot: Speler, x: int, y: int) -> None:
-        """Robot sneuvelt op (x, y): hartjes op 0, wachtrij leeg, terug na RESPAWN_TIKKEN."""
+        """Robot sneuvelt op (x, y): hartjes op 0, wachtrij leeg, kanon op 0, terug na RESPAWN_TIKKEN."""
         robot.robot_levens = 0
         robot.respawn_over = RESPAWN_TIKKEN
         robot.wachtrij.clear()
