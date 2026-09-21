@@ -274,7 +274,7 @@ class Game:
         if isinstance(stap, Move):
             self._loop(speler, stap.richting)
         elif isinstance(stap, Shoot):
-            self._schiet(speler)
+            self._schiet(speler, stap.graden)
         elif isinstance(stap, Shield):
             self._zet_schild(speler, stap.x, stap.y)
         elif isinstance(stap, Bomb):
@@ -301,13 +301,21 @@ class Game:
         else:
             self._meld("geblokkeerd", speler.nummer, tekst=richting)
 
-    def _schiet(self, speler: Speler) -> None:
-        """Kogel vliegt vooruit, max SCHIET_BEREIK vakjes, en raakt het eerste
-        schild, de eerste robot of het eerste gebouw dat hij tegenkomt."""
+    def _schiet(self, speler: Speler, graden: int) -> None:
+        """Kogel vliegt max SCHIET_BEREIK vakjes in de schietrichting (0 vooruit, 90 omhoog,
+        180 achteruit, 270 omlaag; vooruit/achteruit gespiegeld per speler zoals bij lopen)
+        en raakt het eerste schild, de eerste robot of het eerste gebouw dat hij tegenkomt.
+        Ook je eigen toren: een kogel raakt wat hij tegenkomt."""
+        dx, dy = {
+            0: (speler.richting, 0),
+            180: (-speler.richting, 0),
+            90: (0, 1),      # y + 1
+            270: (0, -1),    # y - 1
+        }[graden]
         cellen: list[tuple[int, int]] = []
         raak: tuple[int, int] | None = None
         for i in range(1, SCHIET_BEREIK + 1):
-            x, y = speler.x + speler.richting * i, speler.y
+            x, y = speler.x + dx * i, speler.y + dy * i
             if not in_veld(x, y):
                 break
             cellen.append((x, y))

@@ -512,3 +512,73 @@ def test_schild_niet_op_een_mijn():
     g.mijnen.append(Mijn(4, 3, eigenaar=2))
     assert zet(g, 1, 4, 3) == MELD_BEZET           # de mijn zou anders onzichtbaar worden
     assert g.schild_op(4, 3) is None and g.spelers[1].schilden_over == 3
+
+
+from app.game import GEBOUW_LEVENS
+
+
+def test_schiet_omhoog_raakt_robot_in_dezelfde_kolom():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 4, 2
+    g.spelers[2].x, g.spelers[2].y = 4, 5        # drie vakjes erboven
+    g.voeg_stappen_toe(1, [Shoot(90)])
+    g.tick()
+    assert g.spelers[2].robot_levens == 4
+    assert g.schoten[0].cellen == [(4, 3), (4, 4), (4, 5)]
+    assert g.schoten[0].raak == (4, 5)
+
+
+def test_schiet_omlaag_stopt_bij_schild():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 3, 6
+    g.schilden.append(Schild(3, 4, eigenaar=1))
+    g.spelers[2].x, g.spelers[2].y = 3, 3
+    g.voeg_stappen_toe(1, [Shoot(270)])
+    g.tick()
+    assert g.spelers[2].robot_levens == 5
+    assert g.schild_op(3, 4).levens == SCHILD_LEVENS - 1
+    assert g.schoten[0].raak == (3, 4)
+
+
+def test_schiet_achteruit_is_gespiegeld_per_speler():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 8, 1        # speler 1 staat rechts van speler 2
+    g.spelers[2].x, g.spelers[2].y = 5, 1
+    g.voeg_stappen_toe(1, [Shoot(180)])          # achteruit = naar links voor speler 1
+    g.tick()
+    assert g.spelers[2].robot_levens == 4
+    assert g.schoten[0].cellen == [(7, 1), (6, 1), (5, 1)]   # over het water heen
+    g.voeg_stappen_toe(2, [Shoot(180)])          # achteruit = naar rechts voor speler 2
+    g.tick()
+    assert g.spelers[1].robot_levens == 4
+    assert g.schoten[0].cellen == [(6, 1), (7, 1), (8, 1)]
+
+
+def test_schiet_achteruit_vanaf_startvak_raakt_eigen_toren():
+    g = nieuw()                                  # speler 1 op (2,4), eigen toren op (1,4)
+    g.voeg_stappen_toe(1, [Shoot(180)])
+    g.tick()
+    assert g.spelers[1].gebouw_levens == GEBOUW_LEVENS - 1
+    assert g.schoten[0].cellen == [(1, 4)] and g.schoten[0].raak == (1, 4)
+    g.spelers[1].gebouw_levens = 1
+    g.voeg_stappen_toe(1, [Shoot(180)])
+    g.tick()
+    assert g.winnaar == 2 and g.afgelopen        # eigen toren kapot: de ander wint
+
+
+def test_schiet_omhoog_aan_de_rand_is_mis():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 2, 6        # één vakje onder de bovenrand
+    g.voeg_stappen_toe(1, [Shoot(90)])
+    g.tick()
+    assert g.schoten[0].raak is None
+    assert g.schoten[0].cellen == [(2, 7)]       # alleen het vakje binnen het veld
+
+
+def test_schiet_zonder_graden_is_vooruit():
+    g = nieuw()
+    g.spelers[1].x, g.spelers[1].y = 4, 3
+    g.spelers[2].x, g.spelers[2].y = 6, 3
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert g.schoten[0].raak == (6, 3)
