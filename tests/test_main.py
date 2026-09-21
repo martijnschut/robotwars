@@ -578,3 +578,11 @@ def test_melding_wordt_hint_na_tik(client):
     html = main.weergave.tik_html(main.templates, game, 1)
     assert 'id="hint"' in html and "Hier kan geen schild." in html
     assert game.editors[1].hint == "Hier kan geen schild."   # renderen verandert niets
+
+
+def test_invoer_blokkeert_plakken(client):
+    """Zoals CT-3000: je moet zelf typen, dus plakken en slepen in het invoerveld staan uit."""
+    game, _ = start_spel(client)
+    r = client.get(f"/spel/{game.id}")
+    assert 'onpaste="return false"' in r.text
+    assert 'ondrop="return false"' in r.text

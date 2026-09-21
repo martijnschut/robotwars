@@ -1,3 +1,4 @@
 <input id="invoer" name="regel" type="text" value="" placeholder="robot = vooruit"
        autocomplete="off" spellcheck="false" autofocus
+       onpaste="return false" ondrop="return false"
        ws-send hx-trigger="input changed delay:50ms"{% if game.afgelopen %} disabled{% endif %}>
