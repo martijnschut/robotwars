@@ -40,6 +40,11 @@ a { color: var(--blauw); }
 .uitslag.gewonnen { border-color: var(--geel); }
 .uitslag.verloren { border-color: var(--rood); }
 .link { text-align: center; margin-top: 24px; }
+.uitleg { max-width: 460px; margin: 28px auto 0; padding: 14px 18px; border-radius: 10px; background: var(--paneel); line-height: 1.5; font-size: 15px; }
+.uitleg h3 { margin: 0 0 8px; text-align: center; color: var(--geel); }
+.uitleg ol { margin: 0; padding-left: 22px; } .uitleg li { margin-bottom: 6px; }
+.uitleg code { background: var(--paneel-donker); padding: 1px 6px; border-radius: 5px; font-family: ui-monospace, Consolas, monospace; font-size: 14px; white-space: nowrap; }
+.uitleg .tip { margin: 10px 0 0; font-size: 13px; color: var(--grijs); text-align: center; }
 .wacht { text-align: center; }
 .wacht .knop { display: inline-block; margin-top: 8px; }
 .wacht svg { width: 140px; height: 140px; animation: zweef 1.6s ease-in-out infinite; }
