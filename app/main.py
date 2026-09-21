@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import hashlib
 import logging
 import os
 import re
@@ -40,6 +41,16 @@ lobby = Lobby()
 db = ScoreDb(os.environ.get("ROBOTWARS_DB", "robotwars.db"))
 templates = Jinja2Templates(directory=str(HIER / "templates"))
 templates.env.filters.update(weergave.FILTERS)
+
+
+def statisch(bestand: str) -> str:
+    """URL van een bestand in /static met een hash van de inhoud erachter, zodat browsers en
+    Cloudflare na een deploy de nieuwe versie ophalen in plaats van de gecachete oude."""
+    inhoud = (HIER / "static" / bestand).read_bytes()
+    return f"/static/{bestand}?v={hashlib.sha256(inhoud).hexdigest()[:10]}"
+
+
+templates.env.globals["statisch"] = statisch
 
 # game_id -> spelernummer -> open WebSockets, oudste eerst
 verbindingen: dict[str, dict[int, list[WebSocket]]] = {}
