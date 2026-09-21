@@ -41,6 +41,7 @@ a { color: var(--blauw); }
 .uitslag.verloren { border-color: var(--rood); }
 .link { text-align: center; margin-top: 24px; }
 .wacht { text-align: center; }
+.wacht .knop { display: inline-block; margin-top: 8px; }
 .wacht svg { width: 140px; height: 140px; animation: zweef 1.6s ease-in-out infinite; }
 @keyframes zweef { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
 .puntjes span { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--blauw); margin: 0 4px; animation: stuiter 1.2s infinite; }
