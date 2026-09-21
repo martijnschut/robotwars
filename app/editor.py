@@ -96,7 +96,7 @@ class Editor:
             if not gelukt:
                 self.hint = hint
             return True
-        # Move / Shoot / Shield / Bomb
+        # Move / Shoot / Aim / Shield / Bomb
         if self.diepte > 0:
             self.blok.append(r)
             self._bevries("wacht", tekst, self.diepte)

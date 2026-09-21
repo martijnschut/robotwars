@@ -48,12 +48,12 @@ def test_herhaal_blok_wordt_pas_bij_klaar_uitgevoerd():
 
 def test_genest_blok():
     g, e = nieuw()
-    for tekst in ("herhaal 2 keer", "robot = omhoog", "herhaal 2 keer", "robot = schiet", "klaar"):
+    for tekst in ("herhaal 2 keer", "robot = omhoog", "herhaal 2 keer", "kanon = 180", "robot = schiet", "klaar"):
         e.verwerk(g, 1, tekst)
     assert e.markering == "wacht"                  # buitenste blok nog open
     assert e.regels[3].inspringing == 2
     e.verwerk(g, 1, "klaar")
-    assert list(g.spelers[1].wachtrij) == [Move("omhoog"), Shoot(), Shoot()] * 2
+    assert list(g.spelers[1].wachtrij) == [Move("omhoog"), Aim(180), Shoot(), Aim(180), Shoot()] * 2
 
 
 def test_klaar_zonder_herhaal_is_fout():

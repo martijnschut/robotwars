@@ -175,6 +175,8 @@ def test_kanon_in_vier_richtingen():
 
 
 def test_kanon_foute_graden_geeft_kanon_hint():
+    assert parse_line("kanon = 5") == Invalid(HINT_KANON)       # los cijfer, geen prefix
+    assert parse_line("kanon = 19") == Invalid(HINT_KANON)      # begint als 180, maar wijkt af
     assert parse_line("kanon = 45") == Invalid(HINT_KANON)
     assert parse_line("kanon = 360") == Invalid(HINT_KANON)
     assert parse_line("kanon = 1800") == Invalid(HINT_KANON)
@@ -209,5 +211,4 @@ def test_start_hint_noemt_kanon():
 
 
 def test_schild_met_drie_cijfers_is_voor_het_spel():
-    from app.parser import Shield
     assert parse_line("schild = (123, 4)") == Shield(123, 4)   # het spel keurt dat vak af
