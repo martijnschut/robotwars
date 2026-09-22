@@ -23,10 +23,15 @@ class Cel:
     spoor_index: int = 0         # hoeveelste vakje van de baan (0 = eerste na de schutter)
     raak: bool = False           # hier is iets geraakt in de laatste tik
     knal_vertraging: float = 0.0 # seconden tot de kogel hier aankomt (de 💥 wacht daarop)
+    spoor_vertraging: float = 0.0 # seconden tot de kogel dit vakje passeert (het flitsje wacht daarop)
     kanon: str | None = None     # schermrichting van het kanon van de robot hier, zie schermnaam()
 
 
 STAP_SECONDEN = 0.18   # vliegtijd van de kogel per vakje; 4 vakjes passen ruim in één tik
+# Schuin ligt het volgende vakje √2 keer zo ver, dus duurt het ook langer: de kogel gaat
+# daardoor overal even hard. √2 × 0,18 ≈ 0,25, naar beneden afgerond zodat het verste
+# schot (4 × 0,24 = 0,96 s) nog binnen één tik aankomt — anders mist de 💥 zijn moment.
+SCHUINE_STAP_SECONDEN = 0.24
 
 
 def kolommen(ik: int) -> range:
@@ -72,6 +77,14 @@ def kanonrichting(speler: Speler, ik: int) -> str:
     return schermnaam(dx, dy)
 
 
+def stap_seconden(game: Game, schot) -> float:
+    """Vliegtijd per vakje van dit schot: schuin duurt een vakje langer dan recht."""
+    schutter = game.spelers[schot.schutter]
+    x, y = schot.cellen[0]
+    schuin = x != schutter.x and y != schutter.y
+    return SCHUINE_STAP_SECONDEN if schuin else STAP_SECONDEN
+
+
 def kogelbanen(game: Game, ik: int) -> list[dict]:
     """Per schot van de laatste tik: waar de kogel over het scherm vliegt.
 
@@ -100,7 +113,7 @@ def kogelbanen(game: Game, ik: int) -> list[dict]:
             "rij_tot": max(rij_van, rij_tot) + 1,
             "n": len(schot.cellen) + 1,
             "richting": richting,
-            "duur": round(len(schot.cellen) * STAP_SECONDEN, 2),
+            "duur": round(len(schot.cellen) * stap_seconden(game, schot), 2),
             "schutter": schot.schutter,
             "raak": schot.raak is not None,
         })
@@ -126,11 +139,13 @@ def veld_matrix(game: Game, ik: int) -> list[list[Cel]]:
                 cel.raak = True
             for schot in game.schoten:
                 if (x, y) in schot.cellen:
+                    stap = stap_seconden(game, schot)
                     cel.spoor = True
                     cel.spoor_index = schot.cellen.index((x, y))
+                    cel.spoor_vertraging = round((cel.spoor_index + 1) * stap, 2)
                     if schot.raak == (x, y):
                         cel.raak = True
-                        cel.knal_vertraging = round(len(schot.cellen) * STAP_SECONDEN, 2)
+                        cel.knal_vertraging = round(len(schot.cellen) * stap, 2)
             rij.append(cel)
         rijen.append(rij)
     return rijen

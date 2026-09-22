@@ -91,7 +91,14 @@ de hoek blijft staan tot je hem verandert, en de kogel vliegt 4 vakjes ver.
   wijst — draait 45°: rechtsboven −45°, rechtsonder 45°, linksboven −135°,
   linksonder 135°. Dat is dezelfde aanpak als bij omhoog/omlaag (−90°/90°).
   Ook de `mis`-variant (kogel dooft) krijgt de vier richtingen.
-- **Spoor en 💥** werken al per vakje via `spoor_index` en veranderen niet.
+- **Vliegtijd:** een schuin vakje ligt √2 keer zo ver, dus doet de kogel er ook langer
+  over — anders lijkt hij schuin harder te gaan. `SCHUINE_STAP_SECONDEN = 0.24`
+  (√2 × 0,18 ≈ 0,25, naar beneden afgerond zodat het verste schot met 4 × 0,24 = 0,96 s
+  nog binnen één tik van 1 s aankomt; anders mist de 💥 zijn moment). Een schuin schot
+  van 4 vakjes duurt dus 0,96 s tegen 0,72 s recht, en gaat op het scherm even hard.
+- **Spoor en 💥** wachten mee: `Cel` krijgt een veld `spoor_vertraging`, zodat de
+  vertraging per vakje uit de weergave komt in plaats van uit een losse 0.18 in
+  `veld.html`, en `knal_vertraging` rekent met dezelfde stap.
 - **Statuskaart** (`🔫 45°`) en **log** (*"Jij draait je kanon naar 45°"*)
   werken al met elke hoek en veranderen niet.
 - **Speluitleg** op de startpagina en in `README.md`: noem de acht standen met

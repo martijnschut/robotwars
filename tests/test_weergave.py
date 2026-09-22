@@ -1,7 +1,8 @@
 from pathlib import Path
 
-from app.weergave import (veld_matrix, kolommen, kogelbanen, STAP_SECONDEN, mmss, datum, hartjes, kleur, symbool,
-                          log_regels, schermnaam, KANON_STAPPEN)
+from app.weergave import (veld_matrix, kolommen, kogelbanen, STAP_SECONDEN, SCHUINE_STAP_SECONDEN, mmss, datum,
+                          hartjes, kleur, symbool, log_regels, schermnaam, KANON_STAPPEN)
+from app.game import SCHIET_BEREIK
 from app.game import Game, Schild, Gebeurtenis, MELD_HELFT, MELD_BEZET
 from app.parser import Shoot
 
@@ -320,7 +321,7 @@ def test_kogelbanen_schuin():
     (baan,) = kogelbanen(g, 1)
     # vierkant blok: gridkolommen 4 t/m 8 (schutter x=3, eind x=7) en gridrijen 2 t/m 6
     assert baan == {"kol_van": 4, "kol_tot": 9, "rij_van": 2, "rij_tot": 7, "n": 5,
-                    "richting": "rechtsboven", "duur": round(4 * STAP_SECONDEN, 2),
+                    "richting": "rechtsboven", "duur": round(4 * SCHUINE_STAP_SECONDEN, 2),
                     "schutter": 1, "raak": False}
     # speler 2 ziet het gespiegeld in x: schuin omhoog naar links
     (baan2,) = kogelbanen(g, 2)
@@ -360,3 +361,37 @@ def test_elke_schermrichting_heeft_css():
         if richting != "rechts":   # rechts is de basisregel van .kogelbaan svg, zonder eigen klasse
             assert f".kogelbaan.{richting} " in css, richting
             assert f".kogelbaan.mis.{richting} " in css, richting
+
+
+def test_schuine_kogel_vliegt_even_hard_als_een_rechte():
+    """Een schuin vakje ligt √2 keer zo ver, dus de kogel doet er ongeveer √2 keer
+    zo lang over; anders zou hij schuin harder lijken te gaan."""
+    assert SCHUINE_STAP_SECONDEN > STAP_SECONDEN
+    assert abs(SCHUINE_STAP_SECONDEN / STAP_SECONDEN - 2 ** 0.5) < 0.1
+    # het verste schot moet nog binnen één tik (1 seconde) aankomen, anders mist de 💥
+    assert SCHIET_BEREIK * SCHUINE_STAP_SECONDEN < 1
+
+
+def test_spoor_en_knal_wachten_op_de_schuine_kogel():
+    g = Game("g", "A", "B")
+    g.spelers[1].x, g.spelers[1].y = 3, 2
+    g.spelers[1].kanon = 45
+    g.spelers[2].x, g.spelers[2].y = 5, 4        # twee vakjes schuin erboven: raak
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    rijen = veld_matrix(g, 1)
+    eerste, raak = rijen[7 - 3][4 - 1], rijen[7 - 4][5 - 1]
+    assert eerste.spoor_vertraging == round(SCHUINE_STAP_SECONDEN, 2)
+    assert raak.spoor_vertraging == round(2 * SCHUINE_STAP_SECONDEN, 2)
+    assert raak.knal_vertraging == round(2 * SCHUINE_STAP_SECONDEN, 2)
+
+
+def test_spoor_van_een_recht_schot_houdt_de_gewone_stap():
+    g = Game("g", "A", "B")
+    g.spelers[1].x, g.spelers[1].y = 3, 2
+    g.spelers[2].x, g.spelers[2].y = 5, 2
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    rijen = veld_matrix(g, 1)
+    assert rijen[7 - 2][4 - 1].spoor_vertraging == round(STAP_SECONDEN, 2)
+    assert rijen[7 - 2][5 - 1].knal_vertraging == round(2 * STAP_SECONDEN, 2)

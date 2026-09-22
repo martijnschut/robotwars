@@ -9,7 +9,7 @@
   <div class="co" style="grid-area: {{ r }} / 1">{{ rij[0].y }}</div>
   {% for cel in rij %}
   <div class="c {{ cel.soort }}{% if cel.spoor %} spoor{% endif %}{% if cel.raak %} boem{% endif %}"
-       style="grid-area: {{ r }} / {{ loop.index + 1 }}{% if cel.spoor %}; --vertraging: {{ (cel.spoor_index + 1) * 0.18 }}s{% endif %}">
+       style="grid-area: {{ r }} / {{ loop.index + 1 }}{% if cel.spoor %}; --vertraging: {{ cel.spoor_vertraging }}s{% endif %}">
     {% if cel.gebouw %}
       {% set g = cel.gebouw %}
       <svg class="{{ g.nummer|kleur }}{% if g.nummer != ik %} spiegel{% endif %} t{{ g.gebouw_levens }}">
