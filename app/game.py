@@ -114,7 +114,7 @@ class Speler:
     gebouw_levens: int = GEBOUW_LEVENS
     schilden_over: int = SCHILDEN_PER_SPELER
     bommen_over: int = BOMMEN_PER_SPELER
-    kanon: int = 0               # hoek van het kanon in graden (0 = vooruit), zie parser.GRADEN
+    kanon: int = 0               # hoek van het kanon in graden (0 = vooruit, stapjes van 45), zie parser.GRADEN
     wachtrij: deque[Step] = field(default_factory=deque)
     respawn_over: int = 0        # tikken tot de robot terugkomt (0 = leeft of wacht niet)
     tegoed: int = 0              # stappen die Robo nog mag doen (één per uitgevoerde stap van de mens)
@@ -312,14 +312,19 @@ class Game:
 
     def _schiet(self, speler: Speler) -> None:
         """Kogel vliegt max SCHIET_BEREIK vakjes in de richting van het kanon (0 vooruit, 90 omhoog,
-        180 achteruit, 270 omlaag; vooruit/achteruit gespiegeld per speler zoals bij lopen)
-        en raakt het eerste schild, de eerste robot of het eerste gebouw dat hij tegenkomt.
-        Ook je eigen toren: een kogel raakt wat hij tegenkomt."""
+        180 achteruit, 270 omlaag en schuin daartussen; vooruit/achteruit gespiegeld per speler
+        zoals bij lopen) en raakt het eerste schild, de eerste robot of het eerste gebouw dat hij
+        tegenkomt. Ook je eigen toren: een kogel raakt wat hij tegenkomt.
+        Een schuin schot gaat even ver als een recht schot: SCHIET_BEREIK vakjes."""
         dx, dy = {
             0: (speler.richting, 0),
             180: (-speler.richting, 0),
             90: (0, 1),      # y + 1
             270: (0, -1),    # y - 1
+            45: (speler.richting, 1),     # schuin vooruit-omhoog
+            135: (-speler.richting, 1),   # schuin achteruit-omhoog
+            225: (-speler.richting, -1),  # schuin achteruit-omlaag
+            315: (speler.richting, -1),   # schuin vooruit-omlaag
         }[speler.kanon]
         cellen: list[tuple[int, int]] = []
         raak: tuple[int, int] | None = None

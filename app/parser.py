@@ -21,7 +21,9 @@ class Shoot:
 
 @dataclass(frozen=True)
 class Aim:
-    """Richt het kanon: 0 vooruit, 90 omhoog, 180 achteruit, 270 omlaag."""
+    """Richt het kanon in stapjes van 45 graden: 0 vooruit, 90 omhoog, 180 achteruit,
+    270 omlaag, en schuin daartussen (45 vooruit-omhoog, 135 achteruit-omhoog,
+    225 achteruit-omlaag, 315 vooruit-omlaag)."""
     graden: int
 
 
@@ -64,11 +66,12 @@ Command = Step | RepeatStart | RepeatEnd
 ParseResult = Command | Incomplete | Invalid
 
 HINT_ROBOT = 'Ik ken "{}" niet. Probeer vooruit, achteruit, omhoog, omlaag of schiet.'
-HINT_KANON = ("Kanon draait naar 0, 90, 180 of 270 graden, bijvoorbeeld kanon = 90 voor omhoog. "
-              "0 is vooruit, 180 achteruit, 270 omlaag.")
+HINT_KANON = ("Kanon draait met stapjes van 45 graden: 0, 45, 90, 135, 180, 225, 270 of 315, "
+              "bijvoorbeeld kanon = 90 voor omhoog. 0 is vooruit, 180 achteruit, 270 omlaag; "
+              "45 is er schuin tussenin.")
 HINT_SCHIET = ("Schieten is gewoon robot = schiet. De richting kies je met kanon = 90 "
-               "(0 vooruit, 90 omhoog, 180 achteruit, 270 omlaag).")
-GRADEN = (0, 90, 180, 270)
+               "(0 vooruit, 90 omhoog, 180 achteruit, 270 omlaag, en schuin met 45, 135, 225 of 315).")
+GRADEN = (0, 45, 90, 135, 180, 225, 270, 315)
 HINT_SCHILD = "Schild heeft twee getallen nodig: schild = (x, y), bijvoorbeeld schild = (4, 2)."
 HINT_BOM = ("Bom heeft twee getallen van -1 tot 1 nodig: bom = (dx, dy), "
             "bijvoorbeeld bom = (1, 0) voor het vak vóór je.")

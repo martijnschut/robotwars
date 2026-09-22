@@ -23,7 +23,7 @@ class Cel:
     spoor_index: int = 0         # hoeveelste vakje van de baan (0 = eerste na de schutter)
     raak: bool = False           # hier is iets geraakt in de laatste tik
     knal_vertraging: float = 0.0 # seconden tot de kogel hier aankomt (de 💥 wacht daarop)
-    kanon: str | None = None     # schermrichting van het kanon van de robot hier (rechts/links/omhoog/omlaag)
+    kanon: str | None = None     # schermrichting van het kanon van de robot hier, zie schermnaam()
 
 
 STAP_SECONDEN = 0.18   # vliegtijd van de kogel per vakje; 4 vakjes passen ruim in één tik
@@ -46,17 +46,30 @@ def gridrij(y: int) -> int:
     return HOOGTE - y + 1
 
 
+# stap per hoek op het scherm van de eigen speler: (naar rechts, naar boven)
+KANON_STAPPEN = {0: (1, 0), 45: (1, 1), 90: (0, 1), 135: (-1, 1),
+                 180: (-1, 0), 225: (-1, -1), 270: (0, -1), 315: (1, -1)}
+
+
+def schermnaam(dx: int, dy: int) -> str:
+    """Naam van een schermrichting; dx > 0 is naar rechts, dy > 0 is naar boven.
+    Recht omhoog/omlaag heet 'omhoog'/'omlaag', schuin heet bijvoorbeeld 'rechtsboven'."""
+    if dx == 0:
+        return "omhoog" if dy > 0 else "omlaag"
+    horizontaal = "rechts" if dx > 0 else "links"
+    if dy == 0:
+        return horizontaal
+    return horizontaal + ("boven" if dy > 0 else "onder")
+
+
 def kanonrichting(speler: Speler, ik: int) -> str:
-    """Waar het kanon van `speler` op het scherm van kijker `ik` heen wijst. 90 en 270 zijn
-    voor iedereen omhoog/omlaag; 0 en 180 zijn 'vooruit'/'achteruit', en op ieders scherm
-    kijkt de eigen robot naar rechts en die van de ander naar links."""
-    if speler.kanon == 90:
-        return "omhoog"
-    if speler.kanon == 270:
-        return "omlaag"
-    eigen = speler.nummer == ik
-    naar_rechts = eigen if speler.kanon == 0 else not eigen
-    return "rechts" if naar_rechts else "links"
+    """Waar het kanon van `speler` op het scherm van kijker `ik` heen wijst. De verticale
+    helft van de hoek is voor iedereen hetzelfde; de horizontale helft ('vooruit'/'achteruit')
+    spiegelt: op ieders scherm kijkt de eigen robot naar rechts en die van de ander naar links."""
+    dx, dy = KANON_STAPPEN[speler.kanon]
+    if speler.nummer != ik:
+        dx = -dx
+    return schermnaam(dx, dy)
 
 
 def kogelbanen(game: Game, ik: int) -> list[dict]:
@@ -65,7 +78,8 @@ def kogelbanen(game: Game, ik: int) -> list[dict]:
     Gridkolommen tellen vanaf 2 (kolom 1 is de y-nummers). Gridrijen 1..7 zijn het
     veld met y=7 bovenaan (gridrij = HOOGTE - y + 1); gridrij 8 is de x-nummers.
     De baan is het grid-gebied van rij_van/kol_van tot rij_tot/kol_tot (exclusief, zoals
-    CSS grid-area): één rij hoog bij horizontaal, één kolom breed bij verticaal.
+    CSS grid-area): één rij hoog bij horizontaal, één kolom breed bij verticaal en een
+    vierkant blok bij schuin.
     `n` = aantal vakjes inclusief dat van de schutter.
     """
     if game.afgelopen:          # na het winnende schot geen kogel meer laten staan
@@ -77,14 +91,8 @@ def kogelbanen(game: Game, ik: int) -> list[dict]:
         schutter = game.spelers[schot.schutter]
         kol_van, rij_van = schermkolom(schutter.x, ik), gridrij(schutter.y)
         kol_tot, rij_tot = schermkolom(schot.cellen[-1][0], ik), gridrij(schot.cellen[-1][1])
-        if kol_tot > kol_van:
-            richting = "rechts"
-        elif kol_tot < kol_van:
-            richting = "links"
-        elif rij_tot < rij_van:   # kleinere gridrij = hoger op het scherm
-            richting = "omhoog"
-        else:
-            richting = "omlaag"
+        # kleinere gridrij = hoger op het scherm, dus omkeren voor schermnaam()
+        richting = schermnaam(kol_tot - kol_van, rij_van - rij_tot)
         banen.append({
             "kol_van": min(kol_van, kol_tot) + 1,
             "kol_tot": max(kol_van, kol_tot) + 2,

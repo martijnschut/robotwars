@@ -12,7 +12,8 @@ Spelen: **https://robot.schut.me**
 robot = vooruit      robot = achteruit
 robot = omhoog       robot = omlaag
 robot = schiet       (schiet 4 vakjes in de richting van je kanon)
-kanon = 90           (0 vooruit, 90 omhoog, 180 achteruit, 270 omlaag; blijft staan tot je hem verandert)
+kanon = 90           (stapjes van 45: 0 vooruit, 90 omhoog, 180 achteruit, 270 omlaag,
+                      45/135/225/315 schuin ertussenin; blijft staan tot je hem verandert)
 schild = (4, 2)      (x, y; 3 per potje, alleen op je eigen helft; kapot na 8 treffers)
 bom = (1, 0)         (dx, dy van -1 tot 1 rondom je robot; 3 per potje; robot erop = kapot)
 herhaal 3 keer

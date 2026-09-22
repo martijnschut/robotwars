@@ -1,5 +1,7 @@
+from pathlib import Path
+
 from app.weergave import (veld_matrix, kolommen, kogelbanen, STAP_SECONDEN, mmss, datum, hartjes, kleur, symbool,
-                          log_regels)
+                          log_regels, schermnaam, KANON_STAPPEN)
 from app.game import Game, Schild, Gebeurtenis, MELD_HELFT, MELD_BEZET
 from app.parser import Shoot
 
@@ -290,3 +292,71 @@ def test_logtekst_kanon():
     g.log.append((1, Gebeurtenis("kanon", 1, graden=90)))
     assert log_regels(g, 1)[0]["tekst"] == "Jij draait je kanon naar 90°"
     assert log_regels(g, 2)[0]["tekst"] == "Wessel draait het kanon naar 90°"
+
+
+def test_kanon_schuin_op_het_scherm():
+    g = Game("g", "A", "B")                   # robots op (2,4) en (12,4)
+    g.spelers[1].kanon = g.spelers[2].kanon = 45
+    rijen1, rijen2 = veld_matrix(g, 1), veld_matrix(g, 2)
+    assert rijen1[3][1].kanon == "rechtsboven"     # eigen robot: 45 = vooruit-omhoog = naar rechtsboven
+    assert rijen1[3][11].kanon == "linksboven"     # de ander kijkt naar mij toe, maar ook omhoog
+    assert rijen2[3][1].kanon == "rechtsboven"     # speler 2 ziet zijn eigen robot net zo
+    assert rijen2[3][11].kanon == "linksboven"
+    g.spelers[1].kanon = 135
+    assert veld_matrix(g, 1)[3][1].kanon == "linksboven"    # achteruit-omhoog
+    g.spelers[1].kanon = 225
+    assert veld_matrix(g, 1)[3][1].kanon == "linksonder"    # achteruit-omlaag
+    g.spelers[1].kanon = 315
+    assert veld_matrix(g, 1)[3][1].kanon == "rechtsonder"   # vooruit-omlaag
+    assert veld_matrix(g, 2)[3][11].kanon == "linksonder"   # diezelfde robot bij de ander op het scherm
+
+
+def test_kogelbanen_schuin():
+    g = Game("g", "A", "B")
+    g.spelers[1].x, g.spelers[1].y = 3, 2
+    g.spelers[1].kanon = 45
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()                                # mis: cellen (4,3)..(7,6), over het water heen
+    (baan,) = kogelbanen(g, 1)
+    # vierkant blok: gridkolommen 4 t/m 8 (schutter x=3, eind x=7) en gridrijen 2 t/m 6
+    assert baan == {"kol_van": 4, "kol_tot": 9, "rij_van": 2, "rij_tot": 7, "n": 5,
+                    "richting": "rechtsboven", "duur": round(4 * STAP_SECONDEN, 2),
+                    "schutter": 1, "raak": False}
+    # speler 2 ziet het gespiegeld in x: schuin omhoog naar links
+    (baan2,) = kogelbanen(g, 2)
+    assert baan2["richting"] == "linksboven" and baan2["kol_van"] == 8 and baan2["kol_tot"] == 13
+    assert baan2["rij_van"] == 2 and baan2["rij_tot"] == 7      # rijen worden niet gespiegeld
+    # schuin omlaag met een treffer op het vakje schuin ernaast: n = 2
+    g.spelers[1].kanon = 315
+    g.spelers[2].x, g.spelers[2].y = 4, 1
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    (baan3,) = kogelbanen(g, 1)
+    assert baan3["richting"] == "rechtsonder" and baan3["n"] == 2 and baan3["raak"] is True
+    assert baan3["kol_van"] == 4 and baan3["kol_tot"] == 6 and baan3["rij_van"] == 6 and baan3["rij_tot"] == 8
+
+
+def test_matrix_toont_schuin_spoor():
+    g = Game("g", "A", "B")
+    g.spelers[1].x, g.spelers[1].y = 3, 2
+    g.spelers[1].kanon = 45
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()                                # mis: cellen (4,3)..(7,6)
+    rijen = veld_matrix(g, 1)               # rij 0 is y=7, rij 6 is y=1
+    schuin = [rijen[7 - y][x - 1] for x, y in ((4, 3), (5, 4), (6, 5), (7, 6))]
+    assert [c.spoor for c in schuin] == [True, True, True, True]
+    assert [c.spoor_index for c in schuin] == [0, 1, 2, 3]
+
+
+def test_elke_schermrichting_heeft_css():
+    """Een nieuwe hoek zonder stijl zou onzichtbaar mislukken: driehoekje en kogel
+    hebben voor elke richting uit KANON_STAPPEN een eigen regel nodig."""
+    css = (Path(__file__).resolve().parents[1] / "app" / "static" / "style.css").read_text(encoding="utf-8")
+    richtingen = {schermnaam(dx, dy) for dx, dy in KANON_STAPPEN.values()}
+    assert len(richtingen) == 8
+    for richting in richtingen:
+        assert f".kanon.{richting} " in css, richting
+        assert ("@keyframes vlieg-" + richting + " ") in css, richting
+        if richting != "rechts":   # rechts is de basisregel van .kogelbaan svg, zonder eigen klasse
+            assert f".kogelbaan.{richting} " in css, richting
+            assert f".kogelbaan.mis.{richting} " in css, richting

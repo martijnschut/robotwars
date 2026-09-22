@@ -174,3 +174,14 @@ def test_kanon_en_schiet_teken_voor_teken():
             assert bevroren is (i == len(regel)), regel[:i]
             assert e.hint is None, regel[:i]
     assert list(g.spelers[1].wachtrij) == [Aim(90), Shoot()]
+
+
+def test_kanon_schuin_teken_voor_teken():
+    """315 komt langs "3" en "31": die zijn nog onaf, dus er gaat onderweg niets af."""
+    g, e = nieuw()
+    regel = "kanon = 315"
+    for i in range(1, len(regel) + 1):
+        bevroren = e.verwerk(g, 1, regel[:i])
+        assert bevroren is (i == len(regel)), regel[:i]
+        assert e.hint is None, regel[:i]
+    assert list(g.spelers[1].wachtrij) == [Aim(315)]

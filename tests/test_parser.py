@@ -174,20 +174,32 @@ def test_kanon_in_vier_richtingen():
     assert parse_line("kanon = 090") == Aim(90)         # voorloopnul is geen fout
 
 
+def test_kanon_schuin_in_vier_richtingen():
+    for graden in (45, 135, 225, 315):
+        assert parse_line(f"kanon = {graden}") == Aim(graden)
+    assert parse_line("kanon=45") == Aim(45)            # spaties maken niet uit
+
+
 def test_kanon_foute_graden_geeft_kanon_hint():
     assert parse_line("kanon = 5") == Invalid(HINT_KANON)       # los cijfer, geen prefix
     assert parse_line("kanon = 19") == Invalid(HINT_KANON)      # begint als 180, maar wijkt af
-    assert parse_line("kanon = 45") == Invalid(HINT_KANON)
+    assert parse_line("kanon = 30") == Invalid(HINT_KANON)      # begint als 315, maar wijkt af
     assert parse_line("kanon = 360") == Invalid(HINT_KANON)
     assert parse_line("kanon = 1800") == Invalid(HINT_KANON)
     assert parse_line("kanon = omhoog") == Invalid(HINT_KANON)
     assert parse_line("kanon 90") == Invalid(HINT_KANON)
-    assert "kanon = 90" in HINT_KANON
+    assert "kanon = 90" in HINT_KANON and "45" in HINT_KANON
 
 
 def test_kanon_half_getypt_is_incomplete():
     # het getal staat aan het eind, dus "9" en "18" moeten nog 90 en 180 kunnen worden
     for tekst in ("kan", "kanon", "kanon =", "kanon = 9", "kanon = 1", "kanon = 18", "kanon = 27", "kanon = 09"):
+        assert parse_line(tekst) == Incomplete(), tekst
+
+
+def test_kanon_schuin_half_getypt_is_incomplete():
+    # "4" kan nog 45 worden, "3"/"31" nog 315, "2"/"22" nog 225 (of 270), "13" nog 135
+    for tekst in ("kanon = 4", "kanon = 3", "kanon = 31", "kanon = 2", "kanon = 22", "kanon = 13"):
         assert parse_line(tekst) == Incomplete(), tekst
 
 

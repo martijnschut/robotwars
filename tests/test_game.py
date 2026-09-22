@@ -628,3 +628,63 @@ def test_schiet_omhoog_is_voor_speler_2_ook_omhoog():
     g.voeg_stappen_toe(2, [Shoot()])
     g.tick()
     assert g.schoten[0].cellen == [(10, 4), (10, 5), (10, 6), (10, 7)]
+
+
+# ---- schuin schieten ----
+
+
+def test_schiet_schuin_omhoog_raakt_robot_op_het_schuine_pad():
+    g = nieuw()
+    g.spelers[1].kanon = 45                      # schuin vooruit-omhoog
+    g.spelers[1].x, g.spelers[1].y = 3, 2
+    g.spelers[2].x, g.spelers[2].y = 6, 5        # drie vakjes schuin erboven
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert g.spelers[2].robot_levens == 4
+    assert g.schoten[0].cellen == [(4, 3), (5, 4), (6, 5)]
+    assert g.schoten[0].raak == (6, 5)
+
+
+def test_schiet_schuin_omlaag_stopt_bij_schild():
+    g = nieuw()
+    g.spelers[1].kanon = 315                     # schuin vooruit-omlaag
+    g.spelers[1].x, g.spelers[1].y = 3, 6
+    g.schilden.append(Schild(5, 4, eigenaar=1))
+    g.spelers[2].x, g.spelers[2].y = 6, 3        # erachter, blijft dus heel
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert g.spelers[2].robot_levens == 5
+    assert g.schild_op(5, 4).levens == SCHILD_LEVENS - 1
+    assert g.schoten[0].cellen == [(4, 5), (5, 4)] and g.schoten[0].raak == (5, 4)
+
+
+def test_schiet_schuin_achteruit_is_gespiegeld_per_speler():
+    g = nieuw()
+    g.spelers[1].kanon = g.spelers[2].kanon = 135    # schuin achteruit-omhoog
+    g.spelers[1].x, g.spelers[1].y = 8, 1
+    g.spelers[2].x, g.spelers[2].y = 5, 1
+    g.voeg_stappen_toe(1, [Shoot()])             # achteruit = naar links voor speler 1
+    g.tick()
+    assert g.schoten[0].cellen == [(7, 2), (6, 3), (5, 4), (4, 5)]
+    g.voeg_stappen_toe(2, [Shoot()])             # achteruit = naar rechts voor speler 2
+    g.tick()
+    assert g.schoten[0].cellen == [(6, 2), (7, 3), (8, 4), (9, 5)]
+
+
+def test_schuin_schot_gaat_net_als_recht_vier_vakjes():
+    g = nieuw()
+    g.spelers[1].kanon = 45
+    g.spelers[1].x, g.spelers[1].y = 2, 2
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert g.schoten[0].cellen == [(3, 3), (4, 4), (5, 5), (6, 6)]
+    assert g.schoten[0].raak is None
+
+
+def test_schiet_schuin_omlaag_achteruit_het_veld_uit_is_mis():
+    g = nieuw()
+    g.spelers[1].kanon = 225                     # schuin achteruit-omlaag
+    g.spelers[1].x, g.spelers[1].y = 3, 1        # onderste rij: meteen buiten het veld
+    g.voeg_stappen_toe(1, [Shoot()])
+    g.tick()
+    assert g.schoten[0].cellen == [] and g.schoten[0].raak is None
